@@ -1,0 +1,42 @@
+image: registry.gitlab.com/pospiskurf/pospiskud/build:latest
+
+cache:
+  paths:
+    - /go/src/_/builds/errors/vendor
+    - /go/src/gitlab.com/errors/vendor
+
+stages:
+  - test
+  - build
+
+before_script:
+  - mkdir -p /go/src/gitlab.com/errors /go/src/_/builds
+  - cp -r $CI_PROJECT_DIR /go/src/gitlab.com/errors
+  - ln -s /go/src/gitlab.com/errors /go/src/_/builds/errors
+  - export CC=clang
+  - export CXX=clang++
+
+lint_code:
+  stage: test
+  script:
+    - make lint
+
+
+unit_test:
+  stage: test
+  script:
+    - make test
+
+
+code_coverage:
+  stage: test
+  script:
+    - make coverage
+
+code_coverage_report:
+  stage: test
+  script:
+    - make coverhtml
+  only:
+  - master
+

@@ -1,0 +1,12 @@
+[ErrEmailsUnreadMsg]
+description = "The number of unread emails user have"
+few = "У {{.Name}} имеется {{.PluralCount}} непрочитанных сообщений."
+hash = "sha1-c55fa42a554c2bbb18703ed12dccbcf7d1f4d2f8"
+many = "У {{.Name}} имеется {{.PluralCount}} непрочитанных сообщений."
+one = "У {{.Name}} имеется {{.PluralCount}} непрочитанное сообщение."
+other = "У {{.Name}} имеется {{.PluralCount}} непрочитанных сообщений."
+
+[ErrFileNotFoundMsg]
+description = "The File not found message"
+hash = "sha1-844f2f1bf1ca030f786a5482f2d123ef16262cc5"
+other = "Файл {{.FName}} не найден"
