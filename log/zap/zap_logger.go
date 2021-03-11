@@ -1,3 +1,4 @@
+// Package zap реализует логгер zap.
 package zap
 
 import (
@@ -6,15 +7,16 @@ import (
 	origzap "go.uber.org/zap"
 )
 
-type zaplogger struct {
-	logger *origzap.Logger
-}
-
 // New конструтор интерфейс для использования логгера zap
+// Оборачивает логгер zap l.
 func New(l *origzap.Logger) log.Logger {
 	return &zaplogger{
 		logger: l,
 	}
+}
+
+type zaplogger struct {
+	logger *origzap.Logger
 }
 
 func (l *zaplogger) Warn(err error)  { l.logger.Warn(err.Error()) }

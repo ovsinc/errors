@@ -74,7 +74,7 @@ func BenchmarkStringMultierrFormatFunc1Err(b *testing.B) {
 }
 
 func BenchmarkJsonMultierrFuncFormat2Errs(b *testing.B) {
-	DefaultMultierrFormatFunc = JsonMultierrFuncFormat
+	DefaultMultierrFormatFunc = JSONMultierrFuncFormat
 
 	e := Wrap(e1, e2)
 
@@ -87,7 +87,7 @@ func BenchmarkJsonMultierrFuncFormat2Errs(b *testing.B) {
 }
 
 func BenchmarkJsonMultierrFuncFormat1Err(b *testing.B) {
-	DefaultMultierrFormatFunc = JsonMultierrFuncFormat
+	DefaultMultierrFormatFunc = JSONMultierrFuncFormat
 
 	e := Wrap(nil, e2)
 

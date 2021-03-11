@@ -14,9 +14,10 @@ import (
 // defaultFormatFn функция форматирования, используемая по-умолчанию
 var defaultFormatFn FormatFn = StringFormat
 
-// FormatFn функция форматирования
+// FormatFn тип функции форматирования.
 type FormatFn func(e *Error) string
 
+// JSONFormat функция форматирования вывода сообщения *Error в JSON.
 func JSONFormat(e *Error) string {
 	if e == nil {
 		return "null"
@@ -57,13 +58,15 @@ func JSONFormat(e *Error) string {
 
 	// Msg
 	_, _ = buf.WriteString("\"msg\":")
-	_, _ = buf.WriteString("\"" + e.TranslateMsg() + "\"")
+	_, _ = buf.WriteString("\"" + e.translateMsg() + "\"")
 
 	_, _ = buf.WriteString("}")
 
 	return buf.String()
 }
 
+// StringFormat функция форматирования вывода сообщения *Error в виде строки.
+// Используется по-умолчанию.
 func StringFormat(e *Error) string {
 	if e == nil {
 		return ""
@@ -121,7 +124,7 @@ func StringFormat(e *Error) string {
 	}
 
 	if msg != "" {
-		_, _ = buf.WriteString(e.TranslateMsg())
+		_, _ = buf.WriteString(e.translateMsg())
 	}
 
 	return buf.String()
@@ -129,7 +132,7 @@ func StringFormat(e *Error) string {
 
 //
 
-// Format поддержка fmt.Printf()
+// Format производит форматирование строки, для поддержки fmt.Printf().
 func (e *Error) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'c':

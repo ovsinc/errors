@@ -1,3 +1,4 @@
+// Package golog реализует стандартный логгер golang.
 package golog
 
 import (
@@ -6,7 +7,8 @@ import (
 	log "gitlab.com/ovsinc/errors/log/common"
 )
 
-// New конструтор интерфейс для использования системного логгера log
+// New конструтор интерфейс для использования логгера log из состава golang.
+// Оборачивает стандартный логгер l.
 func New(l *gosystemlog.Logger) log.Logger {
 	return &systemlog{
 		logger: l,

@@ -10,7 +10,8 @@ var ErrNotValidSeverity = origerrors.New("not a valid severity")
 
 //
 
-// ParseSeverityString парсить severity по строке
+// ParseSeverityString парсит severity по строке.
+// В случае ошибки парсинга, функция вернет SeverityUnknown и ошибку.
 func ParseSeverityString(v string) (s Severity, err error) {
 	switch strings.ToLower(v) {
 	case "w", "warn", "warning":
@@ -26,7 +27,8 @@ func ParseSeverityString(v string) (s Severity, err error) {
 	return s, nil
 }
 
-// ParseSeverityUint парсить severity по uint32
+// ParseSeverityUint парсит severity по uint32.
+// В случае ошибки парсинга, функция вернет SeverityUnknown и ошибку.
 func ParseSeverityUint(v uint32) (s Severity, err error) {
 	s = Severity(v)
 	if !s.Valid() {
@@ -41,15 +43,15 @@ func ParseSeverityUint(v uint32) (s Severity, err error) {
 type Severity uint32
 
 const (
-	// SeverityUnknown не инициализированное значение, использовать не допускается
+	// SeverityUnknown не инициализированное значение, использовать не допускается.
 	SeverityUnknown Severity = iota
 
-	// SeverityWarn ...
+	// SeverityWarn - предупреждение. Не является ошибкой по факту.
 	SeverityWarn
-	// SeverityError ...
+	// SeverityError - ошибка.
 	SeverityError
 
-	// SeverityEnds терминирующее значение, использовать не допускается
+	// SeverityEnds терминирующее значение, использовать не допускается.
 	SeverityEnds
 )
 
@@ -63,7 +65,8 @@ func (s Severity) Valid() bool {
 	return s > SeverityUnknown && s < SeverityEnds
 }
 
-// String получить строчное предстваление типа Severity
+// String получить строчное представление типа Severity.
+// Для не корректных значение будет возврашено UNKNOWN.
 func (s Severity) String() (str string) {
 	switch s {
 	case SeverityError:

@@ -1,3 +1,6 @@
+// +build !window
+
+// Package journald реализует логгер journald.
 package journald
 
 import (
@@ -6,6 +9,7 @@ import (
 	log "gitlab.com/ovsinc/errors/log/common"
 )
 
+// New конструктор journald логгера.
 func New() log.Logger {
 	return &journaldlogger{}
 }

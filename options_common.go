@@ -4,10 +4,10 @@ import (
 	"gitlab.com/ovsinc/errors/log"
 )
 
-// Options опиции из параметра ошибки
+// Options опции из параметра ошибки.
 type Options func(e *Error)
 
-// SetFormatFn установить пользовательскую функцию-форматирования
+// SetFormatFn установит пользовательскую функцию-форматирования
 func SetFormatFn(fn FormatFn) Options {
 	return func(e *Error) {
 		if e == nil {
@@ -17,7 +17,7 @@ func SetFormatFn(fn FormatFn) Options {
 	}
 }
 
-// SetMsg установить сообщение
+// SetMsg установит сообщение об ошибке.
 func SetMsg(msg string) Options {
 	return func(e *Error) {
 		if e == nil {
@@ -27,12 +27,22 @@ func SetMsg(msg string) Options {
 	}
 }
 
-// SetSeverity ...
+// SetSeverity устновит Severity.
 func SetSeverity(severity log.Severity) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
 		}
 		e.severity = severity
+	}
+}
+
+// SetID установит ID ошибки.
+func SetID(id string) Options {
+	return func(e *Error) {
+		if e == nil {
+			return
+		}
+		e.id = id
 	}
 }

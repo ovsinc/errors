@@ -1,3 +1,4 @@
+// Package logrus реализует логгер logrus.
 package logrus
 
 import (
@@ -7,6 +8,7 @@ import (
 )
 
 // New конструтор интерфейс для использования логгера logrus
+// Оборачивает logrus логгер l.
 func New(l *origlogrus.Logger) log.Logger {
 	return &logruslogger{
 		logger: l,

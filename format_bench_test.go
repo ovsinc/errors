@@ -1,6 +1,7 @@
 package errors
 
 import (
+	stderrors "errors"
 	"fmt"
 	"io/ioutil"
 	"testing"
@@ -9,6 +10,24 @@ import (
 
 	"gitlab.com/ovsinc/errors/log"
 )
+
+func BenchmarkStandartError(b *testing.B) {
+	e := stderrors.New("[not found][ERROR][write]<hello:world,my:name> -- hello")
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = e.Error()
+	}
+}
+
+func BenchmarkFmt(b *testing.B) {
+	e := fmt.Errorf("[not found][ERROR][write]<hello:world,my:name> -- hello")
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = e.Error()
+	}
+}
 
 func BenchmarkStringFn(b *testing.B) {
 	e := New(

@@ -6,75 +6,68 @@ import (
 	i18n "github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
-type TranslateMessage struct {
-	ID           string
-	Localizer    *i18n.Localizer
+// TranslateContext контекст перевода. Не является обязательным для корректного перевода.
+type TranslateContext struct {
+	// TemplateData - map для замены в шаблоне
 	TemplateData map[string]interface{}
-	PluralCount  interface{}
+	// PluralCount признак множественности.
+	// Может иметь значение nil или число.
+	PluralCount interface{}
+	// DefaultMessage сообщение, которое будет использовано при ошибке перевода.
+	DefaultMessage *i18n.Message
 }
 
-type translateMap map[string]*TranslateMessage
-
-// SetLang установить используемый язык
-func SetLang(lang string) Options {
+// SetTranslateContext установит контекст переревода
+func SetTranslateContext(tctx *TranslateContext) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
 		}
-		e.lang = lang
+		e.translateContext = tctx
 	}
 }
 
-// AddTranslatedMessage установить сообщение переревода и локализатор
-func AddTranslatedMessage(lang string, message *TranslateMessage) Options {
+// SetLocalizer установит локализатор.
+func SetLocalizer(localizer *i18n.Localizer) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
 		}
-
-		if e.translateMap == nil {
-			e.translateMap = make(translateMap)
-		}
-		e.translateMap[lang] = message
+		e.localizer = localizer
 	}
 }
 
 //
 
-func (e *Error) Lang() string {
-	return e.lang
+// TranslateContext вернет *TranslateContext.
+func (e *Error) TranslateContext() *TranslateContext {
+	return e.translateContext
 }
 
-func (e *Error) TranslatedMessage(lang ...string) *TranslateMessage {
-	if len(lang) == 0 {
-		return e.translateMap[e.lang]
-	}
-	return e.translateMap[lang[0]]
+// Localizer вернет локализатор *i18n.Localizer.
+func (e *Error) Localizer() *i18n.Localizer {
+	return e.localizer
 }
 
 //
 
-var (
-	ErrNoLocalizer        = origerrors.New("no localizer config for this lang")
-	ErrNoTranslateContext = origerrors.New("no translate context for this lang")
-)
+var errNoLocalizer = origerrors.New("no localizer config for this lang")
 
 func (e *Error) trans(s string) (string, error) {
-	msgCtx := e.translateMap[e.lang]
-	if msgCtx == nil {
-		return s, ErrNoTranslateContext
+	if e.localizer == nil {
+		return s, errNoLocalizer
 	}
 
-	localizer := msgCtx.Localizer
-	if localizer == nil {
-		return s, ErrNoLocalizer
+	i18nConf := i18n.LocalizeConfig{
+		MessageID: e.id,
+	}
+	if e.translateContext != nil {
+		i18nConf.DefaultMessage = e.translateContext.DefaultMessage
+		i18nConf.PluralCount = e.translateContext.PluralCount
+		i18nConf.TemplateData = e.translateContext.TemplateData
 	}
 
-	msg, _, err := localizer.LocalizeWithTag(&i18n.LocalizeConfig{
-		MessageID:    msgCtx.ID,
-		TemplateData: msgCtx.TemplateData,
-		PluralCount:  msgCtx.PluralCount,
-	})
+	msg, _, err := e.localizer.LocalizeWithTag(&i18nConf)
 	if err != nil {
 		return s, err
 	}
@@ -82,25 +75,9 @@ func (e *Error) trans(s string) (string, error) {
 	return msg, nil
 }
 
-func (e *Error) TranslateMsg() string {
-	return e.Translate(e.msg)
-}
-
-func (e *Error) Translate(s string) string {
-	s, _ = e.trans(s)
+// translateMsg выполнит перевод сообщения об ошибке.
+// Метод в случае неудачи перевода вернет оригинальное сообщение.
+func (e *Error) translateMsg() string {
+	s, _ := e.trans(e.msg)
 	return s
-}
-
-// helper
-
-func Translate(err error, lang string) string {
-	if err == nil {
-		return ""
-	}
-
-	if e, ok := err.(*Error); ok { // nolint:errorlint
-		err = e.WithOptions(SetLang(lang))
-	}
-
-	return err.Error()
 }

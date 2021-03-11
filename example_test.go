@@ -47,7 +47,7 @@ func ExampleErrorOrNil() {
 func ExampleAppendWithLog() {
 	logger := log.New(os.Stdout, "ovsinc/errors ", 0)
 	customlog.DefaultLogger = golog.New(logger)
-	errors.DefaultMultierrFormatFunc = errors.JsonMultierrFuncFormat
+	errors.DefaultMultierrFormatFunc = errors.JSONMultierrFuncFormat
 
 	_ = errors.AppendWithLog(
 		nil,
@@ -171,17 +171,16 @@ func localizePrepare() *i18n.Localizer {
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
 	bundle.MustLoadMessageFile("./testdata/active.ru.toml")
 
-	return i18n.NewLocalizer(bundle, "ru")
+	return i18n.NewLocalizer(bundle, "es", "ru", "en")
 }
 
-func localMsg() errors.TranslateMessage {
+func localTransContext() errors.TranslateContext {
 	var (
 		unreadEmailCount = 5
 		name             = "John Snow"
 	)
 
-	return errors.TranslateMessage{
-		ID: "ErrEmailsUnreadMsg",
+	return errors.TranslateContext{
 		TemplateData: map[string]interface{}{
 			"Name":        name,
 			"PluralCount": unreadEmailCount,
@@ -190,54 +189,24 @@ func localMsg() errors.TranslateMessage {
 	}
 }
 
-func ExampleError_TranslateMsg() {
-	errEmailsUnreadMsg := localMsg()
+func ExampleError_translateMsg() {
+	errEmailsUnreadMsg := localTransContext()
 	localizer := localizePrepare()
 
 	e1 := errors.New(
 		"fallback message",
+		errors.SetID("ErrEmailsUnreadMsg"),
 		errors.SetErrorType(errors.NewErrorType("not found")),
-		errors.AddTranslatedMessage("ru", &errors.TranslateMessage{
-			TemplateData: errEmailsUnreadMsg.TemplateData,
-			PluralCount:  errEmailsUnreadMsg.PluralCount,
-			Localizer:    localizer,
-			ID:           errEmailsUnreadMsg.ID,
-		}),
-		errors.SetLang("ru"),
+		errors.SetTranslateContext(&errEmailsUnreadMsg),
+		errors.SetLocalizer(localizer),
 	)
 
 	fmt.Printf("%v\n", e1)
-	fmt.Printf("%v\n", e1.WithOptions(errors.SetLang("en")))
+	fmt.Print(e1.Error())
 
 	//Output:
 	//[not found][ERROR] -- У John Snow имеется 5 непрочитанных сообщений.
-	//[not found][ERROR] -- fallback message
-}
-
-func ExampleTranslate() {
-	var e1 error
-
-	errEmailsUnreadMsg := localMsg()
-	localizer := localizePrepare()
-
-	e1 = errors.New(
-		"fallback msg",
-		errors.SetErrorType(errors.NewErrorType("not found")),
-		errors.AddTranslatedMessage("ru", &errors.TranslateMessage{
-			TemplateData: errEmailsUnreadMsg.TemplateData,
-			PluralCount:  errEmailsUnreadMsg.PluralCount,
-			Localizer:    localizer,
-			ID:           errEmailsUnreadMsg.ID,
-		}),
-		errors.SetLang("ru"),
-	)
-
-	fmt.Println(errors.Translate(e1, "ru"))
-	fmt.Printf("%v\n", errors.Translate(fmt.Errorf("Hello there"), "ru"))
-
-	//Output:
 	//[not found][ERROR] -- У John Snow имеется 5 непрочитанных сообщений.
-	//Hello there
 }
 
 func ExampleNew() {
