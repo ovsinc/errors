@@ -156,7 +156,7 @@ make bench
 | `func Append(err error, errs ...error) *multierror.Error` | Обертка над  `github.com/hashicorp/go-multierror.Append`. Добавить в цепочку ошибок еще ошибки. Допускается использование `nil` в обоих аргументах. |
 | `func Wrap(olderr error, err error) *multierror.Error` | Обертка над  `github.com/hashicorp/go-multierror.Wrap`. Обернуть ошибку `olderr` ошибкой `err`, получив цепочку. Допускается использование `nil` в обоих аргументах. |
 | `func Unwrap(err error) error` | Развернуть цепочку ошибок, получив первую. |
-| `func UnwrapWithID(err error, id string) error` | Получить ошибку по ID. |
+| `func UnwrapByID(err error, id string) *Error` | Получить ошибку (*Error) по ID. |
 | `func GetID(err error) (id string)` | Получить ID ошибки. Для НЕ `*Error` всегда будет "". |
 
 ### Логгирование ошибки

@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUnwrapWithID(t *testing.T) {
+func TestUnwrapByID(t *testing.T) {
 	id1 := "myid"
 	e1 := New(
 		"e1",
@@ -57,15 +57,21 @@ func TestUnwrapWithID(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			err := UnwrapWithID(tt.args.err, tt.args.id)
+			err := UnwrapByID(tt.args.err, tt.args.id)
+			if tt.want == nil {
+				if err != nil {
+					t.Errorf("UnwrapByID() err must be nil")
+				}
+				return
+			}
 			if !Is(err, tt.want) {
-				t.Errorf("UnwrapWithID() error = %v, want %v", err, tt.want)
+				t.Errorf("UnwrapByID() error = %#v, want %#v", err, tt.want)
 			}
 		})
 	}
 }
 
-func BenchmarkUnwrapWithID(b *testing.B) {
+func BenchmarkUnwrapByID(b *testing.B) {
 	id1 := "myid"
 	e1 := New(
 		"e1",
@@ -74,11 +80,11 @@ func BenchmarkUnwrapWithID(b *testing.B) {
 
 	err := Append(New("first"), e1, New("hello1"), nil, New("hello2", SetID("two")))
 
-	findErr := UnwrapWithID(err, id1)
+	findErr := UnwrapByID(err, id1)
 	require.NotNil(b, findErr)
 	require.Equal(b, findErr.Error(), e1.Error())
 
 	for i := 0; i < b.N; i++ {
-		_ = UnwrapWithID(err, id1)
+		_ = UnwrapByID(err, id1)
 	}
 }
