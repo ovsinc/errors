@@ -16,17 +16,16 @@ func main() {
 
 	err := errors.New(
 		"fallback message",
+		errors.SetID("ErrEmailsUnreadMsg"),
 		errors.SetErrorType(errors.NewErrorType("not found")),
-		errors.AddTranslatedMessage("ru", &errors.TranslateMessage{
+		errors.SetLocalizer(i18n.NewLocalizer(bundle, "ru")),
+		errors.SetTranslateContext(&errors.TranslateContext{
 			TemplateData: map[string]interface{}{
 				"Name":        "John Snow",
 				"PluralCount": 5,
 			},
 			PluralCount: 5,
-			Localizer:   i18n.NewLocalizer(bundle, "ru"),
-			ID:          "ErrEmailsUnreadMsg",
 		}),
-		errors.SetLang("ru"),
 	)
 
 	fmt.Printf("%v\n", err)

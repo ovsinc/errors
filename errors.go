@@ -2,22 +2,24 @@ package errors
 
 import (
 	"github.com/davecgh/go-spew/spew"
+	i18n "github.com/nicksnyder/go-i18n/v2/i18n"
 	"gitlab.com/ovsinc/errors/log"
 )
 
 var _ error = (*Error)(nil)
 
-// Error структура кастомной ошибки
-// Это НЕ потоко-безопасный объект
+// Error структура кастомной ошибки.
+// Внимание. Это НЕ потоко-безопасный объект.
 type Error struct {
-	severity     log.Severity
-	operations   []Operation
-	formatFn     FormatFn
-	errorType    ErrorType
-	msg          string
-	contextInfo  CtxMap
-	translateMap translateMap
-	lang         string
+	severity         log.Severity
+	operations       []Operation
+	formatFn         FormatFn
+	contextInfo      CtxMap
+	translateContext *TranslateContext
+	localizer        *i18n.Localizer
+	errorType        ErrorType
+	msg              string
+	id               string
 }
 
 // New конструктор на необязательных параметрах
@@ -30,7 +32,6 @@ func New(msg string, ops ...Options) *Error {
 		severity:   log.SeverityError,
 		errorType:  UnknownErrorType,
 		msg:        msg,
-		lang:       "en",
 	}
 	for _, op := range ops {
 		op(e)
@@ -40,10 +41,9 @@ func New(msg string, ops ...Options) *Error {
 
 // setters
 
-// WithOptions производит параметризацию *Error
-// * ops ...Options - параметризация через функции-парметры
-//
-// ** *Error - возвращает модифицированный экземпляр *Error
+// WithOptions производит параметризацию *Error с помощью функции-парметры Options.
+// Допускается указывать произвольно количество ops.
+// Возвращается модифицированный экземпляр *Error.
 func (e *Error) WithOptions(ops ...Options) *Error {
 	for _, op := range ops {
 		op(e)
@@ -53,18 +53,25 @@ func (e *Error) WithOptions(ops ...Options) *Error {
 
 // getters
 
-// Severity получить критичность ошибки
+// ID возвращает ID ошибки.
+func (e *Error) ID() string {
+	return e.id
+}
+
+// Severity возвращает критичность ошибки
 func (e *Error) Severity() log.Severity {
 	return e.severity
 }
 
-// Msg получить исходное сообщение об ошибке
+// Msg возвращает исходное сообщение об ошибке
 func (e *Error) Msg() string {
 	return e.msg
 }
 
-// Error получить описание ошибки
-// метод для реализации интерфейса error
+// Error возвращает строковое представление ошибки.
+// Метод для реализации интерфейса error.
+// Метод произволит перевод сообщения об ошибки, если localizer != nil.
+// Для идентификации сообщения перевода используется ID ошибки.
 func (e *Error) Error() string {
 	if e == nil {
 		return ""
@@ -79,7 +86,7 @@ func (e *Error) Error() string {
 
 // дополнительные методы
 
-// Sdump получить текстовый дамп ошибки
+// Sdump вернет текстовый дамп ошибки *Error.
 func (e *Error) Sdump() string {
 	if e == nil {
 		return ""
@@ -87,7 +94,7 @@ func (e *Error) Sdump() string {
 	return spew.Sdump(e)
 }
 
-// ErrorOrNil получить ошибку или nil
+// ErrorOrNil вернет ошибку или nil.
 // ошибкой считается *Error != nil и Severity == SeverityError
 // т.е. SeverityWarn НЕ ошибка
 func (e *Error) ErrorOrNil() error {

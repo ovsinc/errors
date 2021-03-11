@@ -1,22 +1,24 @@
 package errors
 
+// NewOperation констуруктор Operation на основе значения s.
 func NewOperation(s string) Operation {
 	return Operation(s)
 }
 
-// Operation тип операции
+// Operation тип операции.
 type Operation string
 
+// String вернет строковое представление операции.
 func (o Operation) String() string {
 	return string(o)
 }
 
 //
 
-// AppendOperations добавить операции
-// можно указать 0 или несколько
-// если в *Error уже были записаны операции,
-// то указанные в аргументе будет добавлены к уже имеющимся
+// AppendOperations добавить операции.
+// Можно указать произвольное количество.
+// Если в *Error уже были записаны операции,
+// то указанные в аргументе будет добавлены к уже имеющимся.
 func AppendOperations(ops ...Operation) Options {
 	return func(e *Error) {
 		if e == nil || ops == nil {
@@ -31,9 +33,9 @@ func AppendOperations(ops ...Operation) Options {
 }
 
 // SetOperations установить операции
-// можно указать 0 или несколько
-// если в *Error уже были записаны операции,
-// то они будут заменены на указанные в аргументе
+// Можно указать произвольное количество.
+// Если в *Error уже были записаны операции,
+// то они будут заменены на указанные в аргументе ops.
 func SetOperations(ops ...Operation) Options {
 	return func(e *Error) {
 		if e == nil {
@@ -45,7 +47,7 @@ func SetOperations(ops ...Operation) Options {
 
 //
 
-// Operations получить список операций
+// Operations вернет список операций.
 func (e *Error) Operations() []Operation {
 	return e.operations
 }

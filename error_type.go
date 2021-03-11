@@ -1,5 +1,6 @@
 package errors
 
+// NewErrorType констурктор ErrorType
 func NewErrorType(s string) ErrorType {
 	return ErrorType(s)
 }
@@ -16,7 +17,7 @@ var UnknownErrorType = NewErrorType("UNKNOWN_TYPE")
 
 //
 
-// SetErrorType установить тип ошибки
+// SetErrorType установит тип ошибки
 func SetErrorType(etype ErrorType) Options {
 	return func(e *Error) {
 		if e == nil {
@@ -28,7 +29,7 @@ func SetErrorType(etype ErrorType) Options {
 
 //
 
-// ErrorType получить тип ошибки
+// ErrorType вернет тип ошибки
 func (e *Error) ErrorType() ErrorType {
 	return e.errorType
 }

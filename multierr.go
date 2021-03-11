@@ -8,9 +8,11 @@ import (
 	"github.com/valyala/bytebufferpool"
 )
 
+// DefaultMultierrFormatFunc функция форматирования для multierr ошибок.
 var DefaultMultierrFormatFunc = StringMultierrFormatFunc
 
-func JsonMultierrFuncFormat(es []error) string {
+// JSONMultierrFuncFormat функция форматирования вывода сообщения для multierr в виде JSON.
+func JSONMultierrFuncFormat(es []error) string {
 	if len(es) == 0 {
 		return "null"
 	}
@@ -50,6 +52,8 @@ func JsonMultierrFuncFormat(es []error) string {
 	return buf.String()
 }
 
+// StringMultierrFormatFunc функция форматирования вывода сообщения для multierr в виде строки.
+// Используется по-умолчанию.
 func StringMultierrFormatFunc(es []error) string {
 	if len(es) == 0 {
 		return ""
@@ -75,34 +79,20 @@ func StringMultierrFormatFunc(es []error) string {
 	return buf.String()
 }
 
-//
+// хелперы
 
-// Append proxy func for multierror.Append with Custom format
+// Append создаст или дополнит цепочку ошибок err с помощью errs.
+// err и errs[N] могут быть nil.
 func Append(err error, errs ...error) *multierror.Error {
 	me := multierror.Append(err, errs...)
 	me.ErrorFormat = DefaultMultierrFormatFunc
 	return me
 }
 
-// Wrap proxy func for multierror.Append with Custom format
+// Wrap обернет ошибку olderr в err и вернет цепочку.
+// err и olderr могут быть nil.
 func Wrap(olderr error, err error) *multierror.Error {
 	me := Append(olderr, err)
 	me.ErrorFormat = DefaultMultierrFormatFunc
 	return me
-}
-
-// Unwrap позволяет получить оригинальную ошибку
-// для multierror будет разернута цепочка ошибок
-func Unwrap(err error) error {
-	type unwraper interface {
-		Unwrap() error
-	}
-	for err != nil {
-		unwrap, ok := err.(unwraper)
-		if !ok {
-			break
-		}
-		err = unwrap.Unwrap()
-	}
-	return err
 }

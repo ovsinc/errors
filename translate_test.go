@@ -22,21 +22,20 @@ func BenchmarkTranslateMsg(b *testing.B) {
 
 	localizer := i18n.NewLocalizer(bundle, "ru")
 
-	ErrEmailsUnreadMsg := TranslateMessage{
-		ID: "ErrEmailsUnreadMsg",
+	ErrEmailsUnreadMsg := TranslateContext{
 		TemplateData: map[string]interface{}{
 			"Name":        name,
 			"PluralCount": unreadEmailCount,
 		},
 		PluralCount: unreadEmailCount,
-		Localizer:   localizer,
 	}
 
 	e1 := New(
 		"fallback message",
+		SetID("ErrEmailsUnreadMsg"),
+		SetLocalizer(localizer),
 		SetErrorType(NewErrorType("not found")),
-		AddTranslatedMessage("ru", &ErrEmailsUnreadMsg),
-		SetLang("ru"),
+		SetTranslateContext(&ErrEmailsUnreadMsg),
 	)
 
 	require.Equal(b, e1.Error(), "[not found][ERROR] -- У John Snow имеется 5 непрочитанных сообщений.")

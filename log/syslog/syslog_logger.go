@@ -1,3 +1,6 @@
+// +build !windows,!plan9
+
+// Package syslog реализует логгер syslog.
 package syslog
 
 import (
@@ -6,7 +9,8 @@ import (
 	log "gitlab.com/ovsinc/errors/log/common"
 )
 
-// New конструтор интерфейс для использования системного логгера log
+// New конструтор интерфейс для использования логгера syslog.
+// Оборачивает writer интерфейс.
 func New(w *gosystemsyslog.Writer) log.Logger {
 	return &sysloglogger{
 		writer: w,
