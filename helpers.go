@@ -68,7 +68,7 @@ func ErrorOrNil(err error) error {
 // Cast преобразует тип error в *Error
 // Если error не соответствует *Error, то будет создан *Error с сообщением err.Error().
 // Для err == nil, вернется nil.
-func Cast(err error) *Error {
+func Cast(err error) Errorer {
 	if err == nil {
 		return nil
 	}
@@ -102,9 +102,9 @@ func Unwrap(err error) error {
 // UnwrapByID вернет ошибку (*Error) с указанным ID.
 // Для multierror, функция вернет ошибку с указанным ID.
 // Если ошибка с указанным ID не найдена, вернется nil.
-func UnwrapByID(err error, id string) *Error {
-	getiderrFn := func(err error) (*Error, bool) {
-		iderr, ok := err.(*Error) // nolint:errorlint
+func UnwrapByID(err error, id string) Errorer {
+	getiderrFn := func(err error) (Errorer, bool) {
+		iderr, ok := err.(Errorer) // nolint:errorlint
 		if !ok {
 			return nil, false
 		}
