@@ -9,6 +9,9 @@ import (
 // Is сообщает, соответствует ли ошибка err target-ошибке.
 // Для multierr будет производится поиск в цепочке.
 func Is(err, target error) bool {
+	if err == nil {
+		return err == target
+	}
 	return origerrors.Is(err, target)
 }
 
@@ -57,7 +60,6 @@ func ErrorOrNil(err error) error {
 
 	case *Error:
 		return t.ErrorOrNil()
-
 	}
 
 	return err
@@ -66,7 +68,7 @@ func ErrorOrNil(err error) error {
 // Cast преобразует тип error в *Error
 // Если error не соответствует *Error, то будет создан *Error с сообщением err.Error().
 // Для err == nil, вернется nil.
-func Cast(err error) *Error {
+func Cast(err error) Errorer {
 	if err == nil {
 		return nil
 	}
@@ -97,32 +99,28 @@ func Unwrap(err error) error {
 	return nil
 }
 
-// UnwrapWithID вернет ошибку с указанным ID.
+// UnwrapByID вернет ошибку (*Error) с указанным ID.
 // Для multierror, функция вернет ошибку с указанным ID.
 // Если ошибка с указанным ID не найдена, вернется nil.
-func UnwrapWithID(err error, id string) error {
-	type idtyper interface {
-		ID() string
-	}
-
-	getiderrFn := func(err error) (error, bool) {
-		iderr, ok := err.(idtyper)
+func UnwrapByID(err error, id string) Errorer {
+	getiderrFn := func(err error) (Errorer, bool) {
+		iderr, ok := err.(Errorer) // nolint:errorlint
 		if !ok {
 			return nil, false
 		}
-		return err, iderr.ID() == id
+		return iderr, iderr.ID() == id
 	}
 
 	if t, ok := err.(*multierror.Error); ok {
 		for _, e := range t.WrappedErrors() {
-			if _, ok := getiderrFn(e); ok {
-				return e
+			if iderr, ok := getiderrFn(e); ok {
+				return iderr
 			}
 		}
 	}
 
-	if e, ok := getiderrFn(err); ok {
-		return e
+	if iderr, ok := getiderrFn(err); ok {
+		return iderr
 	}
 
 	return nil
