@@ -6,6 +6,10 @@ import (
 	i18n "github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// DefaultLocalizer локализатор по-умолчанию.
+// Для каждой ошибки можно переопределить локализатор.
+var DefaultLocalizer *i18n.Localizer
+
 // TranslateContext контекст перевода. Не является обязательным для корректного перевода.
 type TranslateContext struct {
 	// TemplateData - map для замены в шаблоне
@@ -28,6 +32,8 @@ func SetTranslateContext(tctx *TranslateContext) Options {
 }
 
 // SetLocalizer установит локализатор.
+// Этот локализатор будет использован для данной ошибки даже,
+// если был установлен DefaultLocalizer.
 func SetLocalizer(localizer *i18n.Localizer) Options {
 	return func(e *Error) {
 		if e == nil {
@@ -54,7 +60,16 @@ func (e *Error) Localizer() *i18n.Localizer {
 var errNoLocalizer = origerrors.New("no localizer config for this lang")
 
 func (e *Error) trans(s string) (string, error) {
-	if e.localizer == nil {
+	var localizer *i18n.Localizer
+
+	switch {
+	case e.localizer != nil:
+		localizer = e.localizer
+	case DefaultLocalizer != nil:
+		localizer = DefaultLocalizer
+	}
+
+	if localizer == nil {
 		return s, errNoLocalizer
 	}
 

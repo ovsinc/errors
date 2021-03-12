@@ -1,12 +1,37 @@
 package errors
 
 import (
+	"fmt"
+
 	"github.com/davecgh/go-spew/spew"
 	i18n "github.com/nicksnyder/go-i18n/v2/i18n"
 	"gitlab.com/ovsinc/errors/log"
+	logcommon "gitlab.com/ovsinc/errors/log/common"
 )
 
 var _ error = (*Error)(nil)
+var _ Errorer = (*Error)(nil)
+
+// Errorer итерфейс кастомной ошибки.
+type Errorer interface {
+	WithOptions(ops ...Options) Errorer
+	ID() string
+	Severity() log.Severity
+	Msg() string
+	Error() string
+	Sdump() string
+	ErrorOrNil() error
+
+	ErrorType() ErrorType
+
+	Operations() []Operation
+	Format(s fmt.State, verb rune)
+
+	TranslateContext() *TranslateContext
+	Localizer() *i18n.Localizer
+
+	Log(l ...logcommon.Logger)
+}
 
 // Error структура кастомной ошибки.
 // Внимание. Это НЕ потоко-безопасный объект.
@@ -26,7 +51,7 @@ type Error struct {
 // * ops ...Options -- параметризация через функции-парметры
 //
 // ** *Error
-func New(msg string, ops ...Options) *Error {
+func New(msg string, ops ...Options) Errorer {
 	e := &Error{
 		operations: []Operation{},
 		severity:   log.SeverityError,
@@ -44,7 +69,7 @@ func New(msg string, ops ...Options) *Error {
 // WithOptions производит параметризацию *Error с помощью функции-парметры Options.
 // Допускается указывать произвольно количество ops.
 // Возвращается модифицированный экземпляр *Error.
-func (e *Error) WithOptions(ops ...Options) *Error {
+func (e *Error) WithOptions(ops ...Options) Errorer {
 	for _, op := range ops {
 		op(e)
 	}
