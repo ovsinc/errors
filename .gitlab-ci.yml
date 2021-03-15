@@ -29,7 +29,7 @@ unit_test:
 
 code_coverage:
   stage: test
-  coverage: /coverage: (\d+[,.]\d+%) of statements/
+  coverage: '/coverage: (\d+[,.]\d+%) of statements/'
   script:
     - make coverage
   only:
