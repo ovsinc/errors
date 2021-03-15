@@ -1,6 +1,7 @@
 package errors
 
 import (
+	origerrors "errors"
 	"fmt"
 	"strconv"
 
@@ -29,14 +30,15 @@ func JSONMultierrFuncFormat(es []error) string {
 	_, _ = buf.WriteString("\"messages\":")
 	_, _ = buf.WriteString("[")
 	writeErrFn := func(e error) {
-		switch t := e.(type) { // nolint:errorlint
-		case *Error:
-			JSONFormat(buf, t)
-		default:
-			_, _ = buf.WriteString("\"")
-			_, _ = buf.WriteString(fmt.Sprintf("%v", t))
-			_, _ = buf.WriteString("\"")
+		var myerr *Error
+		if origerrors.As(e, &myerr) {
+			JSONFormat(buf, myerr)
+			return
 		}
+		_, _ = buf.WriteString("\"")
+		_, _ = fmt.Fprintf(buf, "%v", e)
+		_, _ = buf.WriteString("\"")
+
 	}
 	switch len(es) {
 	case 0:
@@ -67,13 +69,13 @@ func StringMultierrFormatFunc(es []error) string {
 	defer bytebufferpool.Put(buf)
 
 	writeErrFn := func(err error) {
-		switch t := err.(type) { // nolint:errorlint
-		case *Error:
+		var myerr *Error
+		if origerrors.As(err, &myerr) {
 			_, _ = buf.WriteString("* ")
-			StringFormat(buf, t)
-		default:
-			_, _ = buf.WriteString(fmt.Sprintf("* %v", t))
+			StringFormat(buf, myerr)
+			return
 		}
+		_, _ = fmt.Fprintf(buf, "* %v", err)
 	}
 
 	for _, err := range es {
