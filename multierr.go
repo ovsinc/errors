@@ -9,7 +9,7 @@ import (
 )
 
 // DefaultMultierrFormatFunc функция форматирования для multierr ошибок.
-var DefaultMultierrFormatFunc = StringMultierrFormatFunc
+var DefaultMultierrFormatFunc = StringMultierrFormatFunc //nolint:gochecknoglobals
 
 // JSONMultierrFuncFormat функция форматирования вывода сообщения для multierr в виде JSON.
 func JSONMultierrFuncFormat(es []error) string {
@@ -22,16 +22,20 @@ func JSONMultierrFuncFormat(es []error) string {
 
 	_, _ = buf.WriteString("{")
 
-	_, _ = buf.WriteString("\"count\":" + strconv.Itoa(len(es)) + ",")
+	_, _ = buf.WriteString("\"count\":")
+	_, _ = buf.WriteString(strconv.Itoa(len(es)))
+	_, _ = buf.WriteString(",")
 
 	_, _ = buf.WriteString("\"messages\":")
 	_, _ = buf.WriteString("[")
 	writeErrFn := func(e error) {
 		switch t := e.(type) { // nolint:errorlint
 		case *Error:
-			_, _ = buf.WriteString(JSONFormat(t))
+			JSONFormat(buf, t)
 		default:
-			_, _ = buf.WriteString("\"" + fmt.Sprintf("%v", t) + "\"")
+			_, _ = buf.WriteString("\"")
+			_, _ = buf.WriteString(fmt.Sprintf("%v", t))
+			_, _ = buf.WriteString("\"")
 		}
 	}
 	switch len(es) {
@@ -65,7 +69,8 @@ func StringMultierrFormatFunc(es []error) string {
 	writeErrFn := func(err error) {
 		switch t := err.(type) { // nolint:errorlint
 		case *Error:
-			_, _ = buf.WriteString("* " + StringFormat(t))
+			_, _ = buf.WriteString("* ")
+			StringFormat(buf, t)
 		default:
 			_, _ = buf.WriteString(fmt.Sprintf("* %v", t))
 		}

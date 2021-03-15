@@ -5,12 +5,22 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	i18n "github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/valyala/bytebufferpool"
 	"gitlab.com/ovsinc/errors/log"
 	logcommon "gitlab.com/ovsinc/errors/log/common"
 )
 
-var _ error = (*Error)(nil)
-var _ Errorer = (*Error)(nil)
+var (
+	_ interface{ Error() string } = (*Error)(nil)
+	_ Errorer                     = (*Error)(nil)
+)
+
+// // _bufferPool is a pool of bytes.Buffers.
+// var _bufferPool = sync.Pool{
+// 	New: func() interface{} {
+// 		return &bytes.Buffer{}
+// 	},
+// }
 
 // Errorer итерфейс кастомной ошибки.
 type Errorer interface {
@@ -22,7 +32,7 @@ type Errorer interface {
 	Sdump() string
 	ErrorOrNil() error
 
-	ErrorType() ErrorType
+	ErrorType() string
 
 	Operations() []Operation
 	Format(s fmt.State, verb rune)
@@ -42,7 +52,7 @@ type Error struct {
 	contextInfo      CtxMap
 	translateContext *TranslateContext
 	localizer        *i18n.Localizer
-	errorType        ErrorType
+	errorType        string
 	msg              string
 	id               string
 }
@@ -106,7 +116,17 @@ func (e *Error) Error() string {
 	if e.formatFn == nil {
 		fn = defaultFormatFn
 	}
-	return fn(e)
+
+	// buf := _bufferPool.Get().(*bytes.Buffer)
+	// buf.Reset()
+	// defer _bufferPool.Put(buf)
+
+	buf := bytebufferpool.Get()
+	defer bytebufferpool.Put(buf)
+
+	fn(buf, e)
+
+	return buf.String()
 }
 
 // дополнительные методы

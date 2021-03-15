@@ -83,7 +83,7 @@ make bench
 ## Фичи
 
 - Стандартный интерфейс ошибки (`error`);
-- Дополнительные поля описания ошибки: тип (`ErrorType`), контекст (`map[string]interface{}`), severity (Enum: `log.SeveritError`, `log.SeverityWarn`), операции (`operations([]Operation`);
+- Дополнительные поля описания ошибки: тип (`string`), контекст (`map[string]interface{}`), severity (Enum: `log.SeveritError`, `log.SeverityWarn`), операции (`operations([]Operation`);
 - Дополнительный метод: [логгирование](#Логгирование-ошибки);
 - Сообщение ошибки может быть [локализовано](#Перевод-ошибки);
 - Хелперы для поддержки наиболее распространенных логгерров: [journald](https://github.com/coreos/go-systemd/), [log](https://golang.org/pkg/log/), [log15](https://github.com/inconshreveable/log15/), [logrus](https://github.com/sirupsen/logrus), [syslog](https://golang.org/pkg/log/syslog/), [zap](https://go.uber.org/zap);
@@ -123,7 +123,7 @@ make bench
 | `func (e *Error) Sdump() string` | Геттер получения текстового дампа `*Error`. Может использоваться для отладки. |
 | `func (e *Error) ErrorOrNil() error` | Геттер получения ошибки или `nil`. `*Error` с типом `log.SeverityWarn` не является ошибкой; метод `ErrorOrNil` с таким типом вернет `nil`. |
 | `func (e *Error) Operations() []Operation` | Геттер получения списка операций. |
-| `func (e *Error) ErrorType() ErrorType` | Геттер получения типа ошибки. |
+| `func (e *Error) ErrorType() string` | Геттер получения типа ошибки. |
 | `func (e *Error) Format(s fmt.State, verb rune)` | Функция форматирования для обработки строк с возможностью задания формата, например: `fmt.Printf`, `fmt.Sprintf`, `fmt.Fprintf`,.. |
 | `func (e *Error) ID() string` | Геттер получения ID. |
 | `func (e *Error) TranslateContext() *TranslateContext` | Геттер получения контекста перевода. |
@@ -141,7 +141,7 @@ make bench
 | `func SetSeverity(severity log.Severity) Options` | Установить уровень важности сообщения. Доступные значения: `log.SeverityWarn`, `log.SeverityError`. |
 | `func SetLocalizer(localizer *i18n.Localizer) Options ` | Установить локализатор для перевода. |
 | `func SetTranslateContext(tctx *TranslateContext) Options` | Установить `*TranslateContext` для указанного языка. Используется для настройки дополнительных параметров, требуемых для корректного перевода. Например, `TranslateContext.PluralCount` позволяет установить множественное значение используемых в переводе объектов. |
-| `func SetErrorType(etype ErrorType) Options` | Установить тип ошибки. Тип `ErrorType` является производным типа `string`, так что создание собственных типов ошибки легко выполнить с помощью конструктора `func NewErrorType(s string) ErrorType`. |
+| `func SetErrorType(etype string) Options` | Установить тип ошибки. Тип - `string`. |
 | `func SetOperations(ops ...Operation) Options` | Установить список выполненных операций. Тип `Operation` является производным типа `string`. Задать операцию можно с помощью конструктора `func NewOperation(s string) Operation`. |
 | `func AppendOperations(ops ...Operation) Options` | Добавить операции к уже имеющемуся списку. Если список операций не существует, он будет создан. |
 | `func SetContextInfo(ctxinf CtxMap) Options` | Задать контекст ошибки. |
@@ -156,7 +156,7 @@ make bench
 | ------ | -------- |
 | `func Is(err, target error) bool` | Обёртка над методом стандартной библиотеки `errors.Is`. |
 | `func As(err error, target interface{}) bool` | Обёртка над методом стандартной библиотеки `errors.As`. |
-| `func GetErrorType(err error) ErrorType` | Получить тип ошибки. Для НЕ `*Error` всегда будет `UnknownErrorType`. |
+| `func GetErrorType(err error) string` | Получить тип ошибки. Для НЕ `*Error` всегда будет "UnknownErrorType". |
 | `func ErrorOrNil(err error) error` | Возможна обработка цепочки или одиночной ошибки. Если хотя бы одна ошибка в цепочке является ошибкой, то она будет возвращена в качестве результата. Важно: `*Error` c Severity `Warn` не является ошибкой. |
 | `func Cast(err error) *Error` | Преобразование типа `error` в `*Error`. |
 | `func Append(err error, errs ...error) *multierror.Error` | Обертка над  `github.com/hashicorp/go-multierror.Append`. Добавить в цепочку ошибок еще ошибки. Допускается использование `nil` в обоих аргументах. |
@@ -294,7 +294,7 @@ func main() {
     err :=  errors.New(
         "fallback message",
         errors.SetID("ErrEmailsUnreadMsg"),
-        errors.SetErrorType(errors.NewErrorType("not found")),
+        errors.SetErrorType("not found"),
         errors.SetLocalizer(i18n.NewLocalizer(bundle, "ru")),
         errors.SetTranslateContext(&errors.TranslateContext{
             TemplateData: map[string]interface{}{

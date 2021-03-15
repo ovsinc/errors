@@ -11,7 +11,7 @@ import (
 var (
 	e1 = New(
 		"hello1",
-		SetErrorType(NewErrorType("not found")),
+		SetErrorType("not found"),
 		SetOperations(NewOperation("write")),
 		SetSeverity(log.SeverityError),
 		SetContextInfo(CtxMap{"hello": "world", "my": "name"}),
@@ -19,7 +19,7 @@ var (
 
 	e2 = New(
 		"hello2",
-		SetErrorType(NewErrorType("not found")),
+		SetErrorType("not found"),
 		SetOperations(NewOperation("read")),
 		SetSeverity(log.SeverityError),
 		SetContextInfo(CtxMap{"hello2": "world", "my2": "name"}),
@@ -27,7 +27,7 @@ var (
 
 	e3 = New(
 		"hello3",
-		SetErrorType(NewErrorType("not found")),
+		SetErrorType("not found"),
 		SetOperations(NewOperation("read")),
 		SetSeverity(log.SeverityError),
 		SetContextInfo(CtxMap{"hello3": "world", "my3": "name"}),

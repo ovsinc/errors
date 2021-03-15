@@ -1,6 +1,8 @@
 package errors
 
 import (
+	origerrors "errors"
+
 	"github.com/hashicorp/go-multierror"
 	"gitlab.com/ovsinc/errors/log"
 	logcommon "gitlab.com/ovsinc/errors/log/common"
@@ -57,12 +59,11 @@ func WrapWithLog(olderr error, err error) *multierror.Error {
 // Log выполнить логгирование ошибки err с ипользованием логгера l[0].
 // Если l не указан, то в качестве логгера будет использоваться логгер по-умолчанию.
 func Log(err error, l ...logcommon.Logger) {
+	var errseverity *Error
 	severity := log.SeverityError
-	type severitier interface {
-		Severity() log.Severity
-	}
-	if customerr, ok := err.(severitier); ok {
-		severity = customerr.Severity()
+
+	if origerrors.As(err, &errseverity) {
+		severity = errseverity.Severity()
 	}
 	customlog(getLogger(l...), err, severity)
 }

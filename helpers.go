@@ -10,7 +10,7 @@ import (
 // Для multierr будет производится поиск в цепочке.
 func Is(err, target error) bool {
 	if err == nil {
-		return err == target
+		return target == nil
 	}
 	return origerrors.Is(err, target)
 }
@@ -21,24 +21,24 @@ func As(err error, target interface{}) bool {
 }
 
 // GetErrorType возвращает тип ошибки. Для НЕ *Error всегда будет UnknownErrorType.
-func GetErrorType(err error) ErrorType {
-	type errtyper interface {
-		ErrorType() ErrorType
+func GetErrorType(err error) string {
+	var errtype *Error
+
+	if origerrors.As(err, &errtype) {
+		return errtype.ErrorType()
 	}
-	if etype, ok := err.(errtyper); ok {
-		return etype.ErrorType()
-	}
+
 	return UnknownErrorType
 }
 
 // GetID возвращает ID ошибки. Для НЕ *Error всегда будет "".
 func GetID(err error) (id string) {
-	type idtyper interface {
-		ID() string
+	var idtype *Error
+
+	if origerrors.As(err, &idtype) {
+		return idtype.ID()
 	}
-	if customerr, ok := err.(idtyper); ok {
-		id = customerr.ID()
-	}
+
 	return
 }
 
@@ -48,18 +48,23 @@ func GetID(err error) (id string) {
 // В противном случае будет возвращен nil.
 // Важно: *Error c Severity Warn не является ошибкой.
 func ErrorOrNil(err error) error {
-	switch t := err.(type) { // nolint:errorlint
-	case *multierror.Error:
-		for _, e := range t.WrappedErrors() {
+	var (
+		multerr *multierror.Error
+		myerr   *Error
+	)
+
+	switch {
+	case origerrors.As(err, &myerr):
+		return myerr.ErrorOrNil()
+
+	case origerrors.As(err, &multerr):
+		for _, e := range multerr.WrappedErrors() {
 			// если это *Error и хотя бы одна из *Error не nil, вернуть ее
-			if customerr, ok := e.(*Error); ok && customerr.ErrorOrNil() != nil {
-				return customerr
+			if origerrors.As(e, &myerr) && myerr.ErrorOrNil() != nil {
+				return myerr
 			}
 		}
 		return nil
-
-	case *Error:
-		return t.ErrorOrNil()
 	}
 
 	return err
@@ -73,8 +78,10 @@ func Cast(err error) Errorer {
 		return nil
 	}
 
-	if t, ok := err.(*Error); ok { // nolint:errorlint
-		return t
+	var myerr *Error
+
+	if origerrors.As(err, &myerr) {
+		return myerr
 	}
 
 	return New(err.Error())
@@ -93,9 +100,10 @@ func Unwrap(err error) error {
 		Unwrap() error
 	}
 
-	if unwrap, ok := err.(unwraper); ok {
+	if unwrap, ok := err.(unwraper); ok { //nolint:errorlint
 		return unwrap.Unwrap()
 	}
+
 	return nil
 }
 
@@ -104,15 +112,17 @@ func Unwrap(err error) error {
 // Если ошибка с указанным ID не найдена, вернется nil.
 func UnwrapByID(err error, id string) Errorer {
 	getiderrFn := func(err error) (Errorer, bool) {
-		iderr, ok := err.(Errorer) // nolint:errorlint
-		if !ok {
-			return nil, false
+		var iderr *Error
+		if origerrors.As(err, &iderr) {
+			return iderr, iderr.ID() == id
 		}
-		return iderr, iderr.ID() == id
+		return nil, false
 	}
 
-	if t, ok := err.(*multierror.Error); ok {
-		for _, e := range t.WrappedErrors() {
+	var multerr *multierror.Error
+
+	if origerrors.As(err, &multerr) {
+		for _, e := range multerr.WrappedErrors() {
 			if iderr, ok := getiderrFn(e); ok {
 				return iderr
 			}

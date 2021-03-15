@@ -13,7 +13,7 @@ import (
 func BenchmarkStringFn(b *testing.B) {
 	e := New(
 		"hello",
-		SetErrorType(NewErrorType("not found")),
+		SetErrorType("not found"),
 		SetOperations(NewOperation("write")),
 		SetSeverity(log.SeverityError),
 		SetContextInfo(CtxMap{"hello": "world", "my": "name"}),
@@ -30,7 +30,7 @@ func BenchmarkStringFn(b *testing.B) {
 func BenchmarkFormatFmt(b *testing.B) {
 	e := New(
 		"hello",
-		SetErrorType(NewErrorType("not found")),
+		SetErrorType("not found"),
 		SetOperations(NewOperation("write")),
 		SetSeverity(log.SeverityError),
 		SetContextInfo(CtxMap{"hello": "world", "name": "john"}),
@@ -47,7 +47,7 @@ func BenchmarkFormatFmt(b *testing.B) {
 func BenchmarkJsonFn(b *testing.B) {
 	e := New(
 		"hello",
-		SetErrorType(NewErrorType("not found")),
+		SetErrorType("not found"),
 		SetOperations(NewOperation("write")),
 		SetSeverity(log.SeverityError),
 		SetContextInfo(CtxMap{"hello": "world", "hi": "there"}),

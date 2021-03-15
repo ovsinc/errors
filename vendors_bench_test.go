@@ -3,7 +3,6 @@ package errors_test
 import (
 	stderrors "errors"
 	"fmt"
-
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -41,7 +40,7 @@ func BenchmarkFmt(b *testing.B) {
 func BenchmarkMyNewMsgOnly(b *testing.B) {
 	err := errors.New(
 		"hello1",
-		errors.SetErrorType(errors.NewErrorType("")),
+		errors.SetErrorType(""),
 		errors.SetSeverity(log.SeverityUnknown),
 	)
 
@@ -82,7 +81,30 @@ func BenchmarkMyMulti2Err(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_ = err.Error()
 	}
+}
 
+func BenchmarkMyMultiMsgOnly2Err(b *testing.B) {
+	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
+
+	err := errors.Append(
+		errors.New(
+			"hello1",
+			errors.SetErrorType(""),
+			errors.SetSeverity(log.SeverityUnknown),
+		),
+		errors.New(
+			"hello2",
+			errors.SetErrorType(""),
+			errors.SetSeverity(log.SeverityUnknown),
+		),
+	)
+
+	require.Equal(b, err.Error(), "* hello1\n* hello2\n")
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = err.Error()
+	}
 }
 
 func BenchmarkHashiMulti2Err(b *testing.B) {
@@ -97,7 +119,6 @@ func BenchmarkHashiMulti2Err(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_ = err.Error()
 	}
-
 }
 
 func BenchmarkUberMulti2Err(b *testing.B) {

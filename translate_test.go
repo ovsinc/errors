@@ -34,7 +34,7 @@ func BenchmarkTranslateMsg(b *testing.B) {
 		"fallback message",
 		SetID("ErrEmailsUnreadMsg"),
 		SetLocalizer(localizer),
-		SetErrorType(NewErrorType("not found")),
+		SetErrorType("not found"),
 		SetTranslateContext(&ErrEmailsUnreadMsg),
 	)
 

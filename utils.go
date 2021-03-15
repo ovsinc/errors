@@ -25,4 +25,4 @@ func Caller(depth int) func() string {
 
 // DefaultCaller is a Valuer that returns the file and line where the Log
 // method was invoked. It can only be used with log.With.
-var DefaultCaller = Caller(3)
+var DefaultCaller = Caller(3) //nolint:gochecknoglobals

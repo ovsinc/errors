@@ -57,8 +57,8 @@ func ExampleAppendWithLog() {
 		itsOk(),
 	)
 
-	//Output:
-	//ovsinc/errors {"count":2,"messages":[{"error_type":"UNKNOWN_TYPE","severity":"ERROR","operations":[],"context":null,"msg":"one"},{"error_type":"UNKNOWN_TYPE","severity":"ERROR","operations":[],"context":null,"msg":"two"}]}
+	// Output:
+	// ovsinc/errors {"count":2,"messages":[{"error_type":"UNKNOWN_TYPE","severity":"ERROR","operations":[],"context":null,"msg":"one"},{"error_type":"UNKNOWN_TYPE","severity":"ERROR","operations":[],"context":null,"msg":"two"}]}
 }
 
 func someFuncWithErr() error {
@@ -67,7 +67,7 @@ func someFuncWithErr() error {
 		errors.SetContextInfo(errors.CtxMap{"hello": "world"}),
 		errors.AppendOperations("write"),
 		errors.SetSeverity(customlog.SeverityUnknown),
-		errors.SetErrorType(errors.NewErrorType("")),
+		errors.SetErrorType(""),
 	)
 }
 
@@ -75,7 +75,7 @@ func someFuncWithErr2() error {
 	return errors.New(
 		"connection error",
 		errors.SetSeverity(customlog.SeverityUnknown),
-		errors.SetErrorType(errors.NewErrorType("")),
+		errors.SetErrorType(""),
 	)
 }
 
@@ -108,14 +108,14 @@ func ExampleNewWithLog() {
 
 	_ = errors.NewWithLog("three")
 
-	//Output:
-	//ovsinc/errors [UNKNOWN_TYPE][ERROR] -- one
-	//ovsinc/errors [UNKNOWN_TYPE][ERROR] -- two
-	//ovsinc/errors [UNKNOWN_TYPE][ERROR] -- three
+	// Output:
+	// ovsinc/errors [UNKNOWN_TYPE][ERROR] -- one
+	// ovsinc/errors [UNKNOWN_TYPE][ERROR] -- two
+	// ovsinc/errors [UNKNOWN_TYPE][ERROR] -- three
 }
 
 func someErrFunc() error {
-	return errors.New("connection error", errors.SetErrorType(errors.NewErrorType("NOT_FOUND")))
+	return errors.New("connection error", errors.SetErrorType("NOT_FOUND"))
 }
 
 func ExampleGetErrorType() {
@@ -132,8 +132,8 @@ func ExampleGetErrorType() {
 		fmt.Printf("Got some unknown")
 	}
 
-	//Output:
-	//Got error with type NOT_FOUND
+	// Output:
+	// Got error with type NOT_FOUND
 }
 
 func someTimedCast() (err error) {
@@ -162,8 +162,8 @@ func ExampleLog() {
 
 	errors.Log(someTimedCast())
 
-	//Output:
-	//ovsinc/errors [UNKNOWN_TYPE][ERROR]<call:example_test.go:163,duration:1s> -- some call
+	// Output:
+	// ovsinc/errors [UNKNOWN_TYPE][ERROR]<call:example_test.go:163,duration:1s> -- some call
 }
 
 func localizePrepare() *i18n.Localizer {
@@ -196,7 +196,7 @@ func ExampleError_translateMsg() {
 	e1 := errors.New(
 		"fallback message",
 		errors.SetID("ErrEmailsUnreadMsg"),
-		errors.SetErrorType(errors.NewErrorType("not found")),
+		errors.SetErrorType("not found"),
 		errors.SetTranslateContext(&errEmailsUnreadMsg),
 		errors.SetLocalizer(localizer),
 	)
