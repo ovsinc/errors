@@ -21,28 +21,25 @@ all: test lint
 build_all: go_security lint build
 
 .PHONY: full_tests
-full_tests: go_lint_max go_performance unit_tests race msan ## Full tests
+full_tests: go_lint_max unit_tests race msan ## Full tests
+
+.PHONY: lint
+lint: go_lint go_security ## Full liner checks
 
 .PHONY: go_security
 go_security: ## Check bugs
-	@${linter} run --disable-all -E gosec -E govet \
-	-E scopelint -E staticcheck -E typecheck
-
-.PHONY: lint
-lint: go_lint go_performance go_security ## Full liner checks
+	@${linter} run --disable-all \
+	-E gosec -E govet -E scopelint -E staticcheck -E typecheck
 
 .PHONY: go_lint
 go_lint: ## Lint the files
 	@${linter} run
 
-.PHONY: go_performance
-go_performance: ## Check performance
-	@${linter} run --disable-all -p performance
-
 .PHONY: go_lint_max
 go_lint_max: ## Max lint checks the files
-	@${linter} run -p bugs -p complexity -p unused -p performance -p format \
-	-E interfacer -E gocritic
+	@${linter} run \
+	-p bugs -p complexity -p unused -p format \
+	-E gosec -E govet -E scopelint -E staticcheck -E typecheck
 
 .PHONY: go_style
 go_style: ## check style of code
@@ -70,8 +67,7 @@ bench: ## Run benchmark tests
 
 .PHONY: coverage
 coverage: ## Generate global code coverage report
-	@[ -x /opt/tools/bin/coverage.sh ] && /opt/tools/bin/coverage.sh || \
-	${_CURDIR}/scripts/tools/coverage.sh
+	@go test -cover ${_CURDIR}
 
 .PHONY: coverhtml
 coverhtml: ## Generate global code coverage report in HTML
