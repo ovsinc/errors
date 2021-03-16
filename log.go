@@ -3,7 +3,6 @@ package errors
 import (
 	origerrors "errors"
 
-	"github.com/hashicorp/go-multierror"
 	"gitlab.com/ovsinc/errors/log"
 	logcommon "gitlab.com/ovsinc/errors/log/common"
 )
@@ -42,15 +41,15 @@ func getLogger(l ...logcommon.Logger) logcommon.Logger {
 
 // AppendWithLog как и Append создаст или дополнит цепочку ошибок err с помощью errs,
 // но при этом будет осуществлено логгирование с помощь логгера по-умолчанию.
-func AppendWithLog(err error, errs ...error) *multierror.Error {
-	e := Append(err, errs...)
+func AppendWithLog(errs ...error) error {
+	e := Append(errs...)
 	Log(e)
 	return e
 }
 
 // WrapWithLog обернет ошибку olderr в err и вернет цепочку,
 // но при этом будет осуществлено логгирование с помощь логгера по-умолчанию.
-func WrapWithLog(olderr error, err error) *multierror.Error {
+func WrapWithLog(olderr error, err error) error {
 	e := Wrap(olderr, err)
 	Log(e)
 	return e

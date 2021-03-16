@@ -2,8 +2,6 @@ package errors
 
 import (
 	origerrors "errors"
-
-	multierror "github.com/hashicorp/go-multierror"
 )
 
 // Is сообщает, соответствует ли ошибка err target-ошибке.
@@ -49,7 +47,7 @@ func GetID(err error) (id string) {
 // Важно: *Error c Severity Warn не является ошибкой.
 func ErrorOrNil(err error) error {
 	var (
-		multerr *multierror.Error
+		multerr *multiError
 		myerr   *Error
 	)
 
@@ -58,7 +56,7 @@ func ErrorOrNil(err error) error {
 		return myerr.ErrorOrNil()
 
 	case origerrors.As(err, &multerr):
-		for _, e := range multerr.WrappedErrors() {
+		for _, e := range multerr.Errors() {
 			// если это *Error и хотя бы одна из *Error не nil, вернуть ее
 			if origerrors.As(e, &myerr) && myerr.ErrorOrNil() != nil {
 				return myerr
@@ -79,7 +77,6 @@ func Cast(err error) Errorer {
 	}
 
 	var myerr *Error
-
 	if origerrors.As(err, &myerr) {
 		return myerr
 	}
@@ -87,30 +84,12 @@ func Cast(err error) Errorer {
 	return New(err.Error())
 }
 
-// Unwrap позволяет получить оригинальную ошибку.
-// Для этого тип err должен иметь метод `Unwrap() error`.
-// Для multierror будет разернута цепочка ошибок.
-// В противном случае будет возвращен nil.
-func Unwrap(err error) error {
-	if err == nil {
-		return nil
-	}
+func findByID(err error, id string) (Errorer, bool) {
+	var (
+		merr  *multiError
+		myerr *Error
+	)
 
-	type unwraper interface {
-		Unwrap() error
-	}
-
-	if unwrap, ok := err.(unwraper); ok { //nolint:errorlint
-		return unwrap.Unwrap()
-	}
-
-	return nil
-}
-
-// UnwrapByID вернет ошибку (*Error) с указанным ID.
-// Для multierror, функция вернет ошибку с указанным ID.
-// Если ошибка с указанным ID не найдена, вернется nil.
-func UnwrapByID(err error, id string) Errorer {
 	getiderrFn := func(err error) (Errorer, bool) {
 		var iderr *Error
 		if origerrors.As(err, &iderr) {
@@ -119,19 +98,35 @@ func UnwrapByID(err error, id string) Errorer {
 		return nil, false
 	}
 
-	var multerr *multierror.Error
-
-	if origerrors.As(err, &multerr) {
-		for _, e := range multerr.WrappedErrors() {
+	switch {
+	case origerrors.As(err, &merr):
+		for _, e := range merr.Errors() {
 			if iderr, ok := getiderrFn(e); ok {
-				return iderr
+				return iderr, true
 			}
+		}
+
+	case origerrors.As(err, &myerr):
+		if myerr.ID() == id {
+			return myerr, true
 		}
 	}
 
-	if iderr, ok := getiderrFn(err); ok {
-		return iderr
-	}
+	return nil, false
+}
 
+// UnwrapByID вернет ошибку (*Error) с указанным ID.
+// Если ошибка с указанным ID не найдена, вернется nil.
+func UnwrapByID(err error, id string) Errorer {
+	if e, ok := findByID(err, id); ok {
+		return e
+	}
 	return nil
+}
+
+// Contains проверит есть ли в цепочке ошибка с указанным ID.
+// Допускается в качестве аргумента err указывать одиночную ошибку.
+func Contains(err error, id string) bool {
+	_, ok := findByID(err, id)
+	return ok
 }

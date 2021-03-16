@@ -2,6 +2,7 @@ package errors
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/davecgh/go-spew/spew"
 	i18n "github.com/nicksnyder/go-i18n/v2/i18n"
@@ -34,7 +35,7 @@ type Errorer interface {
 
 	ErrorType() string
 
-	Operations() []Operation
+	Operations() []string
 	Format(s fmt.State, verb rune)
 
 	TranslateContext() *TranslateContext
@@ -47,7 +48,7 @@ type Errorer interface {
 // Внимание. Это НЕ потоко-безопасный объект.
 type Error struct {
 	severity         log.Severity
-	operations       []Operation
+	operations       []string
 	formatFn         FormatFn
 	contextInfo      CtxMap
 	translateContext *TranslateContext
@@ -63,10 +64,9 @@ type Error struct {
 // ** *Error
 func New(msg string, ops ...Options) Errorer {
 	e := &Error{
-		operations: []Operation{},
-		severity:   log.SeverityError,
-		errorType:  UnknownErrorType,
-		msg:        msg,
+		severity:  log.SeverityError,
+		errorType: UnknownErrorType,
+		msg:       msg,
 	}
 	for _, op := range ops {
 		op(e)
@@ -112,9 +112,14 @@ func (e *Error) Error() string {
 		return ""
 	}
 
-	fn := e.formatFn
-	if e.formatFn == nil {
+	var fn FormatFn
+	switch {
+	case e.formatFn != nil:
+		fn = e.formatFn
+	case defaultFormatFn != nil:
 		fn = defaultFormatFn
+	default:
+		fn = StringFormat
 	}
 
 	// buf := _bufferPool.Get().(*bytes.Buffer)
@@ -127,6 +132,33 @@ func (e *Error) Error() string {
 	fn(buf, e)
 
 	return buf.String()
+}
+
+// Format производит форматирование строки, для поддержки fmt.Printf().
+func (e *Error) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 'c':
+		fmt.Fprintf(s, "%v\n", e.ContextInfo())
+
+	case 'o':
+		fmt.Fprintf(s, "%v\n", e.Operations())
+
+	case 'l':
+		_, _ = io.WriteString(s, e.Severity().String())
+
+	case 't':
+		_, _ = io.WriteString(s, e.ErrorType())
+
+	case 'v':
+		if s.Flag('+') {
+			_, _ = io.WriteString(s, e.Sdump())
+			return
+		}
+		_, _ = io.WriteString(s, e.Error())
+
+	case 's', 'q':
+		_, _ = io.WriteString(s, e.Error())
+	}
 }
 
 // дополнительные методы
@@ -146,8 +178,8 @@ func (e *Error) ErrorOrNil() error {
 	if e == nil {
 		return nil
 	}
-	if e.Severity() != log.SeverityError {
-		return nil
+	if e.Severity() == log.SeverityError {
+		return e
 	}
-	return e
+	return nil
 }

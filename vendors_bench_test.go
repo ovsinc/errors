@@ -52,7 +52,7 @@ func BenchmarkMyNewMsgOnly(b *testing.B) {
 	}
 }
 
-func BenchmarkMyNew(b *testing.B) {
+func BenchmarkMyNewNormal(b *testing.B) {
 	err := errors.New(
 		"hello1",
 	)
@@ -65,14 +65,66 @@ func BenchmarkMyNew(b *testing.B) {
 	}
 }
 
+func BenchmarkMyNewFull(b *testing.B) {
+	err := errors.New(
+		"hello1",
+		errors.AppendContextInfo("hello", "world"),
+		errors.SetID("IDhello1"),
+		errors.SetOperations("nothing"),
+	)
+
+	require.Equal(b, err.Error(), "[UNKNOWN_TYPE][ERROR][nothing]<hello:world> -- hello1")
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = err.Error()
+	}
+}
+
+func BenchmarkMyNewWithTranslate(b *testing.B) {
+	errEmailsUnreadMsg := localTransContext()
+	localizer := localizePrepare()
+
+	err := errors.New(
+		"hello1",
+		errors.AppendContextInfo("hello", "world"),
+		errors.SetOperations("nothing"),
+		errors.SetID("ErrEmailsUnreadMsg"),
+		errors.SetTranslateContext(&errEmailsUnreadMsg),
+		errors.SetLocalizer(localizer),
+	)
+
+	require.Equal(b, err.Error(), "[UNKNOWN_TYPE][ERROR][nothing]<hello:world> -- У John Snow имеется 5 непрочитанных сообщений.")
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = err.Error()
+	}
+}
+
 // mutierr
 
-func BenchmarkMyMulti2Err(b *testing.B) {
+func BenchmarkMyMulti2StdErr(b *testing.B) {
 	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
 
-	err := errors.Append(
+	err := errors.Wrap(
 		stderrors.New("[UNKNOWN_TYPE][ERROR] -- hello1"),
 		stderrors.New("[UNKNOWN_TYPE][ERROR] -- hello2"),
+	)
+
+	require.Equal(b, err.Error(), "* [UNKNOWN_TYPE][ERROR] -- hello1\n* [UNKNOWN_TYPE][ERROR] -- hello2\n")
+
+	for i := 0; i < b.N; i++ {
+		_ = err.Error()
+	}
+}
+
+func BenchmarkMyMulti2ErrNormal(b *testing.B) {
+	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
+
+	err := errors.Wrap(
+		errors.New("hello1"),
+		errors.New("hello2"),
 	)
 
 	require.Equal(b, err.Error(), "* [UNKNOWN_TYPE][ERROR] -- hello1\n* [UNKNOWN_TYPE][ERROR] -- hello2\n")
@@ -83,10 +135,10 @@ func BenchmarkMyMulti2Err(b *testing.B) {
 	}
 }
 
-func BenchmarkMyMultiMsgOnly2Err(b *testing.B) {
+func BenchmarkMyMulti2ErrMsgOnly(b *testing.B) {
 	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
 
-	err := errors.Append(
+	err := errors.Wrap(
 		errors.New(
 			"hello1",
 			errors.SetErrorType(""),
@@ -107,7 +159,7 @@ func BenchmarkMyMultiMsgOnly2Err(b *testing.B) {
 	}
 }
 
-func BenchmarkHashiMulti2Err(b *testing.B) {
+func BenchmarkHashiMulti2StdErr(b *testing.B) {
 	err := hashmultierr.Append(
 		stderrors.New("[UNKNOWN_TYPE][ERROR] -- hello1"),
 		stderrors.New("[UNKNOWN_TYPE][ERROR] -- hello2"),
@@ -121,7 +173,21 @@ func BenchmarkHashiMulti2Err(b *testing.B) {
 	}
 }
 
-func BenchmarkUberMulti2Err(b *testing.B) {
+func BenchmarkHashiMulti2MyErr(b *testing.B) {
+	err := hashmultierr.Append(
+		errors.New("hello1"),
+		errors.New("hello2"),
+	)
+
+	require.Equal(b, err.Error(), "2 errors occurred:\n\t* [UNKNOWN_TYPE][ERROR] -- hello1\n\t* [UNKNOWN_TYPE][ERROR] -- hello2\n\n")
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = err.Error()
+	}
+}
+
+func BenchmarkUberMulti2StdErr(b *testing.B) {
 	err := ubermulierr.Append(
 		stderrors.New("[UNKNOWN_TYPE][ERROR] -- hello1"),
 		stderrors.New("[UNKNOWN_TYPE][ERROR] -- hello2"),
@@ -129,6 +195,22 @@ func BenchmarkUberMulti2Err(b *testing.B) {
 
 	require.Equal(b, err.Error(), "[UNKNOWN_TYPE][ERROR] -- hello1; [UNKNOWN_TYPE][ERROR] -- hello2")
 
+	for i := 0; i < b.N; i++ {
+		_ = err.Error()
+	}
+}
+
+func BenchmarkUberMulti2MyErr(b *testing.B) {
+	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
+
+	err := ubermulierr.Append(
+		errors.New("hello1"),
+		errors.New("hello2"),
+	)
+
+	require.Equal(b, err.Error(), "[UNKNOWN_TYPE][ERROR] -- hello1; [UNKNOWN_TYPE][ERROR] -- hello2")
+
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = err.Error()
 	}
