@@ -32,10 +32,10 @@ func ExampleErrorOrNil() {
 		nil,
 		itsOk(),
 		itsErr("one"),
-		itsErr("two"),
+		errors.New("two", errors.SetSeverity(customlog.SeverityWarn)),
 		itsOk(),
 	)
-	err = errors.Wrap(err, itsErr("three"))
+	err = errors.Wrap(err, errors.New("three", errors.SetSeverity(customlog.SeverityWarn)))
 
 	fmt.Printf("%v\n", errors.ErrorOrNil(err))
 	//Output:
