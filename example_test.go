@@ -39,7 +39,7 @@ func ExampleErrorOrNil() {
 
 	fmt.Printf("%v\n", errors.ErrorOrNil(err))
 	//Output:
-	//[UNKNOWN_TYPE][ERROR] -- one
+	//[ERROR] -- one
 }
 
 // Добавление ошибок в mutierror с логгированием
@@ -58,7 +58,7 @@ func ExampleAppendWithLog() {
 	)
 
 	// Output:
-	// ovsinc/errors {"count":2,"messages":[{"error_type":"UNKNOWN_TYPE","severity":"ERROR","operations":[],"context":null,"msg":"one"},{"error_type":"UNKNOWN_TYPE","severity":"ERROR","operations":[],"context":null,"msg":"two"}]}
+	// ovsinc/errors {"count":2,"messages":[{"error_type":"","severity":"ERROR","operations":[],"context":null,"msg":"one"},{"error_type":"","severity":"ERROR","operations":[],"context":null,"msg":"two"}]}
 }
 
 func someFuncWithErr() error {
@@ -109,9 +109,9 @@ func ExampleNewWithLog() {
 	_ = errors.NewWithLog("three")
 
 	// Output:
-	// ovsinc/errors [UNKNOWN_TYPE][ERROR] -- one
-	// ovsinc/errors [UNKNOWN_TYPE][ERROR] -- two
-	// ovsinc/errors [UNKNOWN_TYPE][ERROR] -- three
+	// ovsinc/errors [ERROR] -- one
+	// ovsinc/errors [ERROR] -- two
+	// ovsinc/errors [ERROR] -- three
 }
 
 func someErrFunc() error {
@@ -163,7 +163,7 @@ func ExampleLog() {
 	errors.Log(someTimedCast())
 
 	// Output:
-	// ovsinc/errors [UNKNOWN_TYPE][ERROR]<call:example_test.go:163,duration:1s> -- some call
+	// ovsinc/errors [ERROR]<call:example_test.go:163,duration:1s> -- some call
 }
 
 func localizePrepare() *i18n.Localizer {
@@ -215,5 +215,5 @@ func ExampleNew() {
 	fmt.Println(e)
 
 	//Output:
-	//[UNKNOWN_TYPE][ERROR] -- hello world
+	//[ERROR] -- hello world
 }

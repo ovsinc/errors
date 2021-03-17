@@ -65,6 +65,10 @@ msan: ## Run memory sanitizer
 bench: ## Run benchmark tests
 	@${test} -benchmem -run=^# -bench=. ${_CURDIR}
 
+.PHONY: bench_vendor
+bench_vendor: ## Run benchmarks tests for comparison with other vendors
+	@${test} -tags=vendors -benchmem -run=^# -bench=Vendor ${_CURDIR}
+
 .PHONY: coverage
 coverage: ## Generate global code coverage report
 	@go test -cover ${_CURDIR}

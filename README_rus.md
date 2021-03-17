@@ -178,7 +178,7 @@ type Errorer interface {
 | ------ | -------- |
 | `func Is(err, target error) bool` | Обёртка над методом стандартной библиотеки `errors.Is`. |
 | `func As(err error, target interface{}) bool` | Обёртка над методом стандартной библиотеки `errors.As`. |
-| `func GetErrorType(err error) string` | Получить тип ошибки. Для НЕ `*Error` всегда будет "UnknownErrorType". |
+| `func GetErrorType(err error) string` | Получить тип ошибки. Для НЕ `*Error` всегда будет "". |
 | `func ErrorOrNil(err error) error` | Возможна обработка цепочки или одиночной ошибки. Если хотя бы одна ошибка в цепочке является ошибкой, то она будет возвращена в качестве результата. Важно: `*Error` c Severity `Warn` не является ошибкой. |
 | `func Cast(err error) Errorer` | Преобразование типа `error` в `*Error`. |
 | `func Append(errs ...error) error` | Создать цепочку ошибок. Допускается использование `nil` в аргументах. |
@@ -217,7 +217,7 @@ var DefaultLogger = golog.New(pkglog.New(os.Stderr, "ovsinc/errors ", pkglog.Lst
 | ------ | -------- |
 | `func NewWithLog(msg string, ops ...Options) Errorer` | Функция произведет логгирование ошибки дефолтным логгером. |
 | `func Log(err error, l ...logcommon.Logger)` | Функция произведет логгирование ошибки дефолтным логгером или логгером указанным в l (будет использоваться только первое значение). |
-| `func AppendWithLog(err error, errs ...error) error` | Хелпер обернет `err` в `errs`, выполнит логгирование дефолтным логгером и вернет цепочку. |
+| `func AppendWithLog(errs ...error) error` | Хелпер создать цепочку ошибок., выполнит логгирование дефолтным логгером и вернет цепочку. |
 | `func WrapWithLog(olderr error, err error) error` | Хелпер обернет `olderr` ошибкой `err`, выполнит логгирование дефолтным логгером и вернет цепочку. |
 
 Для удобства поддерживаются несколько оберток над наиболее популярными логгерами.
