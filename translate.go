@@ -2,13 +2,14 @@ package errors
 
 import (
 	origerrors "errors"
+	"io"
 
 	i18n "github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 // DefaultLocalizer локализатор по-умолчанию.
 // Для каждой ошибки можно переопределить локализатор.
-var DefaultLocalizer *i18n.Localizer
+var DefaultLocalizer *i18n.Localizer //nolint:gochecknoglobals
 
 // TranslateContext контекст перевода. Не является обязательным для корректного перевода.
 type TranslateContext struct {
@@ -59,7 +60,11 @@ func (e *Error) Localizer() *i18n.Localizer {
 
 var errNoLocalizer = origerrors.New("no localizer config for this lang")
 
-func (e *Error) trans(s string) (string, error) {
+func (e *Error) writeTranslate(w io.Writer, s string) error {
+	if len(s) == 0 {
+		return nil
+	}
+
 	var localizer *i18n.Localizer
 
 	switch {
@@ -70,7 +75,8 @@ func (e *Error) trans(s string) (string, error) {
 	}
 
 	if localizer == nil {
-		return s, errNoLocalizer
+		_, _ = io.WriteString(w, s)
+		return errNoLocalizer
 	}
 
 	i18nConf := i18n.LocalizeConfig{
@@ -84,15 +90,11 @@ func (e *Error) trans(s string) (string, error) {
 
 	msg, _, err := e.localizer.LocalizeWithTag(&i18nConf)
 	if err != nil {
-		return s, err
+		_, _ = io.WriteString(w, s)
+		return err
 	}
 
-	return msg, nil
-}
+	_, _ = io.WriteString(w, msg)
 
-// translateMsg выполнит перевод сообщения об ошибке.
-// Метод в случае неудачи перевода вернет оригинальное сообщение.
-func (e *Error) translateMsg() string {
-	s, _ := e.trans(e.msg)
-	return s
+	return nil
 }

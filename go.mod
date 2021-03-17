@@ -1,6 +1,6 @@
 module gitlab.com/ovsinc/errors
 
-go 1.12
+go 1.14
 
 require (
 	github.com/BurntSushi/toml v0.3.1
@@ -14,7 +14,8 @@ require (
 	github.com/sirupsen/logrus v1.8.0
 	github.com/stretchr/testify v1.4.0
 	github.com/valyala/bytebufferpool v1.0.0
+	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.5.0
 	go.uber.org/zap v1.16.0
-	golang.org/x/text v0.3.3
+	golang.org/x/text v0.3.5
 )

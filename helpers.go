@@ -2,15 +2,13 @@ package errors
 
 import (
 	origerrors "errors"
-
-	multierror "github.com/hashicorp/go-multierror"
 )
 
 // Is сообщает, соответствует ли ошибка err target-ошибке.
 // Для multierr будет производится поиск в цепочке.
 func Is(err, target error) bool {
 	if err == nil {
-		return err == target
+		return target == nil
 	}
 	return origerrors.Is(err, target)
 }
@@ -21,24 +19,24 @@ func As(err error, target interface{}) bool {
 }
 
 // GetErrorType возвращает тип ошибки. Для НЕ *Error всегда будет UnknownErrorType.
-func GetErrorType(err error) ErrorType {
-	type errtyper interface {
-		ErrorType() ErrorType
+func GetErrorType(err error) string {
+	var errtype *Error
+
+	if origerrors.As(err, &errtype) {
+		return errtype.ErrorType()
 	}
-	if etype, ok := err.(errtyper); ok {
-		return etype.ErrorType()
-	}
+
 	return UnknownErrorType
 }
 
 // GetID возвращает ID ошибки. Для НЕ *Error всегда будет "".
 func GetID(err error) (id string) {
-	type idtyper interface {
-		ID() string
+	var idtype *Error
+
+	if origerrors.As(err, &idtype) {
+		return idtype.ID()
 	}
-	if customerr, ok := err.(idtyper); ok {
-		id = customerr.ID()
-	}
+
 	return
 }
 
@@ -48,18 +46,23 @@ func GetID(err error) (id string) {
 // В противном случае будет возвращен nil.
 // Важно: *Error c Severity Warn не является ошибкой.
 func ErrorOrNil(err error) error {
-	switch t := err.(type) { // nolint:errorlint
-	case *multierror.Error:
-		for _, e := range t.WrappedErrors() {
+	var (
+		multerr *multiError
+		myerr   *Error
+	)
+
+	switch {
+	case origerrors.As(err, &myerr):
+		return myerr.ErrorOrNil()
+
+	case origerrors.As(err, &multerr):
+		for _, e := range multerr.Errors() {
 			// если это *Error и хотя бы одна из *Error не nil, вернуть ее
-			if customerr, ok := e.(*Error); ok && customerr.ErrorOrNil() != nil {
-				return customerr
+			if origerrors.As(e, &myerr) && myerr.ErrorOrNil() != nil {
+				return myerr
 			}
 		}
 		return nil
-
-	case *Error:
-		return t.ErrorOrNil()
 	}
 
 	return err
@@ -73,55 +76,57 @@ func Cast(err error) Errorer {
 		return nil
 	}
 
-	if t, ok := err.(*Error); ok { // nolint:errorlint
-		return t
+	var myerr *Error
+	if origerrors.As(err, &myerr) {
+		return myerr
 	}
 
 	return New(err.Error())
 }
 
-// Unwrap позволяет получить оригинальную ошибку.
-// Для этого тип err должен иметь метод `Unwrap() error`.
-// Для multierror будет разернута цепочка ошибок.
-// В противном случае будет возвращен nil.
-func Unwrap(err error) error {
-	if err == nil {
-		return nil
+func findByID(err error, id string) (Errorer, bool) {
+	var (
+		merr  *multiError
+		myerr *Error
+	)
+
+	getiderrFn := func(err error) (Errorer, bool) {
+		var iderr *Error
+		if origerrors.As(err, &iderr) {
+			return iderr, iderr.ID() == id
+		}
+		return nil, false
 	}
 
-	type unwraper interface {
-		Unwrap() error
+	switch {
+	case origerrors.As(err, &merr):
+		for _, e := range merr.Errors() {
+			if iderr, ok := getiderrFn(e); ok {
+				return iderr, true
+			}
+		}
+
+	case origerrors.As(err, &myerr):
+		if myerr.ID() == id {
+			return myerr, true
+		}
 	}
 
-	if unwrap, ok := err.(unwraper); ok {
-		return unwrap.Unwrap()
+	return nil, false
+}
+
+// UnwrapByID вернет ошибку (*Error) с указанным ID.
+// Если ошибка с указанным ID не найдена, вернется nil.
+func UnwrapByID(err error, id string) Errorer {
+	if e, ok := findByID(err, id); ok {
+		return e
 	}
 	return nil
 }
 
-// UnwrapByID вернет ошибку (*Error) с указанным ID.
-// Для multierror, функция вернет ошибку с указанным ID.
-// Если ошибка с указанным ID не найдена, вернется nil.
-func UnwrapByID(err error, id string) Errorer {
-	getiderrFn := func(err error) (Errorer, bool) {
-		iderr, ok := err.(Errorer) // nolint:errorlint
-		if !ok {
-			return nil, false
-		}
-		return iderr, iderr.ID() == id
-	}
-
-	if t, ok := err.(*multierror.Error); ok {
-		for _, e := range t.WrappedErrors() {
-			if iderr, ok := getiderrFn(e); ok {
-				return iderr
-			}
-		}
-	}
-
-	if iderr, ok := getiderrFn(err); ok {
-		return iderr
-	}
-
-	return nil
+// Contains проверит есть ли в цепочке ошибка с указанным ID.
+// Допускается в качестве аргумента err указывать одиночную ошибку.
+func Contains(err error, id string) bool {
+	_, ok := findByID(err, id)
+	return ok
 }

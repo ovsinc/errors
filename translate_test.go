@@ -11,6 +11,8 @@ import (
 )
 
 func BenchmarkTranslateMsg(b *testing.B) {
+	DefaultMultierrFormatFunc = StringMultierrFormatFunc
+
 	var (
 		unreadEmailCount = 5
 		name             = "John Snow"
@@ -34,7 +36,7 @@ func BenchmarkTranslateMsg(b *testing.B) {
 		"fallback message",
 		SetID("ErrEmailsUnreadMsg"),
 		SetLocalizer(localizer),
-		SetErrorType(NewErrorType("not found")),
+		SetErrorType("not found"),
 		SetTranslateContext(&ErrEmailsUnreadMsg),
 	)
 

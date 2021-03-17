@@ -1,7 +1,8 @@
 package errors
 
 import (
-	"github.com/hashicorp/go-multierror"
+	origerrors "errors"
+
 	"gitlab.com/ovsinc/errors/log"
 	logcommon "gitlab.com/ovsinc/errors/log/common"
 )
@@ -40,15 +41,15 @@ func getLogger(l ...logcommon.Logger) logcommon.Logger {
 
 // AppendWithLog как и Append создаст или дополнит цепочку ошибок err с помощью errs,
 // но при этом будет осуществлено логгирование с помощь логгера по-умолчанию.
-func AppendWithLog(err error, errs ...error) *multierror.Error {
-	e := Append(err, errs...)
+func AppendWithLog(errs ...error) error {
+	e := Append(errs...)
 	Log(e)
 	return e
 }
 
 // WrapWithLog обернет ошибку olderr в err и вернет цепочку,
 // но при этом будет осуществлено логгирование с помощь логгера по-умолчанию.
-func WrapWithLog(olderr error, err error) *multierror.Error {
+func WrapWithLog(olderr error, err error) error {
 	e := Wrap(olderr, err)
 	Log(e)
 	return e
@@ -57,12 +58,11 @@ func WrapWithLog(olderr error, err error) *multierror.Error {
 // Log выполнить логгирование ошибки err с ипользованием логгера l[0].
 // Если l не указан, то в качестве логгера будет использоваться логгер по-умолчанию.
 func Log(err error, l ...logcommon.Logger) {
+	var errseverity *Error
 	severity := log.SeverityError
-	type severitier interface {
-		Severity() log.Severity
-	}
-	if customerr, ok := err.(severitier); ok {
-		severity = customerr.Severity()
+
+	if origerrors.As(err, &errseverity) {
+		severity = errseverity.Severity()
 	}
 	customlog(getLogger(l...), err, severity)
 }
