@@ -1,105 +1,183 @@
+// Используется оригинальный код проекта "go.uber.org/multierr" с частичным заимствованием.
+// Код проекта "go.uber.org/multierr" распространяется под лицензией MIT (https://github.com/uber-go/multierr/blob/master/LICENSE.txt).
+
 package errors
 
 import (
 	origerrors "errors"
 	"fmt"
-	"strconv"
+	"io"
 
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/valyala/bytebufferpool"
 )
 
-// DefaultMultierrFormatFunc функция форматирования для multierr ошибок.
-var DefaultMultierrFormatFunc = StringMultierrFormatFunc //nolint:gochecknoglobals
-
-// JSONMultierrFuncFormat функция форматирования вывода сообщения для multierr в виде JSON.
-func JSONMultierrFuncFormat(es []error) string {
-	if len(es) == 0 {
-		return "null"
-	}
-
-	buf := bytebufferpool.Get()
-	defer bytebufferpool.Put(buf)
-
-	_, _ = buf.WriteString("{")
-
-	_, _ = buf.WriteString("\"count\":")
-	_, _ = buf.WriteString(strconv.Itoa(len(es)))
-	_, _ = buf.WriteString(",")
-
-	_, _ = buf.WriteString("\"messages\":")
-	_, _ = buf.WriteString("[")
-	writeErrFn := func(e error) {
-		var myerr *Error
-		if origerrors.As(e, &myerr) {
-			JSONFormat(buf, myerr)
-			return
-		}
-		_, _ = buf.WriteString("\"")
-		_, _ = fmt.Fprintf(buf, "%v", e)
-		_, _ = buf.WriteString("\"")
-
-	}
-	switch len(es) {
-	case 0:
-	case 1:
-		writeErrFn(es[0])
-	default:
-		writeErrFn(es[0])
-		for _, e := range es[1:] {
-			_, _ = buf.WriteString(",")
-			writeErrFn(e)
-		}
-	}
-	_, _ = buf.WriteString("]")
-
-	_, _ = buf.WriteString("}")
-
-	return buf.String()
+type errorGroup interface {
+	Errors() []error
 }
 
-// StringMultierrFormatFunc функция форматирования вывода сообщения для multierr в виде строки.
-// Используется по-умолчанию.
-func StringMultierrFormatFunc(es []error) string {
-	if len(es) == 0 {
+// Errors returns a slice containing zero or more errors that the supplied
+// error is composed of. If the error is nil, a nil slice is returned.
+//
+// 	err := multierr.Append(r.Close(), w.Close())
+// 	errors := multierr.Errors(err)
+//
+// If the error is not composed of other errors, the returned slice contains
+// just the error that was passed in.
+//
+// Callers of this function are free to modify the returned slice.
+func Errors(err error) []error {
+	if err == nil {
+		return nil
+	}
+
+	// Note that we're casting to multiError, not errorGroup. Our contract is
+	// that returned errors MAY implement errorGroup. Errors, however, only
+	// has special behavior for multierr-specific error objects.
+	//
+	// This behavior can be expanded in the future but I think it's prudent to
+	// start with as little as possible in terms of contract and possibility
+	// of misuse.
+	var eg *multiError
+	if !origerrors.As(err, &eg) {
+		return []error{err}
+	}
+
+	errors := eg.Errors()
+	result := make([]error, len(errors))
+	copy(result, errors)
+
+	return result
+}
+
+// multiError is an error that holds one or more errors.
+//
+// An instance of this is guaranteed to be non-empty and flattened. That is,
+// none of the errors inside multiError are other multiErrors.
+//
+// multiError formats to a semi-colon delimited list of error messages with
+// %v and with a more readable multi-line format with %+v.
+type multiError struct {
+	errors []error
+}
+
+var _ errorGroup = (*multiError)(nil)
+
+// Errors returns the list of underlying errors.
+//
+// This slice MUST NOT be modified.
+func (merr *multiError) Errors() []error {
+	if merr == nil {
+		return nil
+	}
+	return merr.errors
+}
+
+func (merr *multiError) Error() string {
+	if merr == nil {
 		return ""
 	}
 
-	buf := bytebufferpool.Get()
-	defer bytebufferpool.Put(buf)
+	buff := bytebufferpool.Get()
+	defer bytebufferpool.Put(buff)
 
-	writeErrFn := func(err error) {
-		var myerr *Error
-		if origerrors.As(err, &myerr) {
-			_, _ = buf.WriteString("* ")
-			StringFormat(buf, myerr)
-			return
+	merr.writeLines(buff)
+
+	return buff.String()
+}
+
+func (merr *multiError) Format(f fmt.State, c rune) {
+	merr.writeLines(f)
+}
+
+func (merr *multiError) writeLines(w io.Writer) {
+	if DefaultMultierrFormatFunc == nil {
+		StringMultierrFormatFunc(w, merr.errors)
+		return
+	}
+	DefaultMultierrFormatFunc(w, merr.errors)
+}
+
+type inspectResult struct {
+	// Number of top-level non-nil errors
+	Count int
+
+	// Total number of errors including multiErrors
+	Capacity int
+
+	// Index of the first non-nil error in the list. Value is meaningless if
+	// Count is zero.
+	FirstErrorIdx int
+
+	// Whether the list contains at least one multiError
+	ContainsMultiError bool
+}
+
+// Inspects the given slice of errors so that we can efficiently allocate
+// space for it.
+func inspect(errors []error) (res inspectResult) {
+	first := true
+	for i, err := range errors {
+		if err == nil {
+			continue
 		}
-		_, _ = fmt.Fprintf(buf, "* %v", err)
-	}
 
-	for _, err := range es {
-		writeErrFn(err)
-		_, _ = buf.WriteString("\n")
-	}
+		res.Count++
+		if first {
+			first = false
+			res.FirstErrorIdx = i
+		}
 
-	return buf.String()
+		var merr *multiError
+		if origerrors.As(err, &merr) {
+			res.Capacity += len(merr.errors)
+			res.ContainsMultiError = true
+		} else {
+			res.Capacity++
+		}
+	}
+	return
 }
 
-// хелперы
+// fromSlice converts the given list of errors into a single error.
+func fromSlice(errors []error) error {
+	res := inspect(errors)
+	switch res.Count {
+	case 0:
+		return nil
+	// case 1:
+	// 	// only one non-nil entry
+	// 	return errors[res.FirstErrorIdx]
+	case len(errors):
+		if !res.ContainsMultiError {
+			// already flat
+			return &multiError{errors: errors}
+		}
+	}
 
-// Append создаст или дополнит цепочку ошибок err с помощью errs.
-// err и errs[N] могут быть nil.
-func Append(err error, errs ...error) *multierror.Error {
-	me := multierror.Append(err, errs...)
-	me.ErrorFormat = DefaultMultierrFormatFunc
-	return me
+	nonNilErrs := make([]error, 0, res.Capacity)
+	// for _, err := range errors[res.FirstErrorIdx:] {
+	for _, err := range errors {
+		if err == nil {
+			continue
+		}
+
+		var nested *multiError
+		if origerrors.As(err, &nested) {
+			nonNilErrs = append(nonNilErrs, nested.errors...)
+		} else {
+			nonNilErrs = append(nonNilErrs, err)
+		}
+	}
+
+	return &multiError{errors: nonNilErrs}
 }
 
-// Wrap обернет ошибку olderr в err и вернет цепочку.
-// err и olderr могут быть nil.
-func Wrap(olderr error, err error) *multierror.Error {
-	me := Append(olderr, err)
-	me.ErrorFormat = DefaultMultierrFormatFunc
-	return me
+// Append создаст цепочку ошибок из ошибок ...errors. Допускается использование `nil` в аргументах.
+func Append(errors ...error) error {
+	return fromSlice(errors)
+}
+
+// Wrap обернет ошибку `left` ошибкой `right`, получив цепочку. Допускается использование `nil` в обоих аргументах.
+func Wrap(left error, right error) error {
+	return fromSlice([]error{left, right})
 }

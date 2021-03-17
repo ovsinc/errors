@@ -46,7 +46,8 @@ github.com/stretchr/testify/require
 # github.com/valyala/bytebufferpool v1.0.0
 ## explicit
 github.com/valyala/bytebufferpool
-# go.uber.org/atomic v1.6.0
+# go.uber.org/atomic v1.7.0
+## explicit
 go.uber.org/atomic
 # go.uber.org/multierr v1.5.0
 ## explicit
@@ -62,7 +63,7 @@ go.uber.org/zap/zapcore
 # golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/text v0.3.3
+# golang.org/x/text v0.3.5
 ## explicit
 golang.org/x/text/internal/language
 golang.org/x/text/internal/language/compact

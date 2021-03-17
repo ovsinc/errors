@@ -5,15 +5,26 @@ import (
 	"fmt"
 	"io"
 	"sort"
+	"strconv"
 
 	"gitlab.com/ovsinc/errors/log"
 )
 
-// defaultFormatFn функция форматирования, используемая по-умолчанию
-var defaultFormatFn FormatFn = StringFormat //nolint:gochecknoglobals
+var (
+	// defaultFormatFn функция форматирования, используемая по-умолчанию
+	defaultFormatFn FormatFn //nolint:gochecknoglobals
 
-// FormatFn тип функции форматирования.
-type FormatFn func(buf io.Writer, e *Error)
+	// DefaultMultierrFormatFunc функция форматирования для multierr ошибок.
+	DefaultMultierrFormatFunc MultierrFormatFn //nolint:gochecknoglobals
+)
+
+type (
+	// FormatFn тип функции форматирования.
+	FormatFn func(w io.Writer, e *Error)
+
+	// MultierrFormatFn типу функции морматирования для multierr.
+	MultierrFormatFn func(w io.Writer, es []error)
+)
 
 // JSONFormat функция форматирования вывода сообщения *Error в JSON.
 func JSONFormat(buf io.Writer, e *Error) {
@@ -40,13 +51,12 @@ func JSONFormat(buf io.Writer, e *Error) {
 	_, _ = io.WriteString(buf, "\"operations\":[")
 	ops := e.Operations()
 	if len(ops) > 0 {
-		op0 := ops[0].String()
+		op0 := ops[0]
 		_, _ = io.WriteString(buf, "\"")
 		_, _ = io.WriteString(buf, op0)
 		_, _ = io.WriteString(buf, "\"")
-		for _, s := range ops[1:] {
+		for _, opN := range ops[1:] {
 			_, _ = io.WriteString(buf, ",")
-			opN := s.String()
 			_, _ = io.WriteString(buf, "\"")
 			_, _ = io.WriteString(buf, opN)
 			_, _ = io.WriteString(buf, "\"")
@@ -86,7 +96,7 @@ func StringFormat(buf io.Writer, e *Error) { //nolint:cyclop
 	ctxs := e.ContextInfo()
 	msg := e.Msg()
 
-	if e.ErrorType() != "" {
+	if e.errorType != "" {
 		_, _ = io.WriteString(buf, "[")
 		_, _ = io.WriteString(buf, e.errorType)
 		_, _ = io.WriteString(buf, "]")
@@ -102,11 +112,10 @@ func StringFormat(buf io.Writer, e *Error) { //nolint:cyclop
 
 	if len(ops) > 0 {
 		_, _ = io.WriteString(buf, "[")
-		op0 := ops[0].String()
+		op0 := ops[0]
 		_, _ = io.WriteString(buf, op0)
-		for _, s := range ops[1:] {
+		for _, opN := range ops[1:] {
 			_, _ = io.WriteString(buf, ",")
-			opN := s.String()
 			_, _ = io.WriteString(buf, opN)
 		}
 		_, _ = io.WriteString(buf, "]")
@@ -138,29 +147,57 @@ func StringFormat(buf io.Writer, e *Error) { //nolint:cyclop
 
 //
 
-// Format производит форматирование строки, для поддержки fmt.Printf().
-func (e *Error) Format(s fmt.State, verb rune) {
-	switch verb {
-	case 'c':
-		fmt.Fprintf(s, "%v\n", e.ContextInfo())
+// multierr
 
-	case 'o':
-		fmt.Fprintf(s, "%v\n", e.Operations())
-
-	case 'l':
-		_, _ = io.WriteString(s, e.Severity().String())
-
-	case 't':
-		_, _ = io.WriteString(s, e.ErrorType())
-
-	case 'v':
-		if s.Flag('+') {
-			_, _ = io.WriteString(s, e.Sdump())
-			return
-		}
-		_, _ = io.WriteString(s, e.Error())
-
-	case 's', 'q':
-		_, _ = io.WriteString(s, e.Error())
+// StringMultierrFormatFunc функция форматирования вывода сообщения для multierr в виде строки.
+// Используется по-умолчанию.
+func StringMultierrFormatFunc(w io.Writer, es []error) {
+	if len(es) == 0 {
+		_, _ = io.WriteString(w, "")
+		return
 	}
+
+	for _, err := range es {
+		_, _ = io.WriteString(w, "* ")
+		_, _ = io.WriteString(w, err.Error())
+		_, _ = io.WriteString(w, "\n")
+	}
+}
+
+// JSONMultierrFuncFormat функция форматирования вывода сообщения для multierr в виде JSON.
+func JSONMultierrFuncFormat(w io.Writer, es []error) {
+	if len(es) == 0 {
+		_, _ = io.WriteString(w, "null")
+	}
+
+	_, _ = io.WriteString(w, "{")
+
+	_, _ = io.WriteString(w, "\"count\":")
+	_, _ = io.WriteString(w, strconv.Itoa(len(es)))
+	_, _ = io.WriteString(w, ",")
+
+	_, _ = io.WriteString(w, "\"messages\":")
+	_, _ = io.WriteString(w, "[")
+	writeErrFn := func(e error) {
+		var myerr *Error
+		if As(e, &myerr) {
+			JSONFormat(w, myerr)
+		} else {
+			_, _ = fmt.Fprintf(w, "\"%v\"", myerr)
+		}
+	}
+	switch len(es) {
+	case 0:
+	case 1:
+		writeErrFn(es[0])
+	default:
+		writeErrFn(es[0])
+		for _, e := range es[1:] {
+			_, _ = io.WriteString(w, ",")
+			writeErrFn(e)
+		}
+	}
+	_, _ = io.WriteString(w, "]")
+
+	_, _ = io.WriteString(w, "}")
 }
