@@ -1,3 +1,5 @@
+// +build vendors
+
 package errors_test
 
 import (
@@ -27,7 +29,7 @@ func BenchmarkVendorStandartError(b *testing.B) {
 }
 
 func BenchmarkVendorFmt(b *testing.B) {
-	e := fmt.Errorf("[ERROR] -- hello1")
+	e := fmt.Errorf("[%s] -- %s", "ERROR", "hello1")
 
 	require.Equal(b, e.Error(), "[ERROR] -- hello1")
 
@@ -112,7 +114,7 @@ func BenchmarkVendorMyMulti2StdErr(b *testing.B) {
 		stderrors.New("[ERROR] -- hello2"),
 	)
 
-	require.Equal(b, err.Error(), "* [ERROR] -- hello1\n* [ERROR] -- hello2\n")
+	require.Equal(b, err.Error(), "the following errors occurred:\n* [ERROR] -- hello1\n* [ERROR] -- hello2\n")
 
 	for i := 0; i < b.N; i++ {
 		_ = err.Error()
@@ -127,7 +129,7 @@ func BenchmarkVendorMyMulti2ErrNormal(b *testing.B) {
 		errors.New("hello2"),
 	)
 
-	require.Equal(b, err.Error(), "* [ERROR] -- hello1\n* [ERROR] -- hello2\n")
+	require.Equal(b, err.Error(), "the following errors occurred:\n* [ERROR] -- hello1\n* [ERROR] -- hello2\n")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -151,7 +153,7 @@ func BenchmarkVendorMyMulti2ErrMsgOnly(b *testing.B) {
 		),
 	)
 
-	require.Equal(b, err.Error(), "* hello1\n* hello2\n")
+	require.Equal(b, err.Error(), "the following errors occurred:\n* hello1\n* hello2\n")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -200,7 +202,7 @@ func BenchmarkVendorUberMulti2StdErr(b *testing.B) {
 	}
 }
 
-func BenchmarkVendorUberMulti2MyErr(b *testing.B) {
+func BenchmarkVendorUberMulti2MyNormalErr(b *testing.B) {
 	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
 
 	err := ubermulierr.Append(

@@ -38,8 +38,8 @@ func ExampleErrorOrNil() {
 	err = errors.Wrap(err, errors.New("three", errors.SetSeverity(customlog.SeverityWarn)))
 
 	fmt.Printf("%v\n", errors.ErrorOrNil(err))
-	//Output:
-	//[ERROR] -- one
+	// Output:
+	// [ERROR] -- one
 }
 
 // Добавление ошибок в mutierror с логгированием
@@ -88,9 +88,10 @@ func ExampleWrap() {
 
 	fmt.Printf("%v\n", err)
 
-	//Output:
-	//* [write]<hello:world> -- connection error
-	//* connection error
+	// Output:
+	// the following errors occurred:
+	// * [write]<hello:world> -- connection error
+	// * connection error
 }
 
 func ExampleNewWithLog() {
@@ -163,7 +164,7 @@ func ExampleLog() {
 	errors.Log(someTimedCast())
 
 	// Output:
-	// ovsinc/errors [ERROR]<call:example_test.go:163,duration:1s> -- some call
+	// ovsinc/errors [ERROR]<call:example_test.go:164,duration:1s> -- some call
 }
 
 func localizePrepare() *i18n.Localizer {
@@ -204,9 +205,9 @@ func ExampleError_translateMsg() {
 	fmt.Printf("%v\n", e1)
 	fmt.Print(e1.Error())
 
-	//Output:
-	//[not found][ERROR] -- У John Snow имеется 5 непрочитанных сообщений.
-	//[not found][ERROR] -- У John Snow имеется 5 непрочитанных сообщений.
+	// Output:
+	// [not found][ERROR] -- У John Snow имеется 5 непрочитанных сообщений.
+	// [not found][ERROR] -- У John Snow имеется 5 непрочитанных сообщений.
 }
 
 func ExampleNew() {
