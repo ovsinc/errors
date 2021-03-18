@@ -12,6 +12,8 @@ import (
 	"gitlab.com/ovsinc/errors/log"
 )
 
+var UnknownErrorType = "UNKNOWN_TYPE"
+
 func TestNewNil(t *testing.T) {
 	var err *Error
 
@@ -429,7 +431,7 @@ func TestError_ErrorType(t *testing.T) {
 		{
 			name: "New. Empty ",
 			err:  New(""),
-			want: UnknownErrorType,
+			want: "",
 		},
 		{
 			name: "New. Set",

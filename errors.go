@@ -16,12 +16,6 @@ var (
 	_ Errorer                     = (*Error)(nil)
 )
 
-// // _bufferPool is a pool of bytes.Buffers.
-// var _bufferPool = sync.Pool{
-// 	New: func() interface{} {
-// 	},
-// }
-
 // Errorer итерфейс кастомной ошибки.
 type Errorer interface {
 	WithOptions(ops ...Options) Errorer
@@ -63,9 +57,8 @@ type Error struct {
 // ** *Error
 func New(msg string, ops ...Options) Errorer {
 	e := &Error{
-		severity:  log.SeverityError,
-		errorType: UnknownErrorType,
-		msg:       msg,
+		severity: log.SeverityError,
+		msg:      msg,
 	}
 	for _, op := range ops {
 		op(e)
@@ -100,6 +93,11 @@ func (e *Error) Severity() log.Severity {
 // Msg возвращает исходное сообщение об ошибке
 func (e *Error) Msg() string {
 	return e.msg
+}
+
+// ErrorType вернет тип ошибки
+func (e *Error) ErrorType() string {
+	return e.errorType
 }
 
 // Error возвращает строковое представление ошибки.

@@ -38,8 +38,8 @@ func ExampleErrorOrNil() {
 	err = errors.Wrap(err, errors.New("three", errors.SetSeverity(customlog.SeverityWarn)))
 
 	fmt.Printf("%v\n", errors.ErrorOrNil(err))
-	//Output:
-	//[UNKNOWN_TYPE][ERROR] -- one
+	// Output:
+	// [ERROR] -- one
 }
 
 // Добавление ошибок в mutierror с логгированием
@@ -58,7 +58,7 @@ func ExampleAppendWithLog() {
 	)
 
 	// Output:
-	// ovsinc/errors {"count":2,"messages":[{"error_type":"UNKNOWN_TYPE","severity":"ERROR","operations":[],"context":null,"msg":"one"},{"error_type":"UNKNOWN_TYPE","severity":"ERROR","operations":[],"context":null,"msg":"two"}]}
+	// ovsinc/errors {"count":2,"messages":[{"error_type":"","severity":"ERROR","operations":[],"context":null,"msg":"one"},{"error_type":"","severity":"ERROR","operations":[],"context":null,"msg":"two"}]}
 }
 
 func someFuncWithErr() error {
@@ -88,9 +88,10 @@ func ExampleWrap() {
 
 	fmt.Printf("%v\n", err)
 
-	//Output:
-	//* [write]<hello:world> -- connection error
-	//* connection error
+	// Output:
+	// the following errors occurred:
+	// * [write]<hello:world> -- connection error
+	// * connection error
 }
 
 func ExampleNewWithLog() {
@@ -109,9 +110,9 @@ func ExampleNewWithLog() {
 	_ = errors.NewWithLog("three")
 
 	// Output:
-	// ovsinc/errors [UNKNOWN_TYPE][ERROR] -- one
-	// ovsinc/errors [UNKNOWN_TYPE][ERROR] -- two
-	// ovsinc/errors [UNKNOWN_TYPE][ERROR] -- three
+	// ovsinc/errors [ERROR] -- one
+	// ovsinc/errors [ERROR] -- two
+	// ovsinc/errors [ERROR] -- three
 }
 
 func someErrFunc() error {
@@ -163,7 +164,7 @@ func ExampleLog() {
 	errors.Log(someTimedCast())
 
 	// Output:
-	// ovsinc/errors [UNKNOWN_TYPE][ERROR]<call:example_test.go:163,duration:1s> -- some call
+	// ovsinc/errors [ERROR]<call:example_test.go:164,duration:1s> -- some call
 }
 
 func localizePrepare() *i18n.Localizer {
@@ -204,9 +205,9 @@ func ExampleError_translateMsg() {
 	fmt.Printf("%v\n", e1)
 	fmt.Print(e1.Error())
 
-	//Output:
-	//[not found][ERROR] -- У John Snow имеется 5 непрочитанных сообщений.
-	//[not found][ERROR] -- У John Snow имеется 5 непрочитанных сообщений.
+	// Output:
+	// [not found][ERROR] -- У John Snow имеется 5 непрочитанных сообщений.
+	// [not found][ERROR] -- У John Snow имеется 5 непрочитанных сообщений.
 }
 
 func ExampleNew() {
@@ -215,5 +216,5 @@ func ExampleNew() {
 	fmt.Println(e)
 
 	//Output:
-	//[UNKNOWN_TYPE][ERROR] -- hello world
+	//[ERROR] -- hello world
 }
