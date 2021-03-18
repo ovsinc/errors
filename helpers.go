@@ -18,7 +18,7 @@ func As(err error, target interface{}) bool {
 	return origerrors.As(err, target)
 }
 
-// GetErrorType возвращает тип ошибки. Для НЕ *Error всегда будет UnknownErrorType.
+// GetErrorType возвращает тип ошибки. Для НЕ *Error всегда будет "".
 func GetErrorType(err error) string {
 	var errtype *Error
 
@@ -26,7 +26,7 @@ func GetErrorType(err error) string {
 		return errtype.ErrorType()
 	}
 
-	return UnknownErrorType
+	return ""
 }
 
 // GetID возвращает ID ошибки. Для НЕ *Error всегда будет "".

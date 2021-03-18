@@ -16,6 +16,11 @@ var (
 
 	// DefaultMultierrFormatFunc функция форматирования для multierr ошибок.
 	DefaultMultierrFormatFunc MultierrFormatFn //nolint:gochecknoglobals
+
+	_multilinePrefix    = []byte("the following errors occurred:")
+	_multilineSeparator = []byte("\n")
+	_multilineIndent    = []byte("* ")
+	_msgSeparator       = []byte(" -- ")
 )
 
 type (
@@ -139,7 +144,7 @@ func StringFormat(buf io.Writer, e *Error) { //nolint:cyclop
 	}
 
 	if writeDelim && len(msg) > 0 {
-		_, _ = io.WriteString(buf, " -- ")
+		_, _ = buf.Write(_msgSeparator)
 	}
 
 	_ = e.writeTranslate(buf, msg)
@@ -157,10 +162,13 @@ func StringMultierrFormatFunc(w io.Writer, es []error) {
 		return
 	}
 
+	_, _ = w.Write(_multilinePrefix)
+	_, _ = w.Write(_multilineSeparator)
+
 	for _, err := range es {
-		_, _ = io.WriteString(w, "* ")
+		_, _ = w.Write(_multilineIndent)
 		_, _ = io.WriteString(w, err.Error())
-		_, _ = io.WriteString(w, "\n")
+		_, _ = w.Write(_multilineSeparator)
 	}
 }
 

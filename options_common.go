@@ -46,3 +46,13 @@ func SetID(id string) Options {
 		e.id = id
 	}
 }
+
+// SetErrorType установит тип ошибки
+func SetErrorType(etype string) Options {
+	return func(e *Error) {
+		if e == nil {
+			return
+		}
+		e.errorType = etype
+	}
+}

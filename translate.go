@@ -66,7 +66,6 @@ func (e *Error) writeTranslate(w io.Writer, s string) error {
 	}
 
 	var localizer *i18n.Localizer
-
 	switch {
 	case e.localizer != nil:
 		localizer = e.localizer
