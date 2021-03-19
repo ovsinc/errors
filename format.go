@@ -25,14 +25,14 @@ var (
 
 type (
 	// FormatFn тип функции форматирования.
-	FormatFn func(w io.Writer, e *Error)
+	FormatFn func(w io.Writer, e Errorer)
 
 	// MultierrFormatFn типу функции морматирования для multierr.
 	MultierrFormatFn func(w io.Writer, es []error)
 )
 
 // JSONFormat функция форматирования вывода сообщения *Error в JSON.
-func JSONFormat(buf io.Writer, e *Error) {
+func JSONFormat(buf io.Writer, e Errorer) {
 	if e == nil {
 		_, _ = io.WriteString(buf, "null")
 		return
@@ -43,13 +43,13 @@ func JSONFormat(buf io.Writer, e *Error) {
 	// ErrorType
 	_, _ = io.WriteString(buf, "\"error_type\":")
 	_, _ = io.WriteString(buf, "\"")
-	_, _ = io.WriteString(buf, e.errorType)
+	_, _ = io.WriteString(buf, e.ErrorType())
 	_, _ = io.WriteString(buf, "\",")
 
 	// Severity
 	_, _ = io.WriteString(buf, "\"severity\":")
 	_, _ = io.WriteString(buf, "\"")
-	_, _ = io.WriteString(buf, e.severity.String())
+	_, _ = io.WriteString(buf, e.Severity().String())
 	_, _ = io.WriteString(buf, "\",")
 
 	// Operations
@@ -78,10 +78,10 @@ func JSONFormat(buf io.Writer, e *Error) {
 	// Msg
 	_, _ = io.WriteString(buf, "\"msg\":")
 	_, _ = io.WriteString(buf, "\"")
-	if len(e.msg) == 0 {
+	if len(e.Msg()) == 0 {
 		_, _ = io.WriteString(buf, "null")
 	} else {
-		_ = e.writeTranslate(buf, e.msg)
+		e.WriteTranslateMsg(buf)
 	}
 	_, _ = io.WriteString(buf, "\"")
 
@@ -90,31 +90,30 @@ func JSONFormat(buf io.Writer, e *Error) {
 
 // StringFormat функция форматирования вывода сообщения *Error в виде строки.
 // Используется по-умолчанию.
-func StringFormat(buf io.Writer, e *Error) { //nolint:cyclop
+func StringFormat(buf io.Writer, e Errorer) { //nolint:cyclop
 	if e == nil {
 		return
 	}
 
 	writeDelim := false
 
+	et := e.ErrorType()
+	if et != "" {
+		_, _ = io.WriteString(buf, "[")
+		_, _ = io.WriteString(buf, et)
+		_, _ = io.WriteString(buf, "]")
+		writeDelim = true
+	}
+
+	sev := e.Severity()
+	if sev > log.SeverityUnknown {
+		_, _ = io.WriteString(buf, "[")
+		_, _ = io.WriteString(buf, sev.String())
+		_, _ = io.WriteString(buf, "]")
+		writeDelim = true
+	}
+
 	ops := e.Operations()
-	ctxs := e.ContextInfo()
-	msg := e.Msg()
-
-	if e.errorType != "" {
-		_, _ = io.WriteString(buf, "[")
-		_, _ = io.WriteString(buf, e.errorType)
-		_, _ = io.WriteString(buf, "]")
-		writeDelim = true
-	}
-
-	if e.Severity() > log.SeverityUnknown {
-		_, _ = io.WriteString(buf, "[")
-		_, _ = io.WriteString(buf, e.severity.String())
-		_, _ = io.WriteString(buf, "]")
-		writeDelim = true
-	}
-
 	if len(ops) > 0 {
 		_, _ = io.WriteString(buf, "[")
 		op0 := ops[0]
@@ -127,6 +126,7 @@ func StringFormat(buf io.Writer, e *Error) { //nolint:cyclop
 		writeDelim = true
 	}
 
+	ctxs := e.ContextInfo()
 	if len(ctxs) > 0 {
 		_, _ = io.WriteString(buf, "<")
 		ctxskeys := make([]string, 0, len(ctxs))
@@ -143,11 +143,12 @@ func StringFormat(buf io.Writer, e *Error) { //nolint:cyclop
 		writeDelim = true
 	}
 
+	msg := e.Msg()
 	if writeDelim && len(msg) > 0 {
 		_, _ = buf.Write(_msgSeparator)
 	}
 
-	_ = e.writeTranslate(buf, msg)
+	e.WriteTranslateMsg(buf)
 }
 
 //
@@ -187,8 +188,7 @@ func JSONMultierrFuncFormat(w io.Writer, es []error) {
 	_, _ = io.WriteString(w, "\"messages\":")
 	_, _ = io.WriteString(w, "[")
 	writeErrFn := func(e error) {
-		var myerr *Error
-		if As(e, &myerr) {
+		if myerr, ok := simpleCast(e); ok {
 			JSONFormat(w, myerr)
 		} else {
 			_, _ = fmt.Fprintf(w, "\"%v\"", myerr)

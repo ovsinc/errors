@@ -25,6 +25,7 @@ type Errorer interface {
 	Error() string
 	Sdump() string
 	ErrorOrNil() error
+	ContextInfo() CtxMap
 
 	ErrorType() string
 
@@ -33,6 +34,7 @@ type Errorer interface {
 
 	TranslateContext() *TranslateContext
 	Localizer() *i18n.Localizer
+	WriteTranslateMsg(w io.Writer)
 
 	Log(l ...logcommon.Logger)
 }

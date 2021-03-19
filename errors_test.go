@@ -1,7 +1,6 @@
 package errors
 
 import (
-	origerrors "errors"
 	"io"
 	"reflect"
 	"testing"
@@ -66,7 +65,7 @@ func TestNew(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			if got := New("", tt.args.ops...); origerrors.Is(got, tt.want) {
+			if got := New("", tt.args.ops...); got != nil && tt.want != nil && got.Error() == tt.want.Error() {
 				t.Errorf("New() = %v, want %v", got, tt.want)
 			}
 		})
@@ -108,7 +107,7 @@ func TestSetMsg(t *testing.T) {
 			got := SetMsg(tt.args.msg)
 			got(tt.err)
 
-			if !origerrors.Is(tt.err, tt.want) {
+			if tt.err != nil && tt.want != nil && tt.err.Error() != tt.want.Error() {
 				t.Errorf("SetMsg() = %v, want %v", got, tt.want)
 			}
 		})
@@ -118,7 +117,7 @@ func TestSetMsg(t *testing.T) {
 func TestSetFormatFn(t *testing.T) {
 	myerr := &Error{}
 
-	var testFormatFn FormatFn = func(w io.Writer, e *Error) {}
+	var testFormatFn FormatFn = func(w io.Writer, e Errorer) {}
 
 	type args struct {
 		fn FormatFn
@@ -152,7 +151,7 @@ func TestSetFormatFn(t *testing.T) {
 			got := SetFormatFn(tt.args.fn)
 			got(tt.err)
 
-			if !origerrors.Is(tt.err, tt.want) {
+			if tt.err != nil && tt.want != nil && tt.err.Error() != tt.want.Error() {
 				t.Errorf("SetFormatFn() = %v, want %v", got, tt.want)
 			}
 		})
@@ -568,7 +567,7 @@ func TestError_ErrorOrNil(t *testing.T) {
 				return
 			}
 
-			if err.Error() != tt.want.Error() {
+			if err != nil && tt.want != nil && err.Error() != tt.want.Error() {
 				t.Errorf("Error.ErrorOrNil() error = _%v_, want _%v_", err, tt.want)
 			}
 		})

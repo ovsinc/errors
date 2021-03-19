@@ -1,8 +1,6 @@
 package errors
 
 import (
-	origerrors "errors"
-
 	"gitlab.com/ovsinc/errors/log"
 	logcommon "gitlab.com/ovsinc/errors/log/common"
 )
@@ -58,10 +56,9 @@ func WrapWithLog(olderr error, err error) error {
 // Log выполнить логгирование ошибки err с ипользованием логгера l[0].
 // Если l не указан, то в качестве логгера будет использоваться логгер по-умолчанию.
 func Log(err error, l ...logcommon.Logger) {
-	var errseverity *Error
 	severity := log.SeverityError
 
-	if origerrors.As(err, &errseverity) {
+	if errseverity, ok := simpleCast(err); ok {
 		severity = errseverity.Severity()
 	}
 	customlog(getLogger(l...), err, severity)
