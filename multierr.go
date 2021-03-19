@@ -4,7 +4,6 @@
 package errors
 
 import (
-	origerrors "errors"
 	"fmt"
 	"io"
 
@@ -37,16 +36,14 @@ func Errors(err error) []error {
 	// This behavior can be expanded in the future but I think it's prudent to
 	// start with as little as possible in terms of contract and possibility
 	// of misuse.
-	var eg *multiError
-	if !origerrors.As(err, &eg) {
-		return []error{err}
+	if eg, ok := err.(*multiError); ok { //nolint:errorlint
+		errors := eg.Errors()
+		result := make([]error, len(errors))
+		copy(result, errors)
+		return result
 	}
 
-	errors := eg.Errors()
-	result := make([]error, len(errors))
-	copy(result, errors)
-
-	return result
+	return []error{err}
 }
 
 // multiError is an error that holds one or more errors.
@@ -127,8 +124,7 @@ func inspect(errors []error) (res inspectResult) {
 			res.FirstErrorIdx = i
 		}
 
-		var merr *multiError
-		if origerrors.As(err, &merr) {
+		if merr, ok := err.(*multiError); ok { //nolint:errorlint
 			res.Capacity += len(merr.errors)
 			res.ContainsMultiError = true
 		} else {
@@ -161,8 +157,7 @@ func fromSlice(errors []error) error {
 			continue
 		}
 
-		var nested *multiError
-		if origerrors.As(err, &nested) {
+		if nested, ok := err.(*multiError); ok { //nolint:errorlint
 			nonNilErrs = append(nonNilErrs, nested.errors...)
 		} else {
 			nonNilErrs = append(nonNilErrs, err)

@@ -58,7 +58,7 @@ func TestUnwrapByID(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			err := UnwrapByID(tt.args.err, tt.args.id)
-			if !Is(err, tt.want) {
+			if err != nil && tt.want != nil && err.Error() != tt.want.Error() {
 				t.Errorf("UnwrapByID() error = %#v, want %#v", err, tt.want)
 			}
 		})

@@ -1,28 +1,8 @@
 package errors
 
-import (
-	origerrors "errors"
-)
-
-// Is сообщает, соответствует ли ошибка err target-ошибке.
-// Для multierr будет производится поиск в цепочке.
-func Is(err, target error) bool {
-	if err == nil {
-		return target == nil
-	}
-	return origerrors.Is(err, target)
-}
-
-// As обнаруживает ошибку err, соответствующую target и устанавливает target в найденное значение.
-func As(err error, target interface{}) bool {
-	return origerrors.As(err, target)
-}
-
 // GetErrorType возвращает тип ошибки. Для НЕ *Error всегда будет "".
 func GetErrorType(err error) string {
-	var errtype *Error
-
-	if origerrors.As(err, &errtype) {
+	if errtype, ok := err.(*Error); ok { //nolint:errorlint
 		return errtype.ErrorType()
 	}
 
@@ -31,9 +11,7 @@ func GetErrorType(err error) string {
 
 // GetID возвращает ID ошибки. Для НЕ *Error всегда будет "".
 func GetID(err error) (id string) {
-	var idtype *Error
-
-	if origerrors.As(err, &idtype) {
+	if idtype, ok := err.(*Error); ok { //nolint:errorlint
 		return idtype.ID()
 	}
 
@@ -46,26 +24,40 @@ func GetID(err error) (id string) {
 // В противном случае будет возвращен nil.
 // Важно: *Error c Severity Warn не является ошибкой.
 func ErrorOrNil(err error) error {
-	var (
-		multerr *multiError
-		myerr   *Error
-	)
-
-	switch {
-	case origerrors.As(err, &myerr):
-		return myerr.ErrorOrNil()
-
-	case origerrors.As(err, &multerr):
-		for _, e := range multerr.Errors() {
-			// если это *Error и хотя бы одна из *Error не nil, вернуть ее
-			if origerrors.As(e, &myerr) && myerr.ErrorOrNil() != nil {
-				return myerr
-			}
-		}
-		return nil
+	if e, ok := cast(err); ok {
+		return e.ErrorOrNil()
 	}
 
 	return err
+}
+
+func errsFn(errs []error) Errorer {
+	for _, e := range errs {
+		if myerr, ok := simpleCast(e); ok {
+			return myerr
+		}
+	}
+	return nil
+}
+
+func simpleCast(err error) (Errorer, bool) {
+	e, ok := err.(Errorer) //nolint:errorlint
+	return e, ok
+}
+
+func cast(err error) (Errorer, bool) {
+	switch t := err.(type) { //nolint:errorlint
+	case interface{ Errors() []error }: // *multiError
+		return errsFn(t.Errors()), true
+
+	case interface{ WrappedErrors() []error }: // *github.com/hashicorp/go-multierror.Error
+		return errsFn(t.WrappedErrors()), true
+
+	case *Error:
+		return t, true
+	}
+
+	return nil, false
 }
 
 // Cast преобразует тип error в *Error
@@ -76,40 +68,34 @@ func Cast(err error) Errorer {
 		return nil
 	}
 
-	var myerr *Error
-	if origerrors.As(err, &myerr) {
-		return myerr
+	if e, ok := cast(err); ok {
+		return e
 	}
 
 	return New(err.Error())
 }
 
 func findByID(err error, id string) (Errorer, bool) {
-	var (
-		merr  *multiError
-		myerr *Error
-	)
-
-	getiderrFn := func(err error) (Errorer, bool) {
-		var iderr *Error
-		if origerrors.As(err, &iderr) {
-			return iderr, iderr.ID() == id
-		}
-		return nil, false
-	}
-
-	switch {
-	case origerrors.As(err, &merr):
-		for _, e := range merr.Errors() {
-			if iderr, ok := getiderrFn(e); ok {
-				return iderr, true
+	checkIDFn := func(errs []error) Errorer {
+		for _, err := range errs {
+			if e, ok := simpleCast(err); ok && e.ID() == id {
+				return e
 			}
 		}
+		return nil
+	}
 
-	case origerrors.As(err, &myerr):
-		if myerr.ID() == id {
-			return myerr, true
-		}
+	switch t := err.(type) { //nolint:errorlint
+	case interface{ Errors() []error }: // *multiError
+		e := checkIDFn(t.Errors())
+		return e, e != nil
+
+	case interface{ WrappedErrors() []error }: // *github.com/hashicorp/go-multierror.Error
+		e := checkIDFn(t.WrappedErrors())
+		return e, e != nil
+
+	case *Error:
+		return t, t.ID() == id
 	}
 
 	return nil, false
@@ -121,6 +107,7 @@ func UnwrapByID(err error, id string) Errorer {
 	if e, ok := findByID(err, id); ok {
 		return e
 	}
+
 	return nil
 }
 
@@ -128,5 +115,6 @@ func UnwrapByID(err error, id string) Errorer {
 // Допускается в качестве аргумента err указывать одиночную ошибку.
 func Contains(err error, id string) bool {
 	_, ok := findByID(err, id)
+
 	return ok
 }
