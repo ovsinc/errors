@@ -60,7 +60,14 @@ func (e *Error) Localizer() *i18n.Localizer {
 
 var errNoLocalizer = origerrors.New("no localizer config for this lang")
 
-func (e *Error) writeTranslate(w io.Writer, s string) error {
+// WriteTranslateMsg запишет перевод сообщения ошибки в буфер.
+func (e *Error) WriteTranslateMsg(w io.Writer) {
+	_ = e.writeTranslateMsg(w)
+}
+
+func (e *Error) writeTranslateMsg(w io.Writer) error {
+	s := e.msg
+
 	if len(s) == 0 {
 		return nil
 	}

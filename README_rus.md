@@ -104,6 +104,7 @@ type Errorer interface {
     Error() string
     Sdump() string
     ErrorOrNil() error
+    ContextInfo() CtxMap
 
     ErrorType() string
 
@@ -112,6 +113,7 @@ type Errorer interface {
 
     TranslateContext() *TranslateContext
     Localizer() *i18n.Localizer
+    WriteTranslateMsg(w io.Writer)
 
     Log(l ...logcommon.Logger)
 }
@@ -151,6 +153,7 @@ type Errorer interface {
 | `func (e *Error) TranslateContext() *TranslateContext` | Геттер получения контекста перевода. |
 | `func (e *Error) Localizer() *i18n.Localizer` | Геттер получения локализатора. |
 | `func (e *Error) Log(l ...logcommon.Logger) ` | Метод логгирования. Выполнит логгирование ошибки с использованием логгера `l[0]`. |
+| `func (e *Error) WriteTranslateMsg(w io.Writer)` | Запишет перевод сообщения ошибки в буфер. |
 
 ### Функции-параметры
 
@@ -176,8 +179,8 @@ type Errorer interface {
 
 | Хелпер | Описание |
 | ------ | -------- |
-| `func Is(err, target error) bool` | Обёртка над методом стандартной библиотеки `errors.Is`. |
-| `func As(err error, target interface{}) bool` | Обёртка над методом стандартной библиотеки `errors.As`. |
+| `func Is(err, target error) bool` | Обёртка над методом стандартной библиотеки `errors.Is`. Для go >= 1.13. |
+| `func As(err error, target interface{}) bool` | Обёртка над методом стандартной библиотеки `errors.As`. Для go >= 1.13. |
 | `func GetErrorType(err error) string` | Получить тип ошибки. Для НЕ `*Error` всегда будет "". |
 | `func ErrorOrNil(err error) error` | Возможна обработка цепочки или одиночной ошибки. Если хотя бы одна ошибка в цепочке является ошибкой, то она будет возвращена в качестве результата. Важно: `*Error` c Severity `Warn` не является ошибкой. |
 | `func Cast(err error) Errorer` | Преобразование типа `error` в `*Error`. |
@@ -341,15 +344,15 @@ func main() {
 
 Multierror-сообщения форматируются в пакете следующими функциями:
 
-- для вывода в формате JSON - `func JSONMultierrFuncFormat(es []error) string`;
-- для строкового вывода - `func StringMultierrFormatFunc(es []error) string`.
+- для вывода в формате JSON - `JSONMultierrFuncFormat(w io.Writer, es []error)`;
+- для строкового вывода - `StringMultierrFormatFunc(w io.Writer, es []error)`.
 
 Для сообщений с типом `*Error` используются функции-форматеры типа `type FormatFn func(e *Error) string`. Задать требуемую функцию форматирования можно с помощью функции-параметра `SetFormatFn` в конструкторе или изменить это значение с помощью метода `WithOptions`.
 
 В пакете представлены следующие функции-форматеры:
 
-- для вывода в формате JSON - `func JSONFormat(e *Error) string`;
-- для строкового вывода - `func StringFormat(e *Error) string`.
+- для вывода в формате JSON - `JSONFormat(buf io.Writer, e Errorer)`;
+- для строкового вывода - `StringFormat(buf io.Writer, e Errorer)`.
 
 Внимание! При использовании форматирования цепочки сообщения `JSONMultierrFuncFormat` функция форматирование `*Error` по-умолчанию переключается на `JSONFormat`.
 
