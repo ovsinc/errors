@@ -15,6 +15,7 @@ import (
 	hashmultierr "github.com/hashicorp/go-multierror"
 
 	ubermulierr "go.uber.org/multierr"
+	"golang.org/x/xerrors"
 )
 
 func BenchmarkVendorStandartError(b *testing.B) {
@@ -34,6 +35,16 @@ func BenchmarkVendorFmt(b *testing.B) {
 	require.Equal(b, e.Error(), "[ERROR] -- hello1")
 
 	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = e.Error()
+	}
+}
+
+func BenchmarkVendorXerrors(b *testing.B) {
+	e := xerrors.New("[ERROR] -- hello1")
+
+	require.Equal(b, e.Error(), "[ERROR] -- hello1")
+
 	for i := 0; i < b.N; i++ {
 		_ = e.Error()
 	}

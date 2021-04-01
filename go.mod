@@ -18,4 +18,5 @@ require (
 	go.uber.org/multierr v1.5.0
 	go.uber.org/zap v1.16.0
 	golang.org/x/text v0.3.5
+	golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7
 )
