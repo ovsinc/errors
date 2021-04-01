@@ -5,6 +5,7 @@ import (
 	"io"
 
 	i18n "github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/valyala/bytebufferpool"
 )
 
 // DefaultLocalizer локализатор по-умолчанию.
@@ -63,6 +64,16 @@ var errNoLocalizer = origerrors.New("no localizer config for this lang")
 // WriteTranslateMsg запишет перевод сообщения ошибки в буфер.
 func (e *Error) WriteTranslateMsg(w io.Writer) {
 	_ = e.writeTranslateMsg(w)
+}
+
+// TranslateMsg вернетперевод сообщения ошибки.
+func (e *Error) TranslateMsg() string {
+	buf := bytebufferpool.Get()
+	defer bytebufferpool.Put(buf)
+
+	e.WriteTranslateMsg(buf)
+
+	return buf.String()
 }
 
 func (e *Error) writeTranslateMsg(w io.Writer) error {
