@@ -6,12 +6,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/BurntSushi/toml"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"gitlab.com/ovsinc/errors"
 	customlog "gitlab.com/ovsinc/errors/log"
 	"gitlab.com/ovsinc/errors/log/golog"
-
-	"github.com/BurntSushi/toml"
-	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
 )
 
@@ -164,7 +163,7 @@ func ExampleLog() {
 	errors.Log(someTimedCast())
 
 	// Output:
-	// ovsinc/errors [ERROR]<call:example_test.go:164,duration:1s> -- some call
+	// ovsinc/errors [ERROR]<call:example_test.go:163,duration:1s> -- some call
 }
 
 func localizePrepare() *i18n.Localizer {

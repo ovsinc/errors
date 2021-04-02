@@ -53,7 +53,7 @@ func cast(err error) (Errorer, bool) {
 	case interface{ WrappedErrors() []error }: // *github.com/hashicorp/go-multierror.Error
 		return errsFn(t.WrappedErrors()), true
 
-	case *Error:
+	case Errorer:
 		return t, true
 	}
 
@@ -94,7 +94,7 @@ func findByID(err error, id string) (Errorer, bool) {
 		e := checkIDFn(t.WrappedErrors())
 		return e, e != nil
 
-	case *Error:
+	case Errorer:
 		return t, t.ID() == id
 	}
 

@@ -81,7 +81,7 @@ func JSONFormat(buf io.Writer, e Errorer) {
 	if len(e.Msg()) == 0 {
 		_, _ = io.WriteString(buf, "null")
 	} else {
-		e.WriteTranslateMsg(buf)
+		_, _ = e.WriteTranslateMsg(buf)
 	}
 	_, _ = io.WriteString(buf, "\"")
 
@@ -148,7 +148,7 @@ func StringFormat(buf io.Writer, e Errorer) { //nolint:cyclop
 		_, _ = buf.Write(_msgSeparator)
 	}
 
-	e.WriteTranslateMsg(buf)
+	_, _ = e.WriteTranslateMsg(buf)
 }
 
 //

@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"gitlab.com/ovsinc/errors"
 	"gitlab.com/ovsinc/errors/log"
-
-	"github.com/stretchr/testify/require"
 )
 
 func BenchmarkStringFn(b *testing.B) {
