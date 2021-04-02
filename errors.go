@@ -34,7 +34,7 @@ type Errorer interface {
 
 	TranslateContext() *TranslateContext
 	Localizer() *i18n.Localizer
-	WriteTranslateMsg(w io.Writer)
+	WriteTranslateMsg(w io.Writer) (int, error)
 	TranslateMsg() string
 
 	Log(l ...logcommon.Logger)

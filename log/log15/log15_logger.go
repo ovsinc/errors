@@ -3,7 +3,6 @@ package log15
 
 import (
 	log15orig "github.com/inconshreveable/log15"
-
 	log "gitlab.com/ovsinc/errors/log/common"
 )
 

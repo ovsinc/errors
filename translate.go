@@ -1,7 +1,6 @@
 package errors
 
 import (
-	origerrors "errors"
 	"io"
 
 	i18n "github.com/nicksnyder/go-i18n/v2/i18n"
@@ -59,28 +58,28 @@ func (e *Error) Localizer() *i18n.Localizer {
 
 //
 
-var errNoLocalizer = origerrors.New("no localizer config for this lang")
-
 // WriteTranslateMsg запишет перевод сообщения ошибки в буфер.
-func (e *Error) WriteTranslateMsg(w io.Writer) {
-	_ = e.writeTranslateMsg(w)
+// Если не удастся выполнить перевод в буфер w будет записано оригинальное сообщение.
+func (e *Error) WriteTranslateMsg(w io.Writer) (int, error) {
+	return e.writeTranslateMsg(w)
 }
 
-// TranslateMsg вернетперевод сообщения ошибки.
+// TranslateMsg вернет перевод сообщения ошибки.
+// Если не удастся выполнить перевод, вернет оригинальное сообщение.
 func (e *Error) TranslateMsg() string {
 	buf := bytebufferpool.Get()
 	defer bytebufferpool.Put(buf)
 
-	e.WriteTranslateMsg(buf)
+	_, _ = e.WriteTranslateMsg(buf)
 
 	return buf.String()
 }
 
-func (e *Error) writeTranslateMsg(w io.Writer) error {
+func (e *Error) writeTranslateMsg(w io.Writer) (int, error) {
 	s := e.msg
 
 	if len(s) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	var localizer *i18n.Localizer
@@ -92,8 +91,7 @@ func (e *Error) writeTranslateMsg(w io.Writer) error {
 	}
 
 	if localizer == nil {
-		_, _ = io.WriteString(w, s)
-		return errNoLocalizer
+		return io.WriteString(w, s)
 	}
 
 	i18nConf := i18n.LocalizeConfig{
@@ -107,11 +105,8 @@ func (e *Error) writeTranslateMsg(w io.Writer) error {
 
 	msg, _, err := e.localizer.LocalizeWithTag(&i18nConf)
 	if err != nil {
-		_, _ = io.WriteString(w, s)
-		return err
+		return io.WriteString(w, s)
 	}
 
-	_, _ = io.WriteString(w, msg)
-
-	return nil
+	return io.WriteString(w, msg)
 }

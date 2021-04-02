@@ -5,7 +5,6 @@ package journald
 
 import (
 	pkgjournal "github.com/coreos/go-systemd/journal"
-
 	log "gitlab.com/ovsinc/errors/log/common"
 )
 

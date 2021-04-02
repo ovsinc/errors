@@ -5,9 +5,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
-	"golang.org/x/text/language"
-
 	"github.com/stretchr/testify/require"
+	"golang.org/x/text/language"
 )
 
 func BenchmarkTranslateMsg(b *testing.B) {

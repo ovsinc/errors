@@ -39,7 +39,7 @@ go_lint: ## Lint the files
 go_lint_max: ## Max lint checks the files
 	@${linter} run \
 	-p bugs -p complexity -p unused -p format \
-	-E gosec -E govet -E scopelint -E staticcheck -E typecheck
+	-E gosec -E govet -E exportloopref -E staticcheck -E typecheck
 
 .PHONY: go_style
 go_style: ## check style of code

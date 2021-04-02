@@ -7,13 +7,10 @@ import (
 	"fmt"
 	"testing"
 
+	hashmultierr "github.com/hashicorp/go-multierror"
 	"github.com/stretchr/testify/require"
-
 	"gitlab.com/ovsinc/errors"
 	"gitlab.com/ovsinc/errors/log"
-
-	hashmultierr "github.com/hashicorp/go-multierror"
-
 	ubermulierr "go.uber.org/multierr"
 	"golang.org/x/xerrors"
 )

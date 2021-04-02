@@ -3,7 +3,6 @@ package zap
 
 import (
 	log "gitlab.com/ovsinc/errors/log/common"
-
 	origzap "go.uber.org/zap"
 )
 
