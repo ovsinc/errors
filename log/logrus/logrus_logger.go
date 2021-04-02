@@ -3,7 +3,6 @@ package logrus
 
 import (
 	origlogrus "github.com/sirupsen/logrus"
-
 	log "gitlab.com/ovsinc/errors/log/common"
 )
 
