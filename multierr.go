@@ -83,7 +83,12 @@ func (merr *multiError) Error() string {
 }
 
 func (merr *multiError) Format(f fmt.State, c rune) {
-	merr.writeLines(f)
+	switch c {
+	case 'w', 'v', 's':
+		merr.writeLines(f)
+	case 'j':
+		JSONMultierrFuncFormat(f, merr.errors)
+	}
 }
 
 func (merr *multiError) writeLines(w io.Writer) {

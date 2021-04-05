@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// ErrNotValidSeverity ошибка валидации типа Severuty
+// ErrNotValidSeverity ошибка валидации типа Severuty.
 var ErrNotValidSeverity = origerrors.New("not a valid severity")
 
 //
@@ -39,7 +39,7 @@ func ParseSeverityUint(v uint32) (s Severity, err error) {
 
 //
 
-// Severity ENUM тип определения Severity
+// Severity ENUM тип определения Severity.
 type Severity uint32
 
 const (

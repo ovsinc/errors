@@ -57,7 +57,7 @@ func ExampleAppendWithLog() {
 	)
 
 	// Output:
-	// ovsinc/errors {"count":2,"messages":[{"error_type":"","severity":"ERROR","operations":[],"context":null,"msg":"one"},{"error_type":"","severity":"ERROR","operations":[],"context":null,"msg":"two"}]}
+	// ovsinc/errors {"count":2,"messages":[{"id":"","error_type":"","severity":"ERROR","operations":[],"context":null,"msg":"one"},{"id":"","error_type":"","severity":"ERROR","operations":[],"context":null,"msg":"two"}]}
 }
 
 func someFuncWithErr() error {
