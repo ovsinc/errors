@@ -39,7 +39,7 @@ func BenchmarkTranslateMsg(b *testing.B) {
 		SetTranslateContext(&ErrEmailsUnreadMsg),
 	)
 
-	require.Equal(b, e1.Error(), "[not found][ERROR] -- У John Snow имеется 5 непрочитанных сообщений.")
+	require.Equal(b, e1.Error(), "(not found) -- У John Snow имеется 5 непрочитанных сообщений.")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

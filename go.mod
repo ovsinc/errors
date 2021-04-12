@@ -7,6 +7,7 @@ require (
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/davecgh/go-spew v1.1.1
 	github.com/go-stack/stack v1.8.0 // indirect
+	github.com/goccy/go-json v0.4.11
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/inconshreveable/log15 v0.0.0-20201112154412-8562bdadbbac
 	github.com/mattn/go-colorable v0.1.8 // indirect

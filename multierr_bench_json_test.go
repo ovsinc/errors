@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	e1 = errors.New(
+	je1 = errors.New(
 		"hello1",
 		errors.SetErrorType("not found"),
 		errors.SetOperations("write"),
@@ -17,7 +17,7 @@ var (
 		errors.SetContextInfo(errors.CtxMap{"hello": "world", "my": "name"}),
 	)
 
-	e2 = errors.New(
+	je2 = errors.New(
 		"hello2",
 		errors.SetErrorType("not found"),
 		errors.SetOperations("read"),
@@ -25,7 +25,7 @@ var (
 		errors.SetContextInfo(errors.CtxMap{"hello2": "world", "my2": "name"}),
 	)
 
-	e3 = errors.New(
+	je3 = errors.New(
 		"hello3",
 		errors.SetErrorType("not found"),
 		errors.SetOperations("read"),
@@ -35,6 +35,8 @@ var (
 )
 
 func BenchmarkJsonFn(b *testing.B) {
+	errors.DefaultFormatFn = errors.JSONFormat
+
 	e := errors.New(
 		"hello",
 		errors.SetErrorType("not found"),
@@ -44,7 +46,7 @@ func BenchmarkJsonFn(b *testing.B) {
 		errors.SetFormatFn(errors.JSONFormat),
 	)
 
-	require.JSONEq(b, e.Error(), "{\"error_type\":\"not found\",\"severity\":\"ERROR\",\"operations\":[\"write\"],\"context\":{\"hello\":\"world\",\"hi\":\"there\"},\"msg\":\"hello\"}")
+	require.JSONEq(b, e.Error(), "{\"id\":\"\", \"error_type\":\"not found\",\"severity\":\"ERROR\",\"operations\":[\"write\"],\"context\":{\"hello\":\"world\",\"hi\":\"there\"},\"msg\":\"hello\"}")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -54,10 +56,11 @@ func BenchmarkJsonFn(b *testing.B) {
 
 func BenchmarkJsonMultierrFuncFormat3Errs(b *testing.B) {
 	errors.DefaultMultierrFormatFunc = errors.JSONMultierrFuncFormat
+	errors.DefaultFormatFn = errors.JSONFormat
 
-	e := errors.Append(e1, e2, e3)
+	e := errors.Append(je1, je2, je3)
 
-	require.JSONEq(b, e.Error(), "{\"count\":3,\"messages\":[{\"error_type\":\"not found\",\"severity\":\"ERROR\",\"operations\":[\"write\"],\"context\":{\"hello\":\"world\",\"my\":\"name\"},\"msg\":\"hello1\"},{\"error_type\":\"not found\",\"severity\":\"ERROR\",\"operations\":[\"read\"],\"context\":{\"hello2\":\"world\",\"my2\":\"name\"},\"msg\":\"hello2\"},{\"error_type\":\"not found\",\"severity\":\"ERROR\",\"operations\":[\"read\"],\"context\":{\"hello3\":\"world\",\"my3\":\"name\"},\"msg\":\"hello3\"}]}")
+	require.JSONEq(b, e.Error(), "{\"count\":3,\"messages\":[{\"id\":\"\", \"error_type\":\"not found\",\"severity\":\"ERROR\",\"operations\":[\"write\"],\"context\":{\"hello\":\"world\",\"my\":\"name\"},\"msg\":\"hello1\"},{\"id\":\"\", \"error_type\":\"not found\",\"severity\":\"ERROR\",\"operations\":[\"read\"],\"context\":{\"hello2\":\"world\",\"my2\":\"name\"},\"msg\":\"hello2\"},{\"id\":\"\", \"error_type\":\"not found\",\"severity\":\"ERROR\",\"operations\":[\"read\"],\"context\":{\"hello3\":\"world\",\"my3\":\"name\"},\"msg\":\"hello3\"}]}")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -67,10 +70,11 @@ func BenchmarkJsonMultierrFuncFormat3Errs(b *testing.B) {
 
 func BenchmarkJsonMultierrFuncFormat2Errs(b *testing.B) {
 	errors.DefaultMultierrFormatFunc = errors.JSONMultierrFuncFormat
+	errors.DefaultFormatFn = errors.JSONFormat
 
-	e := errors.Wrap(e1, e2)
+	e := errors.Wrap(je1, je2)
 
-	require.JSONEq(b, e.Error(), "{\"count\":2,\"messages\":[{\"error_type\":\"not found\",\"severity\":\"ERROR\",\"operations\":[\"write\"],\"context\":{\"hello\":\"world\",\"my\":\"name\"},\"msg\":\"hello1\"},{\"error_type\":\"not found\",\"severity\":\"ERROR\",\"operations\":[\"read\"],\"context\":{\"hello2\":\"world\",\"my2\":\"name\"},\"msg\":\"hello2\"}]}")
+	require.JSONEq(b, e.Error(), "{\"count\":2,\"messages\":[{\"id\":\"\", \"error_type\":\"not found\",\"severity\":\"ERROR\",\"operations\":[\"write\"],\"context\":{\"hello\":\"world\",\"my\":\"name\"},\"msg\":\"hello1\"},{\"id\":\"\", \"error_type\":\"not found\",\"severity\":\"ERROR\",\"operations\":[\"read\"],\"context\":{\"hello2\":\"world\",\"my2\":\"name\"},\"msg\":\"hello2\"}]}")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -80,10 +84,11 @@ func BenchmarkJsonMultierrFuncFormat2Errs(b *testing.B) {
 
 func BenchmarkJsonMultierrFuncFormat1Err(b *testing.B) {
 	errors.DefaultMultierrFormatFunc = errors.JSONMultierrFuncFormat
+	errors.DefaultFormatFn = errors.JSONFormat
 
-	e := errors.Wrap(nil, e2)
+	e := errors.Wrap(nil, je2)
 
-	require.JSONEq(b, e.Error(), "{\"count\":1,\"messages\":[{\"error_type\":\"not found\",\"severity\":\"ERROR\",\"operations\":[\"read\"],\"context\":{\"hello2\":\"world\",\"my2\":\"name\"},\"msg\":\"hello2\"}]}")
+	require.JSONEq(b, e.Error(), "{\"id\":\"\", \"error_type\":\"not found\",\"severity\":\"ERROR\",\"operations\":[\"read\"],\"context\":{\"hello2\":\"world\",\"my2\":\"name\"},\"msg\":\"hello2\"}")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

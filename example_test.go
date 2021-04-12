@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
+	"sync"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -38,7 +40,7 @@ func ExampleErrorOrNil() {
 
 	fmt.Printf("%v\n", errors.ErrorOrNil(err))
 	// Output:
-	// [ERROR] -- one
+	// one
 }
 
 // Добавление ошибок в mutierror с логгированием
@@ -57,7 +59,7 @@ func ExampleAppendWithLog() {
 	)
 
 	// Output:
-	// ovsinc/errors {"count":2,"messages":[{"error_type":"","severity":"ERROR","operations":[],"context":null,"msg":"one"},{"error_type":"","severity":"ERROR","operations":[],"context":null,"msg":"two"}]}
+	// ovsinc/errors {"count":2,"messages":[{"id":"","error_type":"","severity":"ERROR","operations":[],"context":null,"msg":"one"},{"id":"","error_type":"","severity":"ERROR","operations":[],"context":null,"msg":"two"}]}
 }
 
 func someFuncWithErr() error {
@@ -109,9 +111,9 @@ func ExampleNewWithLog() {
 	_ = errors.NewWithLog("three")
 
 	// Output:
-	// ovsinc/errors [ERROR] -- one
-	// ovsinc/errors [ERROR] -- two
-	// ovsinc/errors [ERROR] -- three
+	// ovsinc/errors one
+	// ovsinc/errors two
+	// ovsinc/errors three
 }
 
 func someErrFunc() error {
@@ -163,7 +165,7 @@ func ExampleLog() {
 	errors.Log(someTimedCast())
 
 	// Output:
-	// ovsinc/errors [ERROR]<call:example_test.go:163,duration:1s> -- some call
+	// ovsinc/errors <call:example_test.go:165,duration:1s> -- some call
 }
 
 func localizePrepare() *i18n.Localizer {
@@ -189,7 +191,39 @@ func localTransContext() errors.TranslateContext {
 	}
 }
 
-func ExampleError_translateMsg() {
+func ExampleError_WithOptions() {
+	e1 := errors.New("hello")
+
+	wg := &sync.WaitGroup{}
+
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		i := i
+		go func() {
+			defer wg.Done()
+			_ = e1.WithOptions(
+				errors.SetMsg("new error " + strconv.Itoa(i)),
+			)
+		}()
+	}
+
+	wg.Wait()
+
+	e2 := e1.WithOptions(
+		errors.AppendContextInfo("hello", "world"),
+		errors.AppendOperations("test op"),
+		errors.SetErrorType("test type"),
+	)
+
+	fmt.Println(e1.Error())
+	fmt.Println(e2.Error())
+
+	// Output:
+	// hello
+	// (test type)[test op]<hello:world> -- hello
+}
+
+func ExampleError_TranslateMsg() {
 	errEmailsUnreadMsg := localTransContext()
 	localizer := localizePrepare()
 
@@ -202,11 +236,13 @@ func ExampleError_translateMsg() {
 	)
 
 	fmt.Printf("%v\n", e1)
-	fmt.Print(e1.Error())
+	fmt.Println(e1.Error())
+	fmt.Print(e1.TranslateMsg())
 
 	// Output:
-	// [not found][ERROR] -- У John Snow имеется 5 непрочитанных сообщений.
-	// [not found][ERROR] -- У John Snow имеется 5 непрочитанных сообщений.
+	// (not found) -- У John Snow имеется 5 непрочитанных сообщений.
+	// (not found) -- У John Snow имеется 5 непрочитанных сообщений.
+	// У John Snow имеется 5 непрочитанных сообщений.
 }
 
 func ExampleNew() {
@@ -214,6 +250,6 @@ func ExampleNew() {
 
 	fmt.Println(e)
 
-	//Output:
-	//[ERROR] -- hello world
+	// Output:
+	// hello world
 }
