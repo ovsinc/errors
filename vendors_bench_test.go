@@ -16,9 +16,9 @@ import (
 )
 
 func BenchmarkVendorStandartError(b *testing.B) {
-	e := stderrors.New("[ERROR] -- hello1")
+	e := stderrors.New("hello1")
 
-	require.Equal(b, e.Error(), "[ERROR] -- hello1")
+	require.Equal(b, e.Error(), "hello1")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -27,9 +27,9 @@ func BenchmarkVendorStandartError(b *testing.B) {
 }
 
 func BenchmarkVendorFmt(b *testing.B) {
-	e := fmt.Errorf("[%s] -- %s", "ERROR", "hello1")
+	e := fmt.Errorf("%s", "hello1")
 
-	require.Equal(b, e.Error(), "[ERROR] -- hello1")
+	require.Equal(b, e.Error(), "hello1")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -38,27 +38,12 @@ func BenchmarkVendorFmt(b *testing.B) {
 }
 
 func BenchmarkVendorXerrors(b *testing.B) {
-	e := xerrors.New("[ERROR] -- hello1")
+	e := xerrors.New("hello1")
 
-	require.Equal(b, e.Error(), "[ERROR] -- hello1")
+	require.Equal(b, e.Error(), "hello1")
 
 	for i := 0; i < b.N; i++ {
 		_ = e.Error()
-	}
-}
-
-func BenchmarkVendorMyNewMsgOnly(b *testing.B) {
-	err := errors.New(
-		"hello1",
-		errors.SetErrorType(""),
-		errors.SetSeverity(log.SeverityUnknown),
-	)
-
-	require.Equal(b, err.Error(), "hello1")
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_ = err.Error()
 	}
 }
 
@@ -67,7 +52,7 @@ func BenchmarkVendorMyNewNormal(b *testing.B) {
 		"hello1",
 	)
 
-	require.Equal(b, err.Error(), "[ERROR] -- hello1")
+	require.Equal(b, err.Error(), "hello1")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -81,9 +66,10 @@ func BenchmarkVendorMyNewFull(b *testing.B) {
 		errors.AppendContextInfo("hello", "world"),
 		errors.SetID("IDhello1"),
 		errors.SetOperations("nothing"),
+		errors.SetErrorType("not found"),
 	)
 
-	require.Equal(b, err.Error(), "[ERROR][nothing]<hello:world> -- hello1")
+	require.Equal(b, err.Error(), "(not found)[nothing]<hello:world> -- hello1")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -104,7 +90,7 @@ func BenchmarkVendorMyNewWithTranslate(b *testing.B) {
 		errors.SetLocalizer(localizer),
 	)
 
-	require.Equal(b, err.Error(), "[ERROR][nothing]<hello:world> -- У John Snow имеется 5 непрочитанных сообщений.")
+	require.Equal(b, err.Error(), "[nothing]<hello:world> -- У John Snow имеется 5 непрочитанных сообщений.")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -118,11 +104,11 @@ func BenchmarkVendorMyMulti2StdErr(b *testing.B) {
 	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
 
 	err := errors.Wrap(
-		stderrors.New("[ERROR] -- hello1"),
-		stderrors.New("[ERROR] -- hello2"),
+		stderrors.New("hello1"),
+		stderrors.New("hello2"),
 	)
 
-	require.Equal(b, err.Error(), "the following errors occurred:\n* [ERROR] -- hello1\n* [ERROR] -- hello2\n")
+	require.Equal(b, err.Error(), "the following errors occurred:\n* hello1\n* hello2\n")
 
 	for i := 0; i < b.N; i++ {
 		_ = err.Error()
@@ -137,7 +123,7 @@ func BenchmarkVendorMyMulti2ErrNormal(b *testing.B) {
 		errors.New("hello2"),
 	)
 
-	require.Equal(b, err.Error(), "the following errors occurred:\n* [ERROR] -- hello1\n* [ERROR] -- hello2\n")
+	require.Equal(b, err.Error(), "the following errors occurred:\n* hello1\n* hello2\n")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -171,11 +157,11 @@ func BenchmarkVendorMyMulti2ErrMsgOnly(b *testing.B) {
 
 func BenchmarkVendorHashiMulti2StdErr(b *testing.B) {
 	err := hashmultierr.Append(
-		stderrors.New("[ERROR] -- hello1"),
-		stderrors.New("[ERROR] -- hello2"),
+		stderrors.New("hello1"),
+		stderrors.New("hello2"),
 	)
 
-	require.Equal(b, err.Error(), "2 errors occurred:\n\t* [ERROR] -- hello1\n\t* [ERROR] -- hello2\n\n")
+	require.Equal(b, err.Error(), "2 errors occurred:\n\t* hello1\n\t* hello2\n\n")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -189,7 +175,7 @@ func BenchmarkVendorHashiMulti2MyErr(b *testing.B) {
 		errors.New("hello2"),
 	)
 
-	require.Equal(b, err.Error(), "2 errors occurred:\n\t* [ERROR] -- hello1\n\t* [ERROR] -- hello2\n\n")
+	require.Equal(b, err.Error(), "2 errors occurred:\n\t* hello1\n\t* hello2\n\n")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -199,11 +185,11 @@ func BenchmarkVendorHashiMulti2MyErr(b *testing.B) {
 
 func BenchmarkVendorUberMulti2StdErr(b *testing.B) {
 	err := ubermulierr.Append(
-		stderrors.New("[ERROR] -- hello1"),
-		stderrors.New("[ERROR] -- hello2"),
+		stderrors.New("hello1"),
+		stderrors.New("hello2"),
 	)
 
-	require.Equal(b, err.Error(), "[ERROR] -- hello1; [ERROR] -- hello2")
+	require.Equal(b, err.Error(), "hello1; hello2")
 
 	for i := 0; i < b.N; i++ {
 		_ = err.Error()
@@ -218,7 +204,7 @@ func BenchmarkVendorUberMulti2MyNormalErr(b *testing.B) {
 		errors.New("hello2"),
 	)
 
-	require.Equal(b, err.Error(), "[ERROR] -- hello1; [ERROR] -- hello2")
+	require.Equal(b, err.Error(), "hello1; hello2")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

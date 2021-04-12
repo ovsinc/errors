@@ -52,6 +52,7 @@ func TestNew(t *testing.T) {
 					SetErrorType(myerrType1),
 					SetOperations(myop1),
 					SetSeverity(myseverity),
+					SetMsg(myerr1),
 				},
 			},
 			want: &Error{
@@ -65,8 +66,8 @@ func TestNew(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			if got := New("", tt.args.ops...); got != nil && tt.want != nil && got.Error() == tt.want.Error() {
-				t.Errorf("New() = %v, want %v", got, tt.want)
+			if got := New("", tt.args.ops...); got != nil && tt.want != nil && got.Error() != tt.want.Error() {
+				t.Errorf("New() = %+v, want %+v.", got, tt.want)
 			}
 		})
 	}
@@ -117,7 +118,7 @@ func TestSetMsg(t *testing.T) {
 func TestSetFormatFn(t *testing.T) {
 	myerr := &Error{}
 
-	var testFormatFn FormatFn = func(w io.Writer, e Errorer) {}
+	var testFormatFn FormatFn = func(w io.Writer, e *Error) {}
 
 	type args struct {
 		fn FormatFn
@@ -133,7 +134,7 @@ func TestSetFormatFn(t *testing.T) {
 			err:  nil,
 			want: nil,
 			args: args{
-				defaultFormatFn,
+				DefaultFormatFn,
 			},
 		},
 		{
@@ -179,7 +180,7 @@ func TestError_Error(t *testing.T) {
 				errorType:  UnknownErrorType,
 				msg:        "",
 			},
-			want: "[UNKNOWN_TYPE][ERROR]",
+			want: "(UNKNOWN_TYPE)",
 		},
 		{
 			name: "empty",
@@ -189,7 +190,7 @@ func TestError_Error(t *testing.T) {
 				errorType:  UnknownErrorType,
 				msg:        "hello",
 			},
-			want: "[UNKNOWN_TYPE][ERROR] -- hello",
+			want: "(UNKNOWN_TYPE) -- hello",
 		},
 		{
 			name: "with all params",
@@ -200,7 +201,7 @@ func TestError_Error(t *testing.T) {
 				msg:         "hello",
 				contextInfo: CtxMap{"hello": "world", "hi": "there"},
 			},
-			want: "[not found][ERROR][write]<hello:world,hi:there> -- hello",
+			want: "(not found)[write]<hello:world,hi:there> -- hello",
 		},
 	}
 	for _, tt := range tests {
@@ -237,7 +238,7 @@ func TestError_WithOptions(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   Errorer
+		want   *Error
 	}{
 		{
 			name: "New. context",
@@ -372,7 +373,7 @@ func TestError_Operations(t *testing.T) {
 	tests := []struct {
 		name string
 		want []string
-		err  Errorer
+		err  *Error
 	}{
 		{
 			name: "New. set",
@@ -419,7 +420,7 @@ func TestError_Operations(t *testing.T) {
 func TestError_ErrorType(t *testing.T) {
 	tests := []struct {
 		name string
-		err  Errorer
+		err  *Error
 		want string
 	}{
 		{
@@ -456,7 +457,7 @@ func TestError_ErrorType(t *testing.T) {
 func TestError_Severity(t *testing.T) {
 	tests := []struct {
 		name string
-		err  Errorer
+		err  *Error
 		want log.Severity
 	}{
 		{
@@ -491,7 +492,7 @@ func TestError_Severity(t *testing.T) {
 }
 
 func TestError_Sdump(t *testing.T) {
-	var emptyErr Errorer = &Error{}
+	var emptyErr *Error = &Error{}
 	var mynil *Error
 	e1 := New("")
 	e2 := New("hello")
@@ -499,7 +500,7 @@ func TestError_Sdump(t *testing.T) {
 	tests := []struct {
 		name string
 		want string
-		err  Errorer
+		err  *Error
 	}{
 		{
 			name: "empty",
@@ -533,13 +534,13 @@ func TestError_Sdump(t *testing.T) {
 }
 
 func TestError_ErrorOrNil(t *testing.T) {
-	var mynil Errorer = &Error{}
+	var mynil *Error = &Error{}
 	mye1 := New("")
 
 	tests := []struct {
-		err     Errorer
+		err     *Error
 		name    string
-		want    Errorer
+		want    *Error
 		wantNil bool
 	}{
 		{

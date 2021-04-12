@@ -7,12 +7,11 @@ import (
 	"strconv"
 
 	json "github.com/goccy/go-json"
-	"gitlab.com/ovsinc/errors/log"
 )
 
 var (
-	// defaultFormatFn функция форматирования, используемая по-умолчанию
-	defaultFormatFn FormatFn //nolint:gochecknoglobals
+	// DefaultFormatFn функция форматирования, используемая по-умолчанию
+	DefaultFormatFn FormatFn //nolint:gochecknoglobals
 
 	// DefaultMultierrFormatFunc функция форматирования для multierr ошибок.
 	DefaultMultierrFormatFunc MultierrFormatFn //nolint:gochecknoglobals
@@ -25,14 +24,14 @@ var (
 
 type (
 	// FormatFn тип функции форматирования.
-	FormatFn func(w io.Writer, e Errorer)
+	FormatFn func(w io.Writer, e *Error)
 
 	// MultierrFormatFn типу функции морматирования для multierr.
 	MultierrFormatFn func(w io.Writer, es []error)
 )
 
 // JSONFormat функция форматирования вывода сообщения *Error в JSON.
-func JSONFormat(buf io.Writer, e Errorer) {
+func JSONFormat(buf io.Writer, e *Error) {
 	if e == nil {
 		_, _ = io.WriteString(buf, "null")
 		return
@@ -102,7 +101,7 @@ func JSONFormat(buf io.Writer, e Errorer) {
 
 // StringFormat функция форматирования вывода сообщения *Error в виде строки.
 // Используется по-умолчанию.
-func StringFormat(buf io.Writer, e Errorer) { //nolint:cyclop
+func StringFormat(buf io.Writer, e *Error) { //nolint:cyclop
 	if e == nil {
 		return
 	}
@@ -110,16 +109,9 @@ func StringFormat(buf io.Writer, e Errorer) { //nolint:cyclop
 	writeDelim := false
 
 	if et := e.ErrorType(); len(et) > 0 {
-		_, _ = io.WriteString(buf, "[")
+		_, _ = io.WriteString(buf, "(")
 		_, _ = io.WriteString(buf, et)
-		_, _ = io.WriteString(buf, "]")
-		writeDelim = true
-	}
-
-	if sev := e.Severity(); sev > log.SeverityUnknown {
-		_, _ = io.WriteString(buf, "[")
-		_, _ = io.WriteString(buf, sev.String())
-		_, _ = io.WriteString(buf, "]")
+		_, _ = io.WriteString(buf, ")")
 		writeDelim = true
 	}
 
@@ -174,6 +166,9 @@ func StringMultierrFormatFunc(w io.Writer, es []error) {
 	_, _ = w.Write(_multilineSeparator)
 
 	for _, err := range es {
+		if err == nil {
+			continue
+		}
 		_, _ = w.Write(_multilineIndent)
 		_, _ = io.WriteString(w, err.Error())
 		_, _ = w.Write(_multilineSeparator)
@@ -195,6 +190,9 @@ func JSONMultierrFuncFormat(w io.Writer, es []error) {
 	_, _ = io.WriteString(w, "\"messages\":")
 	_, _ = io.WriteString(w, "[")
 	writeErrFn := func(e error) {
+		if e == nil {
+			return
+		}
 		if myerr, ok := simpleCast(e); ok {
 			JSONFormat(w, myerr)
 			return

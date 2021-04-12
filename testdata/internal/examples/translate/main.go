@@ -17,7 +17,6 @@ func main() {
 	err := errors.New(
 		"fallback message",
 		errors.SetID("ErrEmailsUnreadMsg"),
-		errors.SetErrorType("not found"),
 		errors.SetLocalizer(i18n.NewLocalizer(bundle, "ru")),
 		errors.SetTranslateContext(&errors.TranslateContext{
 			TemplateData: map[string]interface{}{
