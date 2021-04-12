@@ -41,7 +41,7 @@ type errorer interface {
 }
 
 // Error структура кастомной ошибки.
-// Внимание. Это НЕ потоко-безопасный объект.
+// Это потоко-безопасный объект.
 type Error struct {
 	severity         log.Severity
 	operations       []string
@@ -73,33 +73,65 @@ func New(msg string, ops ...Options) *Error {
 
 // WithOptions производит параметризацию *Error с помощью функции-парметры Options.
 // Допускается указывать произвольно количество ops.
-// Возвращается модифицированный экземпляр *Error.
+// Возвращается новый экземпляр *Error.
 func (e *Error) WithOptions(ops ...Options) *Error {
-	for _, op := range ops {
-		op(e)
+	if e == nil {
+		return nil
 	}
-	return e
+
+	newerr := &Error{
+		severity:         e.severity,
+		operations:       e.operations,
+		formatFn:         e.formatFn,
+		contextInfo:      e.contextInfo,
+		translateContext: e.translateContext,
+		localizer:        e.localizer,
+		errorType:        e.errorType,
+		msg:              e.msg,
+		id:               e.id,
+	}
+
+	for _, op := range ops {
+		op(newerr)
+	}
+	return newerr
 }
 
 // getters
 
 // ID возвращает ID ошибки.
 func (e *Error) ID() string {
+	if e == nil {
+		return ""
+	}
+
 	return e.id
 }
 
 // Severity возвращает критичность ошибки
 func (e *Error) Severity() log.Severity {
+	if e == nil {
+		return 0
+	}
+
 	return e.severity
 }
 
 // Msg возвращает исходное сообщение об ошибке
 func (e *Error) Msg() string {
+	if e == nil {
+		return ""
+	}
+
 	return e.msg
 }
 
 // ErrorType вернет тип ошибки
 func (e *Error) ErrorType() string {
+	if e == nil {
+		return ""
+	}
+
 	return e.errorType
 }
 
@@ -136,6 +168,10 @@ func (e *Error) Error() string {
 
 // Format производит форматирование строки, для поддержки fmt.Printf().
 func (e *Error) Format(s fmt.State, verb rune) {
+	if e == nil {
+		return
+	}
+
 	switch verb {
 	case 'c':
 		fmt.Fprintf(s, "%v\n", e.ContextInfo())
@@ -165,6 +201,10 @@ func (e *Error) Format(s fmt.State, verb rune) {
 
 // Sdump вернет текстовый дамп ошибки *Error.
 func (e *Error) Sdump() string {
+	if e == nil {
+		return ""
+	}
+
 	if e == nil {
 		return ""
 	}
