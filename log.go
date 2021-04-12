@@ -66,7 +66,7 @@ func Log(err error, l ...logcommon.Logger) {
 
 // NewWithLog конструктор *Error, как и New,
 // но при этом будет осуществлено логгирование с помощь логгера по-умолчанию.
-func NewWithLog(msg string, ops ...Options) Errorer {
+func NewWithLog(msg string, ops ...Options) *Error {
 	e := New(msg, ops...)
 	e.Log()
 	return e

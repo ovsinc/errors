@@ -31,7 +31,7 @@ func ErrorOrNil(err error) error {
 	return err
 }
 
-func errsFn(errs []error) Errorer {
+func errsFn(errs []error) *Error {
 	for _, e := range errs {
 		if myerr, ok := simpleCast(e); ok {
 			return myerr
@@ -40,12 +40,12 @@ func errsFn(errs []error) Errorer {
 	return nil
 }
 
-func simpleCast(err error) (Errorer, bool) {
-	e, ok := err.(Errorer) //nolint:errorlint
+func simpleCast(err error) (*Error, bool) {
+	e, ok := err.(*Error) //nolint:errorlint
 	return e, ok
 }
 
-func cast(err error) (Errorer, bool) {
+func cast(err error) (*Error, bool) {
 	switch t := err.(type) { //nolint:errorlint
 	case interface{ Errors() []error }: // *multiError
 		return errsFn(t.Errors()), true
@@ -53,7 +53,7 @@ func cast(err error) (Errorer, bool) {
 	case interface{ WrappedErrors() []error }: // *github.com/hashicorp/go-multierror.Error
 		return errsFn(t.WrappedErrors()), true
 
-	case Errorer:
+	case *Error:
 		return t, true
 	}
 
@@ -63,7 +63,7 @@ func cast(err error) (Errorer, bool) {
 // Cast преобразует тип error в *Error
 // Если error не соответствует *Error, то будет создан *Error с сообщением err.Error().
 // Для err == nil, вернется nil.
-func Cast(err error) Errorer {
+func Cast(err error) *Error {
 	if err == nil {
 		return nil
 	}
@@ -75,8 +75,8 @@ func Cast(err error) Errorer {
 	return New(err.Error())
 }
 
-func findByID(err error, id string) (Errorer, bool) {
-	checkIDFn := func(errs []error) Errorer {
+func findByID(err error, id string) (*Error, bool) {
+	checkIDFn := func(errs []error) *Error {
 		for _, err := range errs {
 			if e, ok := simpleCast(err); ok && e.ID() == id {
 				return e
@@ -94,7 +94,7 @@ func findByID(err error, id string) (Errorer, bool) {
 		e := checkIDFn(t.WrappedErrors())
 		return e, e != nil
 
-	case Errorer:
+	case *Error:
 		return t, t.ID() == id
 	}
 
@@ -103,7 +103,7 @@ func findByID(err error, id string) (Errorer, bool) {
 
 // UnwrapByID вернет ошибку (*Error) с указанным ID.
 // Если ошибка с указанным ID не найдена, вернется nil.
-func UnwrapByID(err error, id string) Errorer {
+func UnwrapByID(err error, id string) *Error {
 	if e, ok := findByID(err, id); ok {
 		return e
 	}

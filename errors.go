@@ -13,12 +13,12 @@ import (
 
 var (
 	_ interface{ Error() string } = (*Error)(nil)
-	_ Errorer                     = (*Error)(nil)
+	_ error                       = (*Error)(nil)
+	_ errorer                     = (*Error)(nil)
 )
 
-// Errorer итерфейс кастомной ошибки.
-type Errorer interface {
-	WithOptions(ops ...Options) Errorer
+type errorer interface {
+	WithOptions(ops ...Options) *Error
 	ID() string
 	Severity() log.Severity
 	Msg() string
@@ -58,7 +58,7 @@ type Error struct {
 // * ops ...Options -- параметризация через функции-парметры
 //
 // ** *Error
-func New(msg string, ops ...Options) Errorer {
+func New(msg string, ops ...Options) *Error {
 	e := &Error{
 		severity: log.SeverityError,
 		msg:      msg,
@@ -74,7 +74,7 @@ func New(msg string, ops ...Options) Errorer {
 // WithOptions производит параметризацию *Error с помощью функции-парметры Options.
 // Допускается указывать произвольно количество ops.
 // Возвращается модифицированный экземпляр *Error.
-func (e *Error) WithOptions(ops ...Options) Errorer {
+func (e *Error) WithOptions(ops ...Options) *Error {
 	for _, op := range ops {
 		op(e)
 	}
@@ -116,8 +116,8 @@ func (e *Error) Error() string {
 	switch {
 	case e.formatFn != nil:
 		fn = e.formatFn
-	case defaultFormatFn != nil:
-		fn = defaultFormatFn
+	case DefaultFormatFn != nil:
+		fn = DefaultFormatFn
 	default:
 		fn = StringFormat
 	}

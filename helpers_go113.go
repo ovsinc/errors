@@ -15,7 +15,11 @@ func Is(err, target error) bool {
 	return origerrors.Is(err, target)
 }
 
-// As обнаруживает ошибку err, соответствующую target и устанавливает target в найденное значение.
+// As обнаруживает ошибку err, соответствующую типу target и устанавливает target в найденное значение.
 func As(err error, target interface{}) bool {
 	return origerrors.As(err, target)
+}
+
+func Unwrap(err error) error {
+	return origerrors.Unwrap(err)
 }

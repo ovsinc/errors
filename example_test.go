@@ -38,7 +38,7 @@ func ExampleErrorOrNil() {
 
 	fmt.Printf("%v\n", errors.ErrorOrNil(err))
 	// Output:
-	// [ERROR] -- one
+	// one
 }
 
 // Добавление ошибок в mutierror с логгированием
@@ -109,9 +109,9 @@ func ExampleNewWithLog() {
 	_ = errors.NewWithLog("three")
 
 	// Output:
-	// ovsinc/errors [ERROR] -- one
-	// ovsinc/errors [ERROR] -- two
-	// ovsinc/errors [ERROR] -- three
+	// ovsinc/errors one
+	// ovsinc/errors two
+	// ovsinc/errors three
 }
 
 func someErrFunc() error {
@@ -163,7 +163,7 @@ func ExampleLog() {
 	errors.Log(someTimedCast())
 
 	// Output:
-	// ovsinc/errors [ERROR]<call:example_test.go:163,duration:1s> -- some call
+	// ovsinc/errors <call:example_test.go:163,duration:1s> -- some call
 }
 
 func localizePrepare() *i18n.Localizer {
@@ -205,8 +205,8 @@ func ExampleError_translateMsg() {
 	fmt.Print(e1.Error())
 
 	// Output:
-	// [not found][ERROR] -- У John Snow имеется 5 непрочитанных сообщений.
-	// [not found][ERROR] -- У John Snow имеется 5 непрочитанных сообщений.
+	// (not found) -- У John Snow имеется 5 непрочитанных сообщений.
+	// (not found) -- У John Snow имеется 5 непрочитанных сообщений.
 }
 
 func ExampleNew() {
@@ -214,6 +214,6 @@ func ExampleNew() {
 
 	fmt.Println(e)
 
-	//Output:
-	//[ERROR] -- hello world
+	// Output:
+	// hello world
 }
