@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"gitlab.com/ovsinc/errors"
-	"gitlab.com/ovsinc/errors/log"
 )
 
 var (
@@ -14,7 +13,7 @@ var (
 		"hello1",
 		errors.SetErrorType("not found"),
 		errors.SetOperations("write"),
-		errors.SetSeverity(log.SeverityError),
+		errors.SetSeverity(errors.SeverityError),
 		errors.SetContextInfo(errors.CtxMap{"hello": "world", "my": "name"}),
 	)
 
@@ -22,7 +21,7 @@ var (
 		"hello2",
 		errors.SetErrorType("not found"),
 		errors.SetOperations("read"),
-		errors.SetSeverity(log.SeverityError),
+		errors.SetSeverity(errors.SeverityError),
 		errors.SetContextInfo(errors.CtxMap{"hello2": "world", "my2": "name"}),
 	)
 
@@ -30,7 +29,7 @@ var (
 		"hello3",
 		errors.SetErrorType("not found"),
 		errors.SetOperations("read"),
-		errors.SetSeverity(log.SeverityError),
+		errors.SetSeverity(errors.SeverityError),
 		errors.SetContextInfo(errors.CtxMap{"hello3": "world", "my3": "name"}),
 	)
 )
@@ -42,7 +41,7 @@ func BenchmarkStringFn(b *testing.B) {
 		"hello",
 		errors.SetErrorType("not found"),
 		errors.SetOperations("write"),
-		errors.SetSeverity(log.SeverityError),
+		errors.SetSeverity(errors.SeverityError),
 		errors.SetContextInfo(errors.CtxMap{"hello": "world", "my": "name"}),
 	)
 
@@ -61,7 +60,7 @@ func BenchmarkFormatFmt(b *testing.B) {
 		"hello",
 		errors.SetErrorType("not found"),
 		errors.SetOperations("write"),
-		errors.SetSeverity(log.SeverityError),
+		errors.SetSeverity(errors.SeverityError),
 		errors.SetContextInfo(errors.CtxMap{"hello": "world", "name": "john"}),
 	)
 

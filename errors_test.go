@@ -8,7 +8,6 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/ovsinc/errors/log"
 )
 
 var UnknownErrorType = "UNKNOWN_TYPE"
@@ -18,7 +17,7 @@ func TestNewNil(t *testing.T) {
 
 	assert.Nil(t, err.WithOptions(
 		SetErrorType(UnknownErrorType),
-		SetSeverity(log.SeverityError),
+		SetSeverity(SeverityError),
 		SetMsg("hello"),
 		SetContextInfo(CtxMap{"hello": "world"}),
 	))
@@ -28,7 +27,7 @@ func TestNew(t *testing.T) {
 	myerr1 := "some err"
 	myerrType1 := "custom err type"
 	myop1 := "read"
-	myseverity := log.SeverityError
+	myseverity := SeverityError
 
 	type args struct {
 		ops []Options
@@ -164,7 +163,7 @@ func TestError_Error(t *testing.T) {
 		operations  []string
 		errorType   string
 		msg         string
-		severity    log.Severity
+		severity    Severity
 		contextInfo CtxMap
 	}
 	tests := []struct {
@@ -176,7 +175,7 @@ func TestError_Error(t *testing.T) {
 			name: "nil",
 			fields: fields{
 				operations: make([]string, 0),
-				severity:   log.SeverityError,
+				severity:   SeverityError,
 				errorType:  UnknownErrorType,
 				msg:        "",
 			},
@@ -186,7 +185,7 @@ func TestError_Error(t *testing.T) {
 			name: "empty",
 			fields: fields{
 				operations: make([]string, 0),
-				severity:   log.SeverityError,
+				severity:   SeverityError,
 				errorType:  UnknownErrorType,
 				msg:        "hello",
 			},
@@ -196,7 +195,7 @@ func TestError_Error(t *testing.T) {
 			name: "with all params",
 			fields: fields{
 				operations:  []string{"write"},
-				severity:    log.SeverityError,
+				severity:    SeverityError,
 				errorType:   "not found",
 				msg:         "hello",
 				contextInfo: CtxMap{"hello": "world", "hi": "there"},
@@ -228,7 +227,7 @@ func TestError_WithOptions(t *testing.T) {
 		operations  []string
 		errorType   string
 		msg         string
-		severity    log.Severity
+		severity    Severity
 		contextInfo CtxMap
 	}
 	type args struct {
@@ -249,12 +248,12 @@ func TestError_WithOptions(t *testing.T) {
 			},
 			fields: fields{
 				operations: make([]string, 0),
-				severity:   log.SeverityError,
+				severity:   SeverityError,
 				errorType:  UnknownErrorType,
 			},
 			want: &Error{
 				operations:  make([]string, 0),
-				severity:    log.SeverityError,
+				severity:    SeverityError,
 				errorType:   UnknownErrorType,
 				contextInfo: CtxMap{"duration": time.Second},
 			},
@@ -268,12 +267,12 @@ func TestError_WithOptions(t *testing.T) {
 			},
 			fields: fields{
 				operations: make([]string, 0),
-				severity:   log.SeverityError,
+				severity:   SeverityError,
 				errorType:  UnknownErrorType,
 			},
 			want: &Error{
 				operations: make([]string, 0),
-				severity:   log.SeverityError,
+				severity:   SeverityError,
 				errorType:  UnknownErrorType,
 				msg:        err1,
 			},
@@ -285,17 +284,17 @@ func TestError_WithOptions(t *testing.T) {
 					SetMsg(err1),
 					SetErrorType("my type"),
 					SetOperations("write", "read"),
-					SetSeverity(log.SeverityWarn),
+					SetSeverity(SeverityWarn),
 				},
 			},
 			fields: fields{
 				operations: make([]string, 0),
-				severity:   log.SeverityError,
+				severity:   SeverityError,
 				errorType:  UnknownErrorType,
 			},
 			want: &Error{
 				operations: []string{"write", "read"},
-				severity:   log.SeverityWarn,
+				severity:   SeverityWarn,
 				errorType:  "my type",
 				msg:        err1,
 			},
@@ -307,17 +306,17 @@ func TestError_WithOptions(t *testing.T) {
 					SetMsg(err1),
 					SetErrorType("my type"),
 					SetOperations("write", "read"),
-					SetSeverity(log.SeverityWarn),
+					SetSeverity(SeverityWarn),
 				},
 			},
 			fields: fields{
 				operations: make([]string, 0),
-				severity:   log.SeverityError,
+				severity:   SeverityError,
 				errorType:  UnknownErrorType,
 			},
 			want: New("").WithOptions(
 				SetOperations("write", "read"),
-				SetSeverity(log.SeverityWarn),
+				SetSeverity(SeverityWarn),
 				SetErrorType("my type"),
 				SetMsg(err1),
 			),
@@ -329,12 +328,12 @@ func TestError_WithOptions(t *testing.T) {
 					SetMsg(err1),
 					SetErrorType("my type"),
 					SetOperations("write", "read"),
-					SetSeverity(log.SeverityWarn),
+					SetSeverity(SeverityWarn),
 				},
 			},
 			fields: fields{
 				operations: make([]string, 0),
-				severity:   log.SeverityError,
+				severity:   SeverityError,
 				errorType:  UnknownErrorType,
 			},
 			want: New("").
@@ -342,7 +341,7 @@ func TestError_WithOptions(t *testing.T) {
 					SetOperations("write", "read"),
 				).
 				WithOptions(
-					SetSeverity(log.SeverityWarn),
+					SetSeverity(SeverityWarn),
 				).
 				WithOptions(
 					SetErrorType("my type"),
@@ -458,27 +457,27 @@ func TestError_Severity(t *testing.T) {
 	tests := []struct {
 		name string
 		err  *Error
-		want log.Severity
+		want Severity
 	}{
 		{
 			name: "empty",
 			err:  &Error{},
-			want: log.SeverityUnknown,
+			want: SeverityUnknown,
 		},
 		{
 			name: "New",
 			err:  New(""),
-			want: log.SeverityError,
+			want: SeverityError,
 		},
 		{
 			name: "New. Set",
-			err:  New("", SetSeverity(log.SeverityWarn)),
-			want: log.SeverityWarn,
+			err:  New("", SetSeverity(SeverityWarn)),
+			want: SeverityWarn,
 		},
 		{
 			name: "Set",
-			err:  New("").WithOptions(SetSeverity(log.SeverityWarn)),
-			want: log.SeverityWarn,
+			err:  New("").WithOptions(SetSeverity(SeverityWarn)),
+			want: SeverityWarn,
 		},
 	}
 	for _, tt := range tests {

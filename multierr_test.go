@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"gitlab.com/ovsinc/errors"
-	"gitlab.com/ovsinc/errors/log"
 
 	origerrors "errors"
 )
@@ -14,7 +13,7 @@ var (
 		"hello1",
 		errors.SetErrorType("not found"),
 		errors.SetOperations("write"),
-		errors.SetSeverity(log.SeverityError),
+		errors.SetSeverity(errors.SeverityError),
 		errors.SetContextInfo(errors.CtxMap{"hello": "world", "my": "name"}),
 	)
 
@@ -22,7 +21,7 @@ var (
 		"hello2",
 		errors.SetErrorType("not found"),
 		errors.SetOperations("read"),
-		errors.SetSeverity(log.SeverityError),
+		errors.SetSeverity(errors.SeverityError),
 		errors.SetContextInfo(errors.CtxMap{"hello2": "world", "my2": "name"}),
 	)
 

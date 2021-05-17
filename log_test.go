@@ -1,8 +1,6 @@
-package log
+package errors
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestParseSeverityUint(t *testing.T) {
 	type args struct {

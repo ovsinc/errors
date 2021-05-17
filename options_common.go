@@ -1,9 +1,5 @@
 package errors
 
-import (
-	"gitlab.com/ovsinc/errors/log"
-)
-
 // Options опции из параметра ошибки.
 type Options func(e *Error)
 
@@ -28,7 +24,7 @@ func SetMsg(msg string) Options {
 }
 
 // SetSeverity устновит Severity.
-func SetSeverity(severity log.Severity) Options {
+func SetSeverity(severity Severity) Options {
 	return func(e *Error) {
 		if e == nil {
 			return

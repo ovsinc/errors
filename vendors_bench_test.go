@@ -10,7 +10,6 @@ import (
 	hashmultierr "github.com/hashicorp/go-multierror"
 	"github.com/stretchr/testify/require"
 	"gitlab.com/ovsinc/errors"
-	"gitlab.com/ovsinc/errors/log"
 	ubermulierr "go.uber.org/multierr"
 	"golang.org/x/xerrors"
 )
@@ -138,12 +137,12 @@ func BenchmarkVendorMyMulti2ErrMsgOnly(b *testing.B) {
 		errors.New(
 			"hello1",
 			errors.SetErrorType(""),
-			errors.SetSeverity(log.SeverityUnknown),
+			errors.SetSeverity(errors.SeverityUnknown),
 		),
 		errors.New(
 			"hello2",
 			errors.SetErrorType(""),
-			errors.SetSeverity(log.SeverityUnknown),
+			errors.SetSeverity(errors.SeverityUnknown),
 		),
 	)
 

@@ -6,9 +6,8 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	i18n "github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/ovsinc/multilog"
 	"github.com/valyala/bytebufferpool"
-	"gitlab.com/ovsinc/errors/log"
-	logcommon "gitlab.com/ovsinc/errors/log/common"
 )
 
 var (
@@ -20,7 +19,7 @@ var (
 type errorer interface {
 	WithOptions(ops ...Options) *Error
 	ID() string
-	Severity() log.Severity
+	Severity() Severity
 	Msg() string
 	Error() string
 	Sdump() string
@@ -37,13 +36,13 @@ type errorer interface {
 	WriteTranslateMsg(w io.Writer) (int, error)
 	TranslateMsg() string
 
-	Log(l ...logcommon.Logger)
+	Log(l ...multilog.Logger)
 }
 
 // Error структура кастомной ошибки.
 // Это потоко-безопасный объект.
 type Error struct {
-	severity         log.Severity
+	severity         Severity
 	operations       []string
 	formatFn         FormatFn
 	contextInfo      CtxMap
@@ -60,7 +59,7 @@ type Error struct {
 // ** *Error
 func New(msg string, ops ...Options) *Error {
 	e := &Error{
-		severity: log.SeverityError,
+		severity: SeverityError,
 		msg:      msg,
 	}
 	for _, op := range ops {
@@ -109,7 +108,7 @@ func (e *Error) ID() string {
 }
 
 // Severity возвращает критичность ошибки
-func (e *Error) Severity() log.Severity {
+func (e *Error) Severity() Severity {
 	if e == nil {
 		return 0
 	}
@@ -215,7 +214,7 @@ func (e *Error) Sdump() string {
 // ошибкой считается *Error != nil и Severity == SeverityError
 // т.е. SeverityWarn НЕ ошибка
 func (e *Error) ErrorOrNil() error {
-	if e != nil && e.Severity() == log.SeverityError {
+	if e != nil && e.Severity() == SeverityError {
 		return e
 	}
 	return nil
