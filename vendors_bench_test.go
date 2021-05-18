@@ -64,7 +64,7 @@ func BenchmarkVendorMyNewFull(b *testing.B) {
 		"hello1",
 		errors.AppendContextInfo("hello", "world"),
 		errors.SetID("IDhello1"),
-		errors.SetOperationsString("nothing"),
+		errors.SetOperations("nothing"),
 		errors.SetErrorType("not found"),
 	)
 
@@ -83,7 +83,7 @@ func BenchmarkVendorMyNewWithTranslate(b *testing.B) {
 	err := errors.New(
 		"hello1",
 		errors.AppendContextInfo("hello", "world"),
-		errors.SetOperationsString("nothing"),
+		errors.SetOperations("nothing"),
 		errors.SetID("ErrEmailsUnreadMsg"),
 		errors.SetTranslateContext(&errEmailsUnreadMsg),
 		errors.SetLocalizer(localizer),
