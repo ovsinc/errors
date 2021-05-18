@@ -19,7 +19,7 @@ func BenchmarkTranslateMsg(b *testing.B) {
 
 	bundle := i18n.NewBundle(language.English)
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
-	bundle.MustLoadMessageFile("./testdata/active.ru.toml")
+	bundle.MustLoadMessageFile("./internal/examples/translate/testdata/active.ru.toml")
 
 	localizer := i18n.NewLocalizer(bundle, "ru")
 

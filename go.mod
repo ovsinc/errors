@@ -9,6 +9,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/nicksnyder/go-i18n/v2 v2.1.2
 	github.com/ovsinc/multilog v1.0.3
+	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 	github.com/valyala/bytebufferpool v1.0.0
 	go.uber.org/multierr v1.5.0

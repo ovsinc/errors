@@ -1,5 +1,7 @@
 # github.com/BurntSushi/toml v0.3.1
 github.com/BurntSushi/toml
+# github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
+github.com/coreos/go-systemd/journal
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/goccy/go-json v0.5.0
@@ -22,10 +24,15 @@ github.com/nicksnyder/go-i18n/v2/internal
 github.com/nicksnyder/go-i18n/v2/internal/plural
 # github.com/ovsinc/multilog v1.0.3
 github.com/ovsinc/multilog
+github.com/ovsinc/multilog/chain
 github.com/ovsinc/multilog/common
 github.com/ovsinc/multilog/golog
+github.com/ovsinc/multilog/journald
+github.com/ovsinc/multilog/logrus
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
+# github.com/sirupsen/logrus v1.8.1
+github.com/sirupsen/logrus
 # github.com/stretchr/testify v1.7.0
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
@@ -35,6 +42,9 @@ github.com/valyala/bytebufferpool
 go.uber.org/atomic
 # go.uber.org/multierr v1.5.0
 go.uber.org/multierr
+# golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae
+golang.org/x/sys/unix
+golang.org/x/sys/windows
 # golang.org/x/text v0.3.6
 golang.org/x/text/internal/language
 golang.org/x/text/internal/language/compact

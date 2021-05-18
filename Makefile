@@ -82,11 +82,14 @@ coverage: ## Generate global code coverage report
 
 .PHONY: coverhtml
 coverhtml: ## Generate global code coverage report in HTML
-	[ -x /opt/tools/bin/coverage.sh ] && /opt/tools/bin/coverage.sh html || \
+	@[ -x /opt/tools/bin/coverage.sh ] && /opt/tools/bin/coverage.sh html || \
 	${_CURDIR}/scripts/tools/coverage.sh html ${BUILD}/coverage.html
 
 
-
+.PHONY: run
+example := "simple"
+run: ## Run example
+	@go run ./internal/examples/${example}
 
 .PHONY: help
 help: ## Display this help screen

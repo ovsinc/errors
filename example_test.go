@@ -170,7 +170,7 @@ func ExampleLog() {
 func localizePrepare() *i18n.Localizer {
 	bundle := i18n.NewBundle(language.English)
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
-	bundle.MustLoadMessageFile("./_examples/translate/testdata/active.ru.toml")
+	bundle.MustLoadMessageFile("./internal/examples/translate/testdata/active.ru.toml")
 
 	return i18n.NewLocalizer(bundle, "es", "ru", "en")
 }
