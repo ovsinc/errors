@@ -117,7 +117,7 @@ func getLogger(l ...multilog.Logger) multilog.Logger {
 	return logger
 }
 
-// хелперы
+// LOG-хелперы
 
 // AppendWithLog как и Append создаст или дополнит цепочку ошибок err с помощью errs,
 // но при этом будет осуществлено логгирование с помощь логгера по-умолчанию.
@@ -152,12 +152,4 @@ func NewWithLog(msg string, ops ...Options) *Error {
 	e := New(msg, ops...)
 	e.Log()
 	return e
-}
-
-// дополнительные методы *Error
-
-// Log выполнит логгирование ошибки с ипользованием логгера l[0].
-// Если l не указан, то в качестве логгера будет использоваться логгер по-умолчанию.
-func (e *Error) Log(l ...multilog.Logger) {
-	customlog(getLogger(l...), e, e.Severity())
 }

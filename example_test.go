@@ -16,6 +16,8 @@ import (
 	"golang.org/x/text/language"
 )
 
+var UnknownErrorType = errors.NewObjectFromString("UNKNOWN_TYPE")
+
 func itsOk() error {
 	return nil
 }
@@ -126,8 +128,8 @@ func ExampleGetErrorType() {
 	switch errors.GetErrorType(err) {
 	case "NOT_FOUND":
 		fmt.Printf("Got error with type NOT_FOUND")
-	case errors.UnknownErrorType:
-		fmt.Printf("Got error with type %s", errors.UnknownErrorType)
+	case UnknownErrorType.String():
+		fmt.Printf("Got error with type %s", UnknownErrorType.String())
 	default:
 		fmt.Printf("Got some unknown")
 	}
@@ -162,7 +164,7 @@ func ExampleLog() {
 	errors.Log(someTimedCast())
 
 	// Output:
-	// ovsinc/errors ERR: <call:example_test.go:162,duration:1s> -- some call
+	// ovsinc/errors ERR: <call:example_test.go:164,duration:1s> -- some call
 }
 
 func localizePrepare() *i18n.Localizer {

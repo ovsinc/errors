@@ -89,6 +89,7 @@ func TestWrap(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if err := errors.Wrap(tt.args.left, tt.args.right); (err != nil) && !tt.wantNil && tt.want != err.Error() {
 				t.Errorf("Wrap() error = %v, wantErr %v", err, tt.want)
@@ -132,6 +133,7 @@ func TestAppend(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if err := errors.Append(tt.args.errors...); (err != nil) && !tt.wantNil && tt.want != err.Error() {
 				t.Errorf("Append() error = %v, wantErr %v", err, tt.want)
