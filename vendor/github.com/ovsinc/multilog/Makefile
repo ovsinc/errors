@@ -20,6 +20,7 @@ build_all: lint
 .PHONY: full_tests
 full_tests: go_lint_max go_performance unit_tests race msan ## Full tests
 
+
 .PHONY: go_security
 go_security: ## Check bugs
 	@${linter} run --disable-all -E gosec -E govet \
@@ -31,11 +32,6 @@ lint: go_lint go_performance go_security ## Full liner checks
 .PHONY: go_lint
 go_lint: ## Lint the files
 	@${linter} run
-
-.PHONY: go_mod
-go_mod: ## mod with proxy
-	@GOPROXY="https://proxy.golang.org" \
-	go mod download ${PKG_LIST}
 
 .PHONY: go_performance
 go_performance: ## Check performance
@@ -50,8 +46,14 @@ go_lint_max: ## Max lint checks the files
 go_style: ## check style of code
 	@${linter} run -p style
 
+
+.PHONY: go_mod
+go_mod: ## mod with proxy
+	@GOPROXY="https://proxy.golang.org" \
+	go mod download ${PKG_LIST}
+
+
 .PHONY: unit_tests
-test: unit_tests ## Run unittests
 unit_tests: ## Run unittests
 	@go test -short ${PKG_LIST}
 
@@ -59,14 +61,16 @@ unit_tests: ## Run unittests
 race: ## Run data race detector
 	@go test -race -short ${PKG_LIST}
 
+.PHONY: msan
+msan: ## Run memory sanitizer
+	@CXX=clang++ CC=clang \
+	${test} -msan -short ${PKG_LIST}
+
+
 .PHONY: bench
 bench: ## Run benchmark tests
 	@go test -benchmem -bench=. -run=^$ ${PKG_LIST}
 
-
-.PHONY: msan
-msan: ## Run memory sanitizer
-	@go test -msan -short ${PKG_LIST}
 
 .PHONY: coverage
 coverage: ## Generate global code coverage report
@@ -76,9 +80,11 @@ coverage: ## Generate global code coverage report
 coverhtml: ## Generate global code coverage report in HTML
 	[ -x /opt/tools/bin/coverage.sh ] && /opt/tools/bin/coverage.sh html || ${_CURDIR}/scripts/coverage.sh html;
 
+
 .PHONY: dep
 dep: ## Get the dependencies
 	@go mod vendor
+
 
 
 

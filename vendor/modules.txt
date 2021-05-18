@@ -20,7 +20,7 @@ github.com/hashicorp/go-multierror
 github.com/nicksnyder/go-i18n/v2/i18n
 github.com/nicksnyder/go-i18n/v2/internal
 github.com/nicksnyder/go-i18n/v2/internal/plural
-# github.com/ovsinc/multilog v1.0.2
+# github.com/ovsinc/multilog v1.0.3
 github.com/ovsinc/multilog
 github.com/ovsinc/multilog/common
 github.com/ovsinc/multilog/golog

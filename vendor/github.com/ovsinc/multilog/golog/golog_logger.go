@@ -20,17 +20,17 @@ type systemlog struct {
 }
 
 func (l *systemlog) Debugf(format string, args ...interface{}) {
-	l.logger.Printf("DEBUG: "+format, args...)
+	l.logger.Printf(format, args...)
 }
 
 func (l *systemlog) Infof(format string, args ...interface{}) {
-	l.logger.Printf("INFO: "+format, args...)
+	l.logger.Printf(format, args...)
 }
 
 func (l *systemlog) Warnf(format string, args ...interface{}) {
-	l.logger.Printf("WARN: "+format, args...)
+	l.logger.Printf(format, args...)
 }
 
 func (l *systemlog) Errorf(format string, args ...interface{}) {
-	l.logger.Printf("ERR: "+format, args...)
+	l.logger.Printf(format, args...)
 }

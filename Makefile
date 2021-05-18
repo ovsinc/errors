@@ -44,6 +44,10 @@ go_lint_max: ## Max lint checks the files
 go_style: ## check style of code
 	@${linter} run -p style
 
+.PHONY: go_mod
+go_mod: ## mod with proxy
+	@GOPROXY="https://proxy.golang.org" \
+	go mod download ${PKG_LIST}
 
 .PHONY: test
 test: unit_test race msan ## Run unittests

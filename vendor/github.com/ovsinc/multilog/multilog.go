@@ -12,7 +12,7 @@ type Logger common.Logger
 
 // DefaultLogger логгер, используемый по умолчанию.
 // Можно переопределить.
-var DefaultLogger common.Logger = golog.New(pkglog.New(os.Stderr, "", pkglog.LstdFlags))
+var DefaultLogger Logger = golog.New(pkglog.New(os.Stderr, "", pkglog.LstdFlags))
 
 func Debugf(format string, args ...interface{}) {
 	DefaultLogger.Debugf(format, args...)
