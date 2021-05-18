@@ -14,9 +14,6 @@ func (e *Error) Is(target error) bool {
 	switch x := target.(type) { //nolint:errorlint
 	case *Error:
 		return e == x
-
-		// case Errorer:
-		// 	return e == x
 	}
 
 	return false
@@ -26,9 +23,6 @@ func (e *Error) As(target interface{}) bool {
 	switch x := target.(type) { //nolint:errorlint
 	case **Error:
 		*x = e
-
-	// case *Errorer:
-	// 	*x = e
 
 	default:
 		return false

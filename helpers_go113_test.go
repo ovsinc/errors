@@ -39,6 +39,7 @@ func TestIs(t *testing.T) {
 		{errb, err3, false},
 	}
 	for _, tc := range testCases {
+		tc := tc
 		t.Run("", func(t *testing.T) {
 			if got := errors.Is(tc.err, tc.target); got != tc.match {
 				t.Errorf("Is(%v, %v) = %v, want %v", tc.err, tc.target, got, tc.match)
@@ -51,7 +52,8 @@ func TestAs(t *testing.T) {
 	err1 := errors.New("1")
 	merr1 := errors.Append(err1)
 
-	merr1cast := merr1.(errors.Multierror)
+	var merr1cast errors.Multierror
+	origerrors.As(merr1, &merr1cast)
 
 	var err2 error = err1
 
@@ -97,6 +99,7 @@ func TestAs(t *testing.T) {
 		},
 	}
 	for i, tc := range testCases {
+		tc := tc
 		name := fmt.Sprintf("%d:As(Errorf(..., %v), %v)", i, tc.err, tc.target)
 		// Clear the target pointer, in case it was set in a previous test.
 		rtarget := reflect.ValueOf(tc.target)
@@ -166,6 +169,7 @@ func TestUnwrap(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if err := errors.Unwrap(tt.args.err); (err != nil) && !tt.wantNil && tt.want != err.Error() {
 				t.Errorf("Unwrap() error = %v, wantErr %v", err, tt.want)

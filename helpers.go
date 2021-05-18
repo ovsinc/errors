@@ -1,9 +1,11 @@
 package errors
 
+import "bytes"
+
 // GetErrorType возвращает тип ошибки. Для НЕ *Error всегда будет "".
 func GetErrorType(err error) string {
 	if errtype, ok := err.(*Error); ok { //nolint:errorlint
-		return errtype.ErrorType()
+		return errtype.ErrorType().String()
 	}
 
 	return ""
@@ -12,7 +14,7 @@ func GetErrorType(err error) string {
 // GetID возвращает ID ошибки. Для НЕ *Error всегда будет "".
 func GetID(err error) (id string) {
 	if idtype, ok := err.(*Error); ok { //nolint:errorlint
-		return idtype.ID()
+		return idtype.ID().String()
 	}
 
 	return
@@ -78,7 +80,7 @@ func Cast(err error) *Error {
 func findByID(err error, id string) (*Error, bool) {
 	checkIDFn := func(errs []error) *Error {
 		for _, err := range errs {
-			if e, ok := simpleCast(err); ok && e.ID() == id {
+			if e, ok := simpleCast(err); ok && bytes.Equal(e.ID().Bytes(), []byte(id)) {
 				return e
 			}
 		}
@@ -95,7 +97,7 @@ func findByID(err error, id string) (*Error, bool) {
 		return e, e != nil
 
 	case *Error:
-		return t, t.ID() == id
+		return t, bytes.Equal(t.ID().Bytes(), []byte(id))
 	}
 
 	return nil, false

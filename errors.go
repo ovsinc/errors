@@ -6,62 +6,60 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	i18n "github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/ovsinc/multilog"
 	"github.com/valyala/bytebufferpool"
-	"gitlab.com/ovsinc/errors/log"
-	logcommon "gitlab.com/ovsinc/errors/log/common"
 )
 
 var (
-	_ interface{ Error() string } = (*Error)(nil)
-	_ error                       = (*Error)(nil)
-	_ errorer                     = (*Error)(nil)
+	_ error = (*Error)(nil)
+	_ interface {
+		WithOptions(ops ...Options) *Error
+
+		ID() Objecter
+		Severity() Severity
+		Msg() Objecter
+		ContextInfo() CtxMap
+		Operations() Objects
+		ErrorType() Objecter
+
+		Sdump() string
+		ErrorOrNil() error
+
+		Format(s fmt.State, verb rune)
+		Error() string
+
+		TranslateContext() *TranslateContext
+		Localizer() *i18n.Localizer
+		WriteTranslateMsg(w io.Writer) (int, error)
+		TranslateMsg() string
+
+		Log(l ...multilog.Logger)
+	} = (*Error)(nil)
 )
-
-type errorer interface {
-	WithOptions(ops ...Options) *Error
-	ID() string
-	Severity() log.Severity
-	Msg() string
-	Error() string
-	Sdump() string
-	ErrorOrNil() error
-	ContextInfo() CtxMap
-
-	ErrorType() string
-
-	Operations() []string
-	Format(s fmt.State, verb rune)
-
-	TranslateContext() *TranslateContext
-	Localizer() *i18n.Localizer
-	WriteTranslateMsg(w io.Writer) (int, error)
-	TranslateMsg() string
-
-	Log(l ...logcommon.Logger)
-}
 
 // Error структура кастомной ошибки.
 // Это потоко-безопасный объект.
 type Error struct {
-	severity         log.Severity
-	operations       []string
+	id               Objecter
+	msg              Objecter
+	severity         Severity
+	errorType        Objecter
+	operations       Objects
 	formatFn         FormatFn
-	contextInfo      CtxMap
 	translateContext *TranslateContext
 	localizer        *i18n.Localizer
-	errorType        string
-	msg              string
-	id               string
+	contextInfo      CtxMap
 }
 
 // New конструктор на необязательных параметрах
-// * ops ...Options -- параметризация через функции-парметры
+// * ops ...Options -- параметризация через функции-парметры.
+// См. options.go
 //
 // ** *Error
 func New(msg string, ops ...Options) *Error {
 	e := &Error{
-		severity: log.SeverityError,
-		msg:      msg,
+		severity: SeverityError,
+		msg:      NewObjectFromString(msg),
 	}
 	for _, op := range ops {
 		op(e)
@@ -79,37 +77,31 @@ func (e *Error) WithOptions(ops ...Options) *Error {
 		return nil
 	}
 
-	newerr := &Error{
-		severity:         e.severity,
-		operations:       e.operations,
-		formatFn:         e.formatFn,
-		contextInfo:      e.contextInfo,
-		translateContext: e.translateContext,
-		localizer:        e.localizer,
-		errorType:        e.errorType,
-		msg:              e.msg,
-		id:               e.id,
-	}
+	// copy *Error
+	newerr := new(Error)
+	*newerr = *e
 
 	for _, op := range ops {
 		op(newerr)
 	}
+
 	return newerr
 }
 
 // getters
 
 // ID возвращает ID ошибки.
-func (e *Error) ID() string {
-	if e == nil {
-		return ""
+// Это безопасный метод, всегда возвращает не nil.
+func (e *Error) ID() Objecter {
+	if e == nil || e.id == nil {
+		return NewObjectEmpty()
 	}
 
 	return e.id
 }
 
 // Severity возвращает критичность ошибки
-func (e *Error) Severity() log.Severity {
+func (e *Error) Severity() Severity {
 	if e == nil {
 		return 0
 	}
@@ -117,23 +109,46 @@ func (e *Error) Severity() log.Severity {
 	return e.severity
 }
 
-// Msg возвращает исходное сообщение об ошибке
-func (e *Error) Msg() string {
-	if e == nil {
-		return ""
+// Msg возвращает исходное сообщение об ошибке.
+// Это безопасный метод, всегда возвращает не nil.
+func (e *Error) Msg() Objecter {
+	if e == nil || e.msg == nil {
+		return NewObjectEmpty()
 	}
 
 	return e.msg
 }
 
-// ErrorType вернет тип ошибки
-func (e *Error) ErrorType() string {
-	if e == nil {
-		return ""
+// ErrorType вернет тип ошибки.
+// Это безопасный метод, всегда возвращает не nil.
+func (e *Error) ErrorType() Objecter {
+	if e == nil || e.errorType == nil {
+		return NewObjectEmpty()
 	}
 
 	return e.errorType
 }
+
+// Operations вернет список операций.
+// Это безопасный метод, всегда возвращает не nil.
+func (e *Error) Operations() Objects {
+	if e == nil || e.operations == nil {
+		return NewObjects()
+	}
+	return e.operations
+}
+
+// TranslateContext вернет *TranslateContext.
+func (e *Error) TranslateContext() *TranslateContext {
+	return e.translateContext
+}
+
+// Localizer вернет локализатор *i18n.Localizer.
+func (e *Error) Localizer() *i18n.Localizer {
+	return e.localizer
+}
+
+// Error methods
 
 // Error возвращает строковое представление ошибки.
 // Метод для реализации интерфейса error.
@@ -153,10 +168,6 @@ func (e *Error) Error() string {
 	default:
 		fn = StringFormat
 	}
-
-	// buf := _bufferPool.Get().(*bytes.Buffer)
-	// buf.Reset()
-	// defer _bufferPool.Put(buf)
 
 	buf := bytebufferpool.Get()
 	defer bytebufferpool.Put(buf)
@@ -183,7 +194,7 @@ func (e *Error) Format(s fmt.State, verb rune) {
 		_, _ = io.WriteString(s, e.Severity().String())
 
 	case 't':
-		_, _ = io.WriteString(s, e.ErrorType())
+		_, _ = s.Write(e.ErrorType().Bytes())
 
 	case 'v':
 		if s.Flag('+') {
@@ -195,6 +206,25 @@ func (e *Error) Format(s fmt.State, verb rune) {
 	case 's', 'q':
 		_, _ = io.WriteString(s, e.Error())
 	}
+}
+
+// translate
+
+// WriteTranslateMsg запишет перевод сообщения ошибки в буфер.
+// Если не удастся выполнить перевод в буфер w будет записано оригинальное сообщение.
+func (e *Error) WriteTranslateMsg(w io.Writer) (int, error) {
+	return writeTranslateMsg(e, w)
+}
+
+// TranslateMsg вернет перевод сообщения ошибки.
+// Если не удастся выполнить перевод, вернет оригинальное сообщение.
+func (e *Error) TranslateMsg() string {
+	buf := bytebufferpool.Get()
+	defer bytebufferpool.Put(buf)
+
+	_, _ = e.WriteTranslateMsg(buf)
+
+	return buf.String()
 }
 
 // дополнительные методы
@@ -215,8 +245,16 @@ func (e *Error) Sdump() string {
 // ошибкой считается *Error != nil и Severity == SeverityError
 // т.е. SeverityWarn НЕ ошибка
 func (e *Error) ErrorOrNil() error {
-	if e != nil && e.Severity() == log.SeverityError {
+	if e != nil && e.Severity() == SeverityError {
 		return e
 	}
 	return nil
+}
+
+// log
+
+// Log выполнит логгирование ошибки с ипользованием логгера l[0].
+// Если l не указан, то в качестве логгера будет использоваться логгер по-умолчанию.
+func (e *Error) Log(l ...multilog.Logger) {
+	customlog(getLogger(l...), e, e.Severity())
 }

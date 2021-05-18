@@ -8,17 +8,16 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/ovsinc/errors/log"
 )
 
-var UnknownErrorType = "UNKNOWN_TYPE"
+var UnknownErrorType = NewObjectFromString("UNKNOWN_TYPE")
 
 func TestNewNil(t *testing.T) {
 	var err *Error
 
 	assert.Nil(t, err.WithOptions(
-		SetErrorType(UnknownErrorType),
-		SetSeverity(log.SeverityError),
+		SetErrorType(UnknownErrorType.String()),
+		SetSeverity(SeverityError),
 		SetMsg("hello"),
 		SetContextInfo(CtxMap{"hello": "world"}),
 	))
@@ -28,7 +27,7 @@ func TestNew(t *testing.T) {
 	myerr1 := "some err"
 	myerrType1 := "custom err type"
 	myop1 := "read"
-	myseverity := log.SeverityError
+	myseverity := SeverityError
 
 	type args struct {
 		ops []Options
@@ -40,9 +39,6 @@ func TestNew(t *testing.T) {
 	}{
 		{
 			name: "empty",
-			args: args{
-				ops: []Options{},
-			},
 			want: &Error{},
 		},
 		{
@@ -56,9 +52,9 @@ func TestNew(t *testing.T) {
 				},
 			},
 			want: &Error{
-				msg:        myerr1,
-				errorType:  myerrType1,
-				operations: []string{myop1},
+				msg:        NewObjectFromString(myerr1),
+				errorType:  NewObjectFromString(myerrType1),
+				operations: NewObjectsFromString([]string{myop1}...),
 				severity:   myseverity,
 			},
 		},
@@ -66,7 +62,7 @@ func TestNew(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			if got := New("", tt.args.ops...); got != nil && tt.want != nil && got.Error() != tt.want.Error() {
+			if got := New("", tt.args.ops...); got == nil || tt.want == nil || got.Error() != tt.want.Error() {
 				t.Errorf("New() = %+v, want %+v.", got, tt.want)
 			}
 		})
@@ -86,12 +82,17 @@ func TestSetMsg(t *testing.T) {
 		want *Error
 	}{
 		{
-			name: "nil",
+			name: "nil err",
 			err:  nil,
 			want: nil,
 			args: args{
 				"hello",
 			},
+		},
+		{
+			name: "nil",
+			err:  nil,
+			want: nil,
 		},
 		{
 			name: "simple",
@@ -161,10 +162,10 @@ func TestSetFormatFn(t *testing.T) {
 
 func TestError_Error(t *testing.T) {
 	type fields struct {
-		operations  []string
-		errorType   string
-		msg         string
-		severity    log.Severity
+		operations  Objects
+		errorType   Objecter
+		msg         Objecter
+		severity    Severity
 		contextInfo CtxMap
 	}
 	tests := []struct {
@@ -173,32 +174,34 @@ func TestError_Error(t *testing.T) {
 		want   string
 	}{
 		{
-			name: "nil",
-			fields: fields{
-				operations: make([]string, 0),
-				severity:   log.SeverityError,
-				errorType:  UnknownErrorType,
-				msg:        "",
-			},
-			want: "(UNKNOWN_TYPE)",
+			name:   "nil",
+			fields: fields{},
+			want:   "",
 		},
 		{
 			name: "empty",
 			fields: fields{
-				operations: make([]string, 0),
-				severity:   log.SeverityError,
-				errorType:  UnknownErrorType,
-				msg:        "hello",
+				severity:  SeverityError,
+				errorType: UnknownErrorType,
+			},
+			want: "(UNKNOWN_TYPE)",
+		},
+		{
+			name: "only msg",
+			fields: fields{
+				severity:  SeverityError,
+				errorType: UnknownErrorType,
+				msg:       NewObjectFromString("hello"),
 			},
 			want: "(UNKNOWN_TYPE) -- hello",
 		},
 		{
 			name: "with all params",
 			fields: fields{
-				operations:  []string{"write"},
-				severity:    log.SeverityError,
-				errorType:   "not found",
-				msg:         "hello",
+				operations:  NewObjectsFromString("write"),
+				severity:    SeverityError,
+				errorType:   NewObjectFromString("not found"),
+				msg:         NewObjectFromString("hello"),
 				contextInfo: CtxMap{"hello": "world", "hi": "there"},
 			},
 			want: "(not found)[write]<hello:world,hi:there> -- hello",
@@ -225,10 +228,10 @@ func TestError_WithOptions(t *testing.T) {
 	err1 := "hello"
 
 	type fields struct {
-		operations  []string
-		errorType   string
-		msg         string
-		severity    log.Severity
+		operations  Objects
+		errorType   Objecter
+		msg         Objecter
+		severity    Severity
 		contextInfo CtxMap
 	}
 	type args struct {
@@ -248,13 +251,11 @@ func TestError_WithOptions(t *testing.T) {
 				},
 			},
 			fields: fields{
-				operations: make([]string, 0),
-				severity:   log.SeverityError,
-				errorType:  UnknownErrorType,
+				severity:  SeverityError,
+				errorType: UnknownErrorType,
 			},
 			want: &Error{
-				operations:  make([]string, 0),
-				severity:    log.SeverityError,
+				severity:    SeverityError,
 				errorType:   UnknownErrorType,
 				contextInfo: CtxMap{"duration": time.Second},
 			},
@@ -267,15 +268,13 @@ func TestError_WithOptions(t *testing.T) {
 				},
 			},
 			fields: fields{
-				operations: make([]string, 0),
-				severity:   log.SeverityError,
-				errorType:  UnknownErrorType,
+				severity:  SeverityError,
+				errorType: UnknownErrorType,
 			},
 			want: &Error{
-				operations: make([]string, 0),
-				severity:   log.SeverityError,
-				errorType:  UnknownErrorType,
-				msg:        err1,
+				severity:  SeverityError,
+				errorType: UnknownErrorType,
+				msg:       NewObjectFromString(err1),
 			},
 		},
 		{
@@ -285,19 +284,18 @@ func TestError_WithOptions(t *testing.T) {
 					SetMsg(err1),
 					SetErrorType("my type"),
 					SetOperations("write", "read"),
-					SetSeverity(log.SeverityWarn),
+					SetSeverity(SeverityWarn),
 				},
 			},
 			fields: fields{
-				operations: make([]string, 0),
-				severity:   log.SeverityError,
-				errorType:  UnknownErrorType,
+				severity:  SeverityError,
+				errorType: UnknownErrorType,
 			},
 			want: &Error{
-				operations: []string{"write", "read"},
-				severity:   log.SeverityWarn,
-				errorType:  "my type",
-				msg:        err1,
+				operations: NewObjectsFromString("write", "read"),
+				severity:   SeverityWarn,
+				errorType:  NewObjectFromString("my type"),
+				msg:        NewObjectFromString(err1),
 			},
 		},
 		{
@@ -307,17 +305,16 @@ func TestError_WithOptions(t *testing.T) {
 					SetMsg(err1),
 					SetErrorType("my type"),
 					SetOperations("write", "read"),
-					SetSeverity(log.SeverityWarn),
+					SetSeverity(SeverityWarn),
 				},
 			},
 			fields: fields{
-				operations: make([]string, 0),
-				severity:   log.SeverityError,
-				errorType:  UnknownErrorType,
+				severity:  SeverityError,
+				errorType: UnknownErrorType,
 			},
 			want: New("").WithOptions(
 				SetOperations("write", "read"),
-				SetSeverity(log.SeverityWarn),
+				SetSeverity(SeverityWarn),
 				SetErrorType("my type"),
 				SetMsg(err1),
 			),
@@ -329,20 +326,19 @@ func TestError_WithOptions(t *testing.T) {
 					SetMsg(err1),
 					SetErrorType("my type"),
 					SetOperations("write", "read"),
-					SetSeverity(log.SeverityWarn),
+					SetSeverity(SeverityWarn),
 				},
 			},
 			fields: fields{
-				operations: make([]string, 0),
-				severity:   log.SeverityError,
-				errorType:  UnknownErrorType,
+				severity:  SeverityError,
+				errorType: UnknownErrorType,
 			},
 			want: New("").
 				WithOptions(
 					SetOperations("write", "read"),
 				).
 				WithOptions(
-					SetSeverity(log.SeverityWarn),
+					SetSeverity(SeverityWarn),
 				).
 				WithOptions(
 					SetErrorType("my type"),
@@ -372,38 +368,59 @@ func TestError_WithOptions(t *testing.T) {
 func TestError_Operations(t *testing.T) {
 	tests := []struct {
 		name string
-		want []string
+		want Objects
 		err  *Error
 	}{
 		{
 			name: "New. set",
 			err:  New("", SetOperations("new operation")),
-			want: []string{"new operation"},
+			want: NewObjectsFromString("new operation"),
 		},
 		{
 			name: "Set",
 			err:  New("").WithOptions(SetOperations("new operation")),
-			want: []string{"new operation"},
+			want: NewObjectsFromString("new operation"),
 		},
 		{
 			name: "Set 2",
 			err: New("").
-				WithOptions(SetOperations("noe one")).
+				WithOptions(SetOperations("new one")).
 				WithOptions(AppendOperations()).
 				WithOptions(SetOperations("new operation")),
-			want: []string{"new operation"},
+			want: NewObjectsFromString("new operation"),
+		},
+		{
+			name: "Set 3",
+			err: New("").
+				WithOptions(
+					SetOperations("new one"),
+					AppendOperations("hhh"),
+					SetOperations("new operation"),
+				),
+			want: NewObjectsFromString("new operation"),
 		},
 		{
 			name: "append",
-			err: New("").
-				WithOptions(SetOperations("new operation")).
-				WithOptions(AppendOperations("noe one")),
-			want: []string{"new operation", "noe one"},
+			err: New("", SetOperations("unknown")).
+				WithOptions(SetOperations("hhh")).
+				WithOptions(AppendOperations("new operation")).
+				WithOptions(AppendOperations("new one")),
+			want: NewObjectsFromString("hhh", "new operation", "new one"),
+		},
+		{
+			name: "append 2",
+			err: New("", SetOperations("unknown")).
+				WithOptions(
+					SetOperations("hhh"),
+					AppendOperations("new operation"),
+					AppendOperations("new one"),
+				),
+			want: NewObjectsFromString("hhh", "new operation", "new one"),
 		},
 		{
 			name: "Empty",
 			err:  New(""),
-			want: nil,
+			want: NewObjects(),
 		},
 	}
 	for _, tt := range tests {
@@ -447,7 +464,7 @@ func TestError_ErrorType(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.err.ErrorType(); got != tt.want {
+			if got := tt.err.ErrorType(); got == nil || got.String() != tt.want {
 				t.Errorf("Error.ErrorType() = %v, want %v", got, tt.want)
 			}
 		})
@@ -458,27 +475,27 @@ func TestError_Severity(t *testing.T) {
 	tests := []struct {
 		name string
 		err  *Error
-		want log.Severity
+		want Severity
 	}{
 		{
 			name: "empty",
 			err:  &Error{},
-			want: log.SeverityUnknown,
+			want: SeverityUnknown,
 		},
 		{
 			name: "New",
 			err:  New(""),
-			want: log.SeverityError,
+			want: SeverityError,
 		},
 		{
 			name: "New. Set",
-			err:  New("", SetSeverity(log.SeverityWarn)),
-			want: log.SeverityWarn,
+			err:  New("", SetSeverity(SeverityWarn)),
+			want: SeverityWarn,
 		},
 		{
 			name: "Set",
-			err:  New("").WithOptions(SetSeverity(log.SeverityWarn)),
-			want: log.SeverityWarn,
+			err:  New("").WithOptions(SetSeverity(SeverityWarn)),
+			want: SeverityWarn,
 		},
 	}
 	for _, tt := range tests {

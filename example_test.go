@@ -10,11 +10,13 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/ovsinc/multilog"
+	"github.com/ovsinc/multilog/golog"
 	"gitlab.com/ovsinc/errors"
-	customlog "gitlab.com/ovsinc/errors/log"
-	"gitlab.com/ovsinc/errors/log/golog"
 	"golang.org/x/text/language"
 )
+
+var UnknownErrorType = errors.NewObjectFromString("UNKNOWN_TYPE")
 
 func itsOk() error {
 	return nil
@@ -33,10 +35,10 @@ func ExampleErrorOrNil() {
 		nil,
 		itsOk(),
 		itsErr("one"),
-		errors.New("two", errors.SetSeverity(customlog.SeverityWarn)),
+		errors.New("two", errors.SetSeverity(errors.SeverityWarn)),
 		itsOk(),
 	)
-	err = errors.Wrap(err, errors.New("three", errors.SetSeverity(customlog.SeverityWarn)))
+	err = errors.Wrap(err, errors.New("three", errors.SetSeverity(errors.SeverityWarn)))
 
 	fmt.Printf("%v\n", errors.ErrorOrNil(err))
 	// Output:
@@ -46,8 +48,7 @@ func ExampleErrorOrNil() {
 // Добавление ошибок в mutierror с логгированием
 // тут изменена функция форматирования вывода -- испльзуется json
 func ExampleAppendWithLog() {
-	logger := log.New(os.Stdout, "ovsinc/errors ", 0)
-	customlog.DefaultLogger = golog.New(logger)
+	multilog.DefaultLogger = golog.New(log.New(os.Stdout, "ovsinc/errors ", 0))
 	errors.DefaultMultierrFormatFunc = errors.JSONMultierrFuncFormat
 
 	_ = errors.AppendWithLog(
@@ -67,7 +68,7 @@ func someFuncWithErr() error {
 		"connection error",
 		errors.SetContextInfo(errors.CtxMap{"hello": "world"}),
 		errors.AppendOperations("write"),
-		errors.SetSeverity(customlog.SeverityUnknown),
+		errors.SetSeverity(errors.SeverityUnknown),
 		errors.SetErrorType(""),
 	)
 }
@@ -75,7 +76,7 @@ func someFuncWithErr() error {
 func someFuncWithErr2() error {
 	return errors.New(
 		"connection error",
-		errors.SetSeverity(customlog.SeverityUnknown),
+		errors.SetSeverity(errors.SeverityUnknown),
 		errors.SetErrorType(""),
 	)
 }
@@ -96,8 +97,7 @@ func ExampleWrap() {
 }
 
 func ExampleNewWithLog() {
-	logger := log.New(os.Stdout, "ovsinc/errors ", 0)
-	customlog.DefaultLogger = golog.New(logger)
+	multilog.DefaultLogger = golog.New(log.New(os.Stdout, "ovsinc/errors ", 0))
 	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
 
 	_ = errors.Append(
@@ -128,8 +128,8 @@ func ExampleGetErrorType() {
 	switch errors.GetErrorType(err) {
 	case "NOT_FOUND":
 		fmt.Printf("Got error with type NOT_FOUND")
-	case errors.UnknownErrorType:
-		fmt.Printf("Got error with type %s", errors.UnknownErrorType)
+	case UnknownErrorType.String():
+		fmt.Printf("Got error with type %s", UnknownErrorType.String())
 	default:
 		fmt.Printf("Got some unknown")
 	}
@@ -158,20 +158,19 @@ func someTimedCast() (err error) {
 }
 
 func ExampleLog() {
-	logger := log.New(os.Stdout, "ovsinc/errors ", 0)
-	customlog.DefaultLogger = golog.New(logger)
+	multilog.DefaultLogger = golog.New(log.New(os.Stdout, "ovsinc/errors ", 0))
 	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
 
 	errors.Log(someTimedCast())
 
 	// Output:
-	// ovsinc/errors <call:example_test.go:165,duration:1s> -- some call
+	// ovsinc/errors <call:example_test.go:164,duration:1s> -- some call
 }
 
 func localizePrepare() *i18n.Localizer {
 	bundle := i18n.NewBundle(language.English)
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
-	bundle.MustLoadMessageFile("./testdata/active.ru.toml")
+	bundle.MustLoadMessageFile("./_examples/translate/testdata/active.ru.toml")
 
 	return i18n.NewLocalizer(bundle, "es", "ru", "en")
 }
