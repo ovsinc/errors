@@ -77,10 +77,10 @@ func Cast(err error) *Error {
 	return New(err.Error())
 }
 
-func findByID(err error, id string) (*Error, bool) {
+func findByID(err error, id []byte) (*Error, bool) {
 	checkIDFn := func(errs []error) *Error {
 		for _, err := range errs {
-			if e, ok := simpleCast(err); ok && bytes.Equal(e.ID().Bytes(), []byte(id)) {
+			if e, ok := simpleCast(err); ok && bytes.Equal(e.ID().Bytes(), id) {
 				return e
 			}
 		}
@@ -106,7 +106,7 @@ func findByID(err error, id string) (*Error, bool) {
 // UnwrapByID вернет ошибку (*Error) с указанным ID.
 // Если ошибка с указанным ID не найдена, вернется nil.
 func UnwrapByID(err error, id string) *Error {
-	if e, ok := findByID(err, id); ok {
+	if e, ok := findByID(err, []byte(id)); ok {
 		return e
 	}
 
@@ -116,7 +116,7 @@ func UnwrapByID(err error, id string) *Error {
 // Contains проверит есть ли в цепочке ошибка с указанным ID.
 // Допускается в качестве аргумента err указывать одиночную ошибку.
 func Contains(err error, id string) bool {
-	_, ok := findByID(err, id)
+	_, ok := findByID(err, []byte(id))
 
 	return ok
 }

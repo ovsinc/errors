@@ -32,7 +32,7 @@ func JSONFormat(buf io.Writer, e *Error) {
 	// Severity
 	_, _ = io.WriteString(buf, "\"severity\":")
 	_, _ = io.WriteString(buf, "\"")
-	_, _ = io.WriteString(buf, e.Severity().String())
+	_, _ = buf.Write(e.Severity().Bytes())
 	_, _ = io.WriteString(buf, "\",")
 
 	// Operations

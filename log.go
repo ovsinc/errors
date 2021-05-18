@@ -68,23 +68,29 @@ func (s Severity) Valid() bool {
 	return s > SeverityUnknown && s < SeverityEnds
 }
 
-// String получить строчное представление типа Severity.
-// Для не корректных значение будет возврашено UNKNOWN.
-func (s Severity) String() (str string) {
+// Bytes получить представление типа Severity в []byte.
+// Для не корректных значение будет возвращено UNKNOWN.
+func (s Severity) Bytes() (buf []byte) {
 	switch s {
 	case SeverityError:
-		str = "ERROR"
+		buf = []byte("ERROR")
 
 	case SeverityWarn:
-		str = "WARN"
+		buf = []byte("WARN")
 
 	case SeverityEnds, SeverityUnknown:
-		str = "UNKNOWN"
+		buf = []byte("UNKNOWN")
 
 	default:
-		str = "UNKNOWN"
+		buf = []byte("UNKNOWN")
 	}
-	return str
+	return buf
+}
+
+// String получить строчное представление типа Severity.
+// Для не корректных значение будет возвращено UNKNOWN.
+func (s Severity) String() (str string) {
+	return string(s.Bytes())
 }
 
 //

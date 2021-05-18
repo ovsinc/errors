@@ -22,9 +22,9 @@ type TranslateContext struct {
 }
 
 func writeTranslateMsg(e *Error, w io.Writer) (int, error) {
-	s := e.Msg()
+	buf := e.Msg().Bytes()
 
-	if len(s.Bytes()) == 0 {
+	if len(buf) == 0 {
 		return 0, nil
 	}
 
@@ -37,10 +37,10 @@ func writeTranslateMsg(e *Error, w io.Writer) (int, error) {
 	}
 
 	if localizer == nil {
-		return w.Write(s.Bytes())
+		return w.Write(buf)
 	}
 
-	i18nConf := i18n.LocalizeConfig{
+	i18nConf := &i18n.LocalizeConfig{
 		MessageID: e.id.String(),
 	}
 	if e.translateContext != nil {
@@ -49,9 +49,9 @@ func writeTranslateMsg(e *Error, w io.Writer) (int, error) {
 		i18nConf.TemplateData = e.translateContext.TemplateData
 	}
 
-	msg, _, err := e.localizer.LocalizeWithTag(&i18nConf)
+	msg, _, err := e.localizer.LocalizeWithTag(i18nConf)
 	if err != nil {
-		return w.Write(s.Bytes())
+		return w.Write(buf)
 	}
 
 	return io.WriteString(w, msg)

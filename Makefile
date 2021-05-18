@@ -4,7 +4,7 @@ BUILD = `date +%FT%T%z`
 _CURDIR := `git rev-parse --show-toplevel 2>/dev/null | sed -e 's/(//'`
 
 # PKG := "gitlab.com/ovsinc/memory-rate-limits"
-PKG_LIST := $(shell go list ${_CURDIR}/... 2>/dev/null)
+PKG_LIST := $(shell go list ${_CURDIR}/... 2>/dev/null | grep -v internal/examples)
 
 
 linter := golangci-lint

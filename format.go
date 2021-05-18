@@ -36,9 +36,9 @@ func StringFormat(buf io.Writer, e *Error) { //nolint:cyclop
 
 	writeDelim := false
 
-	if et := e.ErrorType(); len(et.Bytes()) > 0 {
+	if et := e.ErrorType().Bytes(); len(et) > 0 {
 		_, _ = io.WriteString(buf, "(")
-		_, _ = buf.Write(et.Bytes())
+		_, _ = buf.Write(et)
 		_, _ = io.WriteString(buf, ")")
 		writeDelim = true
 	}
@@ -71,7 +71,7 @@ func StringFormat(buf io.Writer, e *Error) { //nolint:cyclop
 		writeDelim = true
 	}
 
-	if msg := e.Msg(); writeDelim && len(msg.Bytes()) > 0 {
+	if writeDelim && len(e.Msg().Bytes()) > 0 {
 		_, _ = buf.Write(_msgSeparator)
 	}
 
