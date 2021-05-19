@@ -3,16 +3,15 @@ BUILD = `date +%FT%T%z`
 
 _CURDIR := `git rev-parse --show-toplevel 2>/dev/null | sed -e 's/(//'`
 
-PKG_LIST := $(shell go list ${_CURDIR}/... 2>/dev/null)
-
-EXAMPLE := ${_CURDIR}/_example
+PKG_LIST := $(shell go list ${_CURDIR}/... 2>/dev/null | grep -v mock)
 
 linter := golangci-lint
 
+test := go test -short -run=.
 
 
 .PHONY: all
-all: lint
+all: lint test
 
 .PHONY: build_all
 build_all: lint
@@ -47,19 +46,16 @@ go_style: ## check style of code
 	@${linter} run -p style
 
 
-.PHONY: go_mod
-go_mod: ## mod with proxy
-	@GOPROXY="https://proxy.golang.org" \
-	go mod download ${PKG_LIST}
+.PHONY: test
+test: unit_test race msan ## Run all tests
 
-
-.PHONY: unit_tests
-unit_tests: ## Run unittests
-	@go test -short ${PKG_LIST}
+.PHONY: unit_test
+unit_test: ## Run unittests
+	@${test} ${PKG_LIST}
 
 .PHONY: race
 race: ## Run data race detector
-	@go test -race -short ${PKG_LIST}
+	@${test} -race ${PKG_LIST}
 
 .PHONY: msan
 msan: ## Run memory sanitizer
@@ -70,6 +66,13 @@ msan: ## Run memory sanitizer
 .PHONY: bench
 bench: ## Run benchmark tests
 	@go test -benchmem -bench=. -run=^$ ${PKG_LIST}
+
+
+
+.PHONY: go_mod
+go_mod: ## mod with proxy
+	@GOPROXY="https://proxy.golang.org" \
+	go mod download ${PKG_LIST}
 
 
 .PHONY: coverage

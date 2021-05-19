@@ -7,7 +7,6 @@ import (
 
 	origerrors "errors"
 
-	hashmultierr "github.com/hashicorp/go-multierror"
 	"github.com/ovsinc/errors"
 )
 
@@ -16,7 +15,7 @@ func TestIs(t *testing.T) {
 	err11 := errors.New("1")
 	err2 := errors.New("2")
 	err22 := err2
-	erra := hashmultierr.Append(err1, err2)
+	erra := errors.Append(err1, err2)
 	err3 := errors.New("3")
 	errb := errors.Wrap(erra, err2)
 	errc := errors.Append(err1, err3, err2)

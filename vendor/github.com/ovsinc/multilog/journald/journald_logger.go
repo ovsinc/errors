@@ -1,5 +1,9 @@
 // +build !window
 
+// Package journal implements the journal logger.
+//
+//
+// RU:
 // Package journald реализует логгер journald.
 package journald
 
@@ -11,6 +15,10 @@ import (
 	pkgjournal "github.com/coreos/go-systemd/journal"
 )
 
+// New constructor of the custom journald logger.
+//
+//
+// RU:
 // New конструктор journald логгера.
 func New() log.Logger {
 	return &journaldlogger{}
