@@ -8,7 +8,7 @@ import (
 	origerrors "errors"
 
 	hashmultierr "github.com/hashicorp/go-multierror"
-	"gitlab.com/ovsinc/errors"
+	"github.com/ovsinc/errors"
 )
 
 func TestIs(t *testing.T) {

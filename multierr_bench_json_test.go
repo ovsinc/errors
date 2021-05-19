@@ -3,8 +3,8 @@ package errors_test
 import (
 	"testing"
 
+	"github.com/ovsinc/errors"
 	"github.com/stretchr/testify/require"
-	"gitlab.com/ovsinc/errors"
 )
 
 var (

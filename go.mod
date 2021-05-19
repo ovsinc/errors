@@ -1,6 +1,6 @@
-module gitlab.com/ovsinc/errors
+module github.com/ovsinc/errors
 
-go 1.12
+go 1.14
 
 require (
 	github.com/BurntSushi/toml v0.3.1

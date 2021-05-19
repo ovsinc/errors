@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"gitlab.com/ovsinc/errors"
+	"github.com/ovsinc/errors"
 )
 
 func main() {

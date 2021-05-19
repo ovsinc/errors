@@ -10,9 +10,9 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/ovsinc/errors"
 	"github.com/ovsinc/multilog"
 	"github.com/ovsinc/multilog/golog"
-	"gitlab.com/ovsinc/errors"
 	"golang.org/x/text/language"
 )
 

@@ -26,7 +26,7 @@ ____
 ## Установка
 
 ```text
-go get gitlab.com/ovsinc/errors
+go get github.com/ovsinc/errors
 ```
 
 Для простого использования достаточно будет импортировать пакет в своём приложении:
@@ -36,7 +36,7 @@ package main
 
 import (
     "fmt"
-    "gitlab.com/ovsinc/errors"
+    "github.com/ovsinc/errors"
 )
 
 func main() {
@@ -49,7 +49,7 @@ func main() {
 
 ## Миграция
 
-Поскольку `gitlab.com/ovsinc/errors` совместим с `errors`, то в общем случае миграция достаточно проста.
+Поскольку `github.com/ovsinc/errors` совместим с `errors`, то в общем случае миграция достаточно проста.
 
 ```golang
 package main
@@ -57,7 +57,7 @@ package main
 import (
     "fmt"
     // "errors"
-    "gitlab.com/ovsinc/errors"
+    "github.com/ovsinc/errors"
 )
 
 func main() {
@@ -73,7 +73,7 @@ func main() {
 Склонируйте репозиторий:
 
 ```text
-git clone https://gitlab.com/ovsinc/errors
+git clone https://github.com/ovsinc/errors
 cd errors
 ```
 
@@ -142,7 +142,7 @@ type Error struct {
 
 Для переводов сообщения используется библиотека `github.com/nicksnyder/go-i18n/v2/i18n`. Ознакомится с особенностями работы i18n можно [тут](https://github.com/nicksnyder/go-i18n).
 
-Можно также ознакомится с [примерами](https://gitlab.com/ovsinc/errors/-/blob/master/example_test.go) использования `gitlab.com/ovsinc/errors`.
+Можно также ознакомится с [примерами](https://github.com/ovsinc/errors/-/blob/main/example_test.go) использования `github.com/ovsinc/errors`.
 
 ### Методы *Error
 
@@ -277,7 +277,7 @@ type Logger interface {
 
 Для удобства поддерживаются несколько оберток над наиболее популярными логгерами.
 
-Ниже приведен пример использования `gitlab.com/ovsinc/errors` c логгированием:
+Ниже приведен пример использования `github.com/ovsinc/errors` c логгированием:
 
 ```golang
 package main
@@ -290,7 +290,7 @@ import (
     "github.com/ovsinc/multilog/journald"
     "github.com/ovsinc/multilog/logrus"
     origlogrus "github.com/sirupsen/logrus"
-    "gitlab.com/ovsinc/errors"
+    "github.com/ovsinc/errors"
 )
 
 func main() {
@@ -363,7 +363,7 @@ import (
 
     "github.com/BurntSushi/toml"
     "github.com/nicksnyder/go-i18n/v2/i18n"
-    "gitlab.com/ovsinc/errors"
+    "github.com/ovsinc/errors"
     "golang.org/x/text/language"
 )
 

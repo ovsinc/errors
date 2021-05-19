@@ -3,7 +3,7 @@ package errors_test
 import (
 	"testing"
 
-	"gitlab.com/ovsinc/errors"
+	"github.com/ovsinc/errors"
 
 	origerrors "errors"
 )
