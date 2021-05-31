@@ -26,7 +26,7 @@ ____
 ## Установка
 
 ```text
-go get gitlab.com/ovsinc/errors
+go get github.com/ovsinc/errors
 ```
 
 Для простого использования достаточно будет импортировать пакет в своём приложении:
@@ -36,7 +36,7 @@ package main
 
 import (
     "fmt"
-    "gitlab.com/ovsinc/errors"
+    "github.com/ovsinc/errors"
 )
 
 func main() {
@@ -49,7 +49,7 @@ func main() {
 
 ## Миграция
 
-Поскольку `gitlab.com/ovsinc/errors` совместим с `errors`, то в общем случае миграция достаточно проста.
+Поскольку `github.com/ovsinc/errors` совместим с `errors`, то в общем случае миграция достаточно проста.
 
 ```golang
 package main
@@ -57,7 +57,7 @@ package main
 import (
     "fmt"
     // "errors"
-    "gitlab.com/ovsinc/errors"
+    "github.com/ovsinc/errors"
 )
 
 func main() {
@@ -73,7 +73,7 @@ func main() {
 Склонируйте репозиторий:
 
 ```text
-git clone https://gitlab.com/ovsinc/errors
+git clone https://github.com/ovsinc/errors
 cd errors
 ```
 
@@ -142,7 +142,7 @@ type Error struct {
 
 Для переводов сообщения используется библиотека `github.com/nicksnyder/go-i18n/v2/i18n`. Ознакомится с особенностями работы i18n можно [тут](https://github.com/nicksnyder/go-i18n).
 
-Можно также ознакомится с [примерами](https://gitlab.com/ovsinc/errors/-/blob/master/example_test.go) использования `gitlab.com/ovsinc/errors`.
+Можно также ознакомится с [примерами](https://github.com/ovsinc/errors/-/blob/main/example_test.go) использования `github.com/ovsinc/errors`.
 
 ### Методы *Error
 
@@ -238,7 +238,7 @@ func main() {
 | `func GetErrorType(err error) string` | Получить тип ошибки. Для НЕ `*Error` всегда будет "". |
 | `func ErrorOrNil(err error) error` | Возможна обработка цепочки или одиночной ошибки. Если хотя бы одна ошибка в цепочке является ошибкой, то она будет возвращена в качестве результата. Важно: `*Error` c Severity `Warn` не является ошибкой. |
 | `func Cast(err error) *Error` | Преобразование типа `error` в `*Error`. |
-| `func Append(errs ...error) error` | Создать цепочку ошибок. Допускается использование `nil` в аргументах. |
+| `func Combine(errs ...error) error` | Создать цепочку ошибок. Допускается использование `nil` в аргументах. |
 | `func Wrap(left error, right error) error` | Обернуть ошибку `left` ошибкой `right`, получив цепочку. Допускается использование `nil` в одном из аргументов, тогда функция вернет ошибку из второго аргумента. |
 | `func Errors(err error) []error` | Получить список ошибок из цепочки. Вернет `nil`, при пустой цепочке. |
 | `func UnwrapByID(err error, id string) *Error` | Получить ошибку (`*Error`) по ID. Вернет `nil`, если в случае провала поиска. |
@@ -272,12 +272,12 @@ type Logger interface {
 | ------ | -------- |
 | `func NewWithLog(msg string, ops ...Options) *Error` | Функция произведет логгирование ошибки дефолтным логгером. |
 | `func Log(err error, l ...multilog.Logger)` | Функция произведет логгирование ошибки дефолтным логгером или логгером указанным в l (будет использоваться только первое значение). |
-| `func AppendWithLog(errs ...error) error` | Хелпер создать цепочку ошибок., выполнит логгирование дефолтным логгером и вернет цепочку. |
+| `func CombineWithLog(errs ...error) error` | Хелпер создать цепочку ошибок., выполнит логгирование дефолтным логгером и вернет цепочку. |
 | `func WrapWithLog(olderr error, err error) error` | Хелпер обернет `olderr` ошибкой `err`, выполнит логгирование дефолтным логгером и вернет цепочку. |
 
 Для удобства поддерживаются несколько оберток над наиболее популярными логгерами.
 
-Ниже приведен пример использования `gitlab.com/ovsinc/errors` c логгированием:
+Ниже приведен пример использования `github.com/ovsinc/errors` c логгированием:
 
 ```golang
 package main
@@ -290,7 +290,7 @@ import (
     "github.com/ovsinc/multilog/journald"
     "github.com/ovsinc/multilog/logrus"
     origlogrus "github.com/sirupsen/logrus"
-    "gitlab.com/ovsinc/errors"
+    "github.com/ovsinc/errors"
 )
 
 func main() {
@@ -363,7 +363,7 @@ import (
 
     "github.com/BurntSushi/toml"
     "github.com/nicksnyder/go-i18n/v2/i18n"
-    "gitlab.com/ovsinc/errors"
+    "github.com/ovsinc/errors"
     "golang.org/x/text/language"
 )
 

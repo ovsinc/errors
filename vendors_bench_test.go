@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	hashmultierr "github.com/hashicorp/go-multierror"
+	"github.com/ovsinc/errors"
 	"github.com/stretchr/testify/require"
-	"gitlab.com/ovsinc/errors"
 	ubermulierr "go.uber.org/multierr"
 	"golang.org/x/xerrors"
 )

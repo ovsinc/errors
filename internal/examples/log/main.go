@@ -3,12 +3,12 @@ package main
 import (
 	"time"
 
+	"github.com/ovsinc/errors"
 	"github.com/ovsinc/multilog"
 	"github.com/ovsinc/multilog/chain"
 	"github.com/ovsinc/multilog/journald"
 	"github.com/ovsinc/multilog/logrus"
 	origlogrus "github.com/sirupsen/logrus"
-	"gitlab.com/ovsinc/errors"
 )
 
 func main() {

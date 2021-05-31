@@ -10,9 +10,9 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/ovsinc/errors"
 	"github.com/ovsinc/multilog"
 	"github.com/ovsinc/multilog/golog"
-	"gitlab.com/ovsinc/errors"
 	"golang.org/x/text/language"
 )
 
@@ -31,7 +31,7 @@ func ExampleErrorOrNil() {
 	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
 
 	var err error
-	err = errors.Append(
+	err = errors.Combine(
 		nil,
 		itsOk(),
 		itsErr("one"),
@@ -47,11 +47,10 @@ func ExampleErrorOrNil() {
 
 // Добавление ошибок в mutierror с логгированием
 // тут изменена функция форматирования вывода -- испльзуется json
-func ExampleAppendWithLog() {
+func ExampleCombineWithLog() {
 	multilog.DefaultLogger = golog.New(log.New(os.Stdout, "ovsinc/errors ", 0))
-	errors.DefaultMultierrFormatFunc = errors.JSONMultierrFuncFormat
 
-	_ = errors.AppendWithLog(
+	_ = errors.CombineWithLog(
 		nil,
 		itsOk(),
 		itsErr("one"),
@@ -60,7 +59,9 @@ func ExampleAppendWithLog() {
 	)
 
 	// Output:
-	// ovsinc/errors {"count":2,"messages":[{"id":"","error_type":"","severity":"ERROR","operations":[],"context":null,"msg":"one"},{"id":"","error_type":"","severity":"ERROR","operations":[],"context":null,"msg":"two"}]}
+	// ovsinc/errors the following errors occurred:
+	// 	#0 one
+	// 	#1 two
 }
 
 func someFuncWithErr() error {
@@ -92,15 +93,15 @@ func ExampleWrap() {
 
 	// Output:
 	// the following errors occurred:
-	// * [write]<hello:world> -- connection error
-	// * connection error
+	// 	#0 [write]<hello:world> -- connection error
+	// 	#1 connection error
 }
 
 func ExampleNewWithLog() {
 	multilog.DefaultLogger = golog.New(log.New(os.Stdout, "ovsinc/errors ", 0))
 	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
 
-	_ = errors.Append(
+	_ = errors.Combine(
 		nil,
 		itsOk(),
 		errors.NewWithLog("one"),
@@ -164,7 +165,7 @@ func ExampleLog() {
 	errors.Log(someTimedCast())
 
 	// Output:
-	// ovsinc/errors <call:example_test.go:164,duration:1s> -- some call
+	// ovsinc/errors <call:example_test.go:165,duration:1s> -- some call
 }
 
 func localizePrepare() *i18n.Localizer {

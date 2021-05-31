@@ -1,3 +1,7 @@
+// Package logrus implements the logrus logger.
+//
+//
+// RU:
 // Package logrus реализует логгер logrus.
 package logrus
 
@@ -7,6 +11,10 @@ import (
 	origlogrus "github.com/sirupsen/logrus"
 )
 
+// New constructor of a logger that wraps the original logger.
+//
+//
+// RU:
 // New конструтор интерфейс для использования логгера logrus
 // Оборачивает logrus логгер l.
 func New(l *origlogrus.Logger) log.Logger {

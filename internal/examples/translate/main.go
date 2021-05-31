@@ -5,7 +5,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
-	"gitlab.com/ovsinc/errors"
+	"github.com/ovsinc/errors"
 	"golang.org/x/text/language"
 )
 

@@ -3,7 +3,6 @@ BUILD = `date +%FT%T%z`
 
 _CURDIR := `git rev-parse --show-toplevel 2>/dev/null | sed -e 's/(//'`
 
-# PKG := "gitlab.com/ovsinc/memory-rate-limits"
 PKG_LIST := $(shell go list ${_CURDIR}/... 2>/dev/null | grep -v internal/examples)
 
 
@@ -88,7 +87,7 @@ coverhtml: ## Generate global code coverage report in HTML
 
 .PHONY: run
 example := "simple"
-run: ## Run example
+run: ## Run example, call: make example={log|multi|simple|translate} run
 	@go run ./internal/examples/${example}
 
 .PHONY: help

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ovsinc/errors"
 	"github.com/stretchr/testify/require"
-	"gitlab.com/ovsinc/errors"
 )
 
 var (
@@ -77,7 +77,7 @@ func BenchmarkStringMultierrFuncFormat3Errs(b *testing.B) {
 	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
 	errors.DefaultFormatFn = errors.StringFormat
 
-	e := errors.Append(se1, se2, se3)
+	e := errors.Combine(se1, se2, se3)
 
 	require.Equal(b, e.Error(), "the following errors occurred:\n* (not found)[write]<hello:world,my:name> -- hello1\n* (not found)[read]<hello2:world,my2:name> -- hello2\n* (not found)[read]<hello3:world,my3:name> -- hello3\n")
 

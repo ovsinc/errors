@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 
-	"gitlab.com/ovsinc/errors"
+	"github.com/ovsinc/errors"
 )
 
 func main() {
 	fmt.Printf("%v\n",
-		errors.Append(
+		errors.Combine(
 			errors.New("one error"),
 			errors.New("two error"),
 			errors.New("three error"),

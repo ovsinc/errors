@@ -3,8 +3,8 @@ package errors_test
 import (
 	"testing"
 
+	"github.com/ovsinc/errors"
 	"github.com/stretchr/testify/require"
-	"gitlab.com/ovsinc/errors"
 )
 
 var (
@@ -57,7 +57,7 @@ func BenchmarkJsonMultierrFuncFormat3Errs(b *testing.B) {
 	errors.DefaultMultierrFormatFunc = errors.JSONMultierrFuncFormat
 	errors.DefaultFormatFn = errors.JSONFormat
 
-	e := errors.Append(je1, je2, je3)
+	e := errors.Combine(je1, je2, je3)
 
 	require.JSONEq(b, e.Error(), "{\"count\":3,\"messages\":[{\"id\":\"\", \"error_type\":\"not found\",\"severity\":\"ERROR\",\"operations\":[\"write\"],\"context\":{\"hello\":\"world\",\"my\":\"name\"},\"msg\":\"hello1\"},{\"id\":\"\", \"error_type\":\"not found\",\"severity\":\"ERROR\",\"operations\":[\"read\"],\"context\":{\"hello2\":\"world\",\"my2\":\"name\"},\"msg\":\"hello2\"},{\"id\":\"\", \"error_type\":\"not found\",\"severity\":\"ERROR\",\"operations\":[\"read\"],\"context\":{\"hello3\":\"world\",\"my3\":\"name\"},\"msg\":\"hello3\"}]}")
 
