@@ -8,7 +8,7 @@ import (
 
 func main() {
 	fmt.Printf("%v\n",
-		errors.Append(
+		errors.Combine(
 			errors.New("one error"),
 			errors.New("two error"),
 			errors.New("three error"),

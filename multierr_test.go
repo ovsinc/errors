@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/ovsinc/errors"
+	"github.com/stretchr/testify/assert"
 
 	origerrors "errors"
 )
@@ -28,7 +29,7 @@ var (
 	me3 = origerrors.New("hello")
 )
 
-func TestWrap(t *testing.T) {
+func TestWrapSimple(t *testing.T) {
 	type args struct {
 		left  error
 		right error
@@ -71,13 +72,39 @@ func TestWrap(t *testing.T) {
 			},
 			want: "(not found)[read]<hello2:world,my2:name> -- hello2",
 		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+
+		t.Run(tt.name, func(t *testing.T) {
+			if err := errors.Wrap(tt.args.left, tt.args.right); (err != nil) && !tt.wantNil && !assert.Equal(t, tt.want, err.Error()) {
+				t.Errorf("Wrap() error = %v, wantErr %v", err, tt.want)
+			} else if err == nil && !tt.wantNil {
+				t.Errorf("Wrap() error must be nill by = %v", err)
+			}
+		})
+	}
+}
+
+func TestWrapMultierr(t *testing.T) {
+	type args struct {
+		left  error
+		right error
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantNil bool
+	}{
 		{
 			name: "two",
 			args: args{
 				left:  me2,
 				right: me1,
 			},
-			want: "the following errors occurred:\n* (not found)[read]<hello2:world,my2:name> -- hello2\n* (not found)[write]<hello:world,my:name> -- hello1\n",
+			want: "the following errors occurred:\n\t#0 (not found)[read]<hello2:world,my2:name> -- hello2\n\t#1 (not found)[write]<hello:world,my:name> -- hello1\n",
 		},
 		{
 			name: "two std",
@@ -85,7 +112,7 @@ func TestWrap(t *testing.T) {
 				left:  me3,
 				right: me1,
 			},
-			want: "the following errors occurred:\n* hello\n* (not found)[write]<hello:world,my:name> -- hello1\n",
+			want: "the following errors occurred:\n\t#0 hello\n\t#1 (not found)[write]<hello:world,my:name> -- hello1\n",
 		},
 	}
 	for _, tt := range tests {
@@ -100,7 +127,7 @@ func TestWrap(t *testing.T) {
 	}
 }
 
-func TestAppend(t *testing.T) {
+func TestCombine(t *testing.T) {
 	type args struct {
 		errors []error
 	}
@@ -122,20 +149,20 @@ func TestAppend(t *testing.T) {
 			args: args{
 				errors: []error{me1},
 			},
-			want: "the following errors occurred:\n* (not found)[write]<hello:world,my:name> -- hello1\n",
+			want: "the following errors occurred:\n\t#0 (not found)[write]<hello:world,my:name> -- hello1\n",
 		},
 		{
 			name: "many with nil",
 			args: args{
 				errors: []error{nil, me1, nil, se2, nil, se3, nil},
 			},
-			want: "the following errors occurred:\n* (not found)[write]<hello:world,my:name> -- hello1\n* (not found)[read]<hello2:world,my2:name> -- hello2\n* (not found)[read]<hello3:world,my3:name> -- hello3\n",
+			want: "the following errors occurred:\n\t#0 (not found)[write]<hello:world,my:name> -- hello1\n\t#1 (not found)[read]<hello2:world,my2:name> -- hello2\n\t#2 (not found)[read]<hello3:world,my3:name> -- hello3\n",
 		},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			if err := errors.Append(tt.args.errors...); (err != nil) && !tt.wantNil && tt.want != err.Error() {
+			if err := errors.Combine(tt.args.errors...); (err != nil) && !tt.wantNil && tt.want != err.Error() {
 				t.Errorf("Append() error = %v, wantErr %v", err, tt.want)
 			} else if !tt.wantNil && err == nil {
 				t.Errorf("Wrap() error must be nill by = %v", err)
