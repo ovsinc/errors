@@ -49,9 +49,25 @@ var intBELookup = [100]uint16{
 
 var intLookup = [2]*[100]uint16{&intLELookup, &intBELookup}
 
-func AppendInt(out []byte, u64 uint64, code *Opcode) []byte {
-	n := u64 & code.Mask
-	negative := (u64>>code.RshiftNum)&1 == 1
+func numMask(numBitSize uint8) uint64 {
+	return 1<<numBitSize - 1
+}
+
+func AppendInt(_ *RuntimeContext, out []byte, p uintptr, code *Opcode) []byte {
+	var u64 uint64
+	switch code.NumBitSize {
+	case 8:
+		u64 = (uint64)(**(**uint8)(unsafe.Pointer(&p)))
+	case 16:
+		u64 = (uint64)(**(**uint16)(unsafe.Pointer(&p)))
+	case 32:
+		u64 = (uint64)(**(**uint32)(unsafe.Pointer(&p)))
+	case 64:
+		u64 = **(**uint64)(unsafe.Pointer(&p))
+	}
+	mask := numMask(code.NumBitSize)
+	n := u64 & mask
+	negative := (u64>>(code.NumBitSize-1))&1 == 1
 	if !negative {
 		if n < 10 {
 			return append(out, byte(n+'0'))
@@ -60,7 +76,7 @@ func AppendInt(out []byte, u64 uint64, code *Opcode) []byte {
 			return append(out, byte(u), byte(u>>8))
 		}
 	} else {
-		n = -n & code.Mask
+		n = -n & mask
 	}
 
 	lookup := intLookup[endianness]
@@ -91,8 +107,20 @@ func AppendInt(out []byte, u64 uint64, code *Opcode) []byte {
 	return append(out, b[i:]...)
 }
 
-func AppendUint(out []byte, u64 uint64, code *Opcode) []byte {
-	n := u64 & code.Mask
+func AppendUint(_ *RuntimeContext, out []byte, p uintptr, code *Opcode) []byte {
+	var u64 uint64
+	switch code.NumBitSize {
+	case 8:
+		u64 = (uint64)(**(**uint8)(unsafe.Pointer(&p)))
+	case 16:
+		u64 = (uint64)(**(**uint16)(unsafe.Pointer(&p)))
+	case 32:
+		u64 = (uint64)(**(**uint32)(unsafe.Pointer(&p)))
+	case 64:
+		u64 = **(**uint64)(unsafe.Pointer(&p))
+	}
+	mask := numMask(code.NumBitSize)
+	n := u64 & mask
 	if n < 10 {
 		return append(out, byte(n+'0'))
 	} else if n < 100 {

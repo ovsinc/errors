@@ -2,6 +2,12 @@ name: Go
 
 on:
   push:
+    paths-ignore:
+      - "doc/**"
+      - "README.md"
+      - "README_rus.md"
+      - Makefile
+      - ".gitignore"
     branches:
       - master
       - main
