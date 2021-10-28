@@ -29,21 +29,21 @@ func NewObjectFromString(s string) Objecter {
 }
 
 func (o *object) String() string {
-	if o == nil || len(o.data) == 0 {
+	if len(o.data) == 0 {
 		return ""
 	}
 	return string(o.data)
 }
 
 func (o *object) Bytes() []byte {
-	if o == nil || len(o.data) == 0 {
+	if len(o.data) == 0 {
 		return []byte{}
 	}
 	return o.data
 }
 
 func (o *object) Buffer() *bytes.Buffer {
-	if o == nil {
+	if len(o.data) == 0 {
 		return &bytes.Buffer{}
 	}
 	return bytes.NewBuffer(o.data)
@@ -71,7 +71,7 @@ func NewObjectsFromBytes(vv ...[]byte) Objects {
 	return objs
 }
 
-func NewObjectsFromString(ss ...string) Objects {
+func NewObjectsFromStrings(ss ...string) Objects {
 	objs := make(Objects, 0, len(ss))
 	for _, s := range ss {
 		objs = append(objs, NewObjectFromString(s))
@@ -79,30 +79,28 @@ func NewObjectsFromString(ss ...string) Objects {
 	return objs
 }
 
-func (os Objects) copy(cap int) Objects {
-	objs := make(Objects, 0, cap)
-	if len(os) > 0 {
-		objs = append(objs, os...)
-	}
+func (os Objects) append(oo ...Objecter) Objects {
+	objs := append(make(Objects, 0, len(os)+len(oo)), os...)
+	objs = append(objs, oo...)
 	return objs
 }
 
 func (os Objects) Append(oo ...Objecter) Objects {
-	return append(os.copy(len(os)+len(oo)), oo...)
+	return os.append(oo...)
 }
 
 func (os Objects) AppendString(ss ...string) Objects {
-	objs := os.copy(len(os) + len(ss))
+	oo := make(Objects, 0, len(ss))
 	for _, v := range ss {
-		objs = append(objs, NewObjectFromString(v))
+		oo = append(oo, NewObjectFromString(v))
 	}
-	return objs
+	return os.append(oo...)
 }
 
 func (os Objects) AppendBytes(vv ...[]byte) Objects {
-	objs := os.copy(len(os) + len(vv))
+	oo := make(Objects, 0, len(vv))
 	for _, v := range vv {
-		objs = append(objs, NewObjectFromBytes(v))
+		oo = append(oo, NewObjectFromBytes(v))
 	}
-	return objs
+	return os.append(oo...)
 }

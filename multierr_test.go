@@ -26,7 +26,7 @@ var (
 		errors.SetContextInfo(errors.CtxMap{"hello2": "world", "my2": "name"}),
 	)
 
-	me3 = origerrors.New("hello")
+	errMe3 = origerrors.New("hello")
 )
 
 func TestWrapSimple(t *testing.T) {
@@ -54,13 +54,13 @@ func TestWrapSimple(t *testing.T) {
 				left:  nil,
 				right: me1,
 			},
-			want: "(not found)[write]<hello:world,my:name> -- hello1",
+			want: "(not found)[write]{hello:world,my:name} -- hello1",
 		},
 		{
 			name: "nil left std",
 			args: args{
 				left:  nil,
-				right: me3,
+				right: errMe3,
 			},
 			want: "hello",
 		},
@@ -70,7 +70,7 @@ func TestWrapSimple(t *testing.T) {
 				left:  me2,
 				right: nil,
 			},
-			want: "(not found)[read]<hello2:world,my2:name> -- hello2",
+			want: "(not found)[read]{hello2:world,my2:name} -- hello2",
 		},
 	}
 
@@ -104,15 +104,15 @@ func TestWrapMultierr(t *testing.T) {
 				left:  me2,
 				right: me1,
 			},
-			want: "the following errors occurred:\n\t#0 (not found)[read]<hello2:world,my2:name> -- hello2\n\t#1 (not found)[write]<hello:world,my:name> -- hello1\n",
+			want: "the following errors occurred:\n\t#1 (not found)[read]{hello2:world,my2:name} -- hello2\n\t#2 (not found)[write]{hello:world,my:name} -- hello1\n",
 		},
 		{
 			name: "two std",
 			args: args{
-				left:  me3,
+				left:  errMe3,
 				right: me1,
 			},
-			want: "the following errors occurred:\n\t#0 hello\n\t#1 (not found)[write]<hello:world,my:name> -- hello1\n",
+			want: "the following errors occurred:\n\t#1 hello\n\t#2 (not found)[write]{hello:world,my:name} -- hello1\n",
 		},
 	}
 	for _, tt := range tests {
@@ -149,14 +149,14 @@ func TestCombine(t *testing.T) {
 			args: args{
 				errors: []error{me1},
 			},
-			want: "the following errors occurred:\n\t#0 (not found)[write]<hello:world,my:name> -- hello1\n",
+			want: "the following errors occurred:\n\t#1 (not found)[write]{hello:world,my:name} -- hello1\n",
 		},
 		{
 			name: "many with nil",
 			args: args{
 				errors: []error{nil, me1, nil, se2, nil, se3, nil},
 			},
-			want: "the following errors occurred:\n\t#0 (not found)[write]<hello:world,my:name> -- hello1\n\t#1 (not found)[read]<hello2:world,my2:name> -- hello2\n\t#2 (not found)[read]<hello3:world,my3:name> -- hello3\n",
+			want: "the following errors occurred:\n\t#1 (not found)[write]{hello:world,my:name} -- hello1\n\t#2 (not found)[read]{hello2:world,my2:name} -- hello2\n\t#3 (not found)[read]{hello3:world,my3:name} -- hello3\n",
 		},
 	}
 	for _, tt := range tests {

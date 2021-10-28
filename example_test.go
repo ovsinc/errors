@@ -26,7 +26,7 @@ func itsErr(s string) error {
 	return errors.New(s)
 }
 
-// Накопление результатов выполнения каких-либо функций спроверкой на НЕ nil
+// Накопление результатов выполнения каких-либо функций с проверкой на НЕ nil
 func ExampleErrorOrNil() {
 	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
 
@@ -46,7 +46,7 @@ func ExampleErrorOrNil() {
 }
 
 // Добавление ошибок в mutierror с логгированием
-// тут изменена функция форматирования вывода -- испльзуется json
+// тут изменена функция форматирования вывода -- используется json
 func ExampleCombineWithLog() {
 	multilog.DefaultLogger = golog.New(log.New(os.Stdout, "ovsinc/errors ", 0))
 
@@ -60,8 +60,8 @@ func ExampleCombineWithLog() {
 
 	// Output:
 	// ovsinc/errors the following errors occurred:
-	// 	#0 one
-	// 	#1 two
+	// 	#1 one
+	// 	#2 two
 }
 
 func someFuncWithErr() error {
@@ -93,8 +93,8 @@ func ExampleWrap() {
 
 	// Output:
 	// the following errors occurred:
-	// 	#0 [write]<hello:world> -- connection error
-	// 	#1 connection error
+	// 	#1 [write]{hello:world} -- connection error
+	// 	#2 connection error
 }
 
 func ExampleNewWithLog() {
@@ -165,7 +165,7 @@ func ExampleLog() {
 	errors.Log(someTimedCast())
 
 	// Output:
-	// ovsinc/errors <call:example_test.go:165,duration:1s> -- some call
+	// ovsinc/errors {call:example_test.go:165,duration:1s} -- some call
 }
 
 func localizePrepare() *i18n.Localizer {
@@ -220,7 +220,7 @@ func ExampleError_WithOptions() {
 
 	// Output:
 	// hello
-	// (test type)[test op]<hello:world> -- hello
+	// (test type)[test op]{hello:world} -- hello
 }
 
 func ExampleError_TranslateMsg() {

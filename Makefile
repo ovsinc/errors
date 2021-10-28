@@ -88,7 +88,8 @@ coverhtml: ## Generate global code coverage report in HTML
 .PHONY: run
 example := "simple"
 run: ## Run example, call: make example={log|multi|simple|translate} run
-	@go run ./internal/examples/${example}
+	@pushd ${_CURDIR}/_examples/${example} && \
+	go run .
 
 .PHONY: help
 help: ## Display this help screen

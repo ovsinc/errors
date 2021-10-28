@@ -54,7 +54,7 @@ func TestNew(t *testing.T) {
 			want: &Error{
 				msg:        NewObjectFromString(myerr1),
 				errorType:  NewObjectFromString(myerrType1),
-				operations: NewObjectsFromString([]string{myop1}...),
+				operations: NewObjectsFromStrings([]string{myop1}...),
 				severity:   myseverity,
 			},
 		},
@@ -198,13 +198,13 @@ func TestError_Error(t *testing.T) {
 		{
 			name: "with all params",
 			fields: fields{
-				operations:  NewObjectsFromString("write"),
+				operations:  NewObjectsFromStrings("write"),
 				severity:    SeverityError,
 				errorType:   NewObjectFromString("not found"),
 				msg:         NewObjectFromString("hello"),
 				contextInfo: CtxMap{"hello": "world", "hi": "there"},
 			},
-			want: "(not found)[write]<hello:world,hi:there> -- hello",
+			want: "(not found)[write]{hello:world,hi:there} -- hello",
 		},
 	}
 	for _, tt := range tests {
@@ -292,7 +292,7 @@ func TestError_WithOptions(t *testing.T) {
 				errorType: UnknownErrorType,
 			},
 			want: &Error{
-				operations: NewObjectsFromString("write", "read"),
+				operations: NewObjectsFromStrings("write", "read"),
 				severity:   SeverityWarn,
 				errorType:  NewObjectFromString("my type"),
 				msg:        NewObjectFromString(err1),
@@ -374,12 +374,12 @@ func TestError_Operations(t *testing.T) {
 		{
 			name: "New. set",
 			err:  New("", SetOperations("new operation")),
-			want: NewObjectsFromString("new operation"),
+			want: NewObjectsFromStrings("new operation"),
 		},
 		{
 			name: "Set",
 			err:  New("").WithOptions(SetOperations("new operation")),
-			want: NewObjectsFromString("new operation"),
+			want: NewObjectsFromStrings("new operation"),
 		},
 		{
 			name: "Set 2",
@@ -387,7 +387,7 @@ func TestError_Operations(t *testing.T) {
 				WithOptions(SetOperations("new one")).
 				WithOptions(AppendOperations()).
 				WithOptions(SetOperations("new operation")),
-			want: NewObjectsFromString("new operation"),
+			want: NewObjectsFromStrings("new operation"),
 		},
 		{
 			name: "Set 3",
@@ -397,7 +397,7 @@ func TestError_Operations(t *testing.T) {
 					AppendOperations("hhh"),
 					SetOperations("new operation"),
 				),
-			want: NewObjectsFromString("new operation"),
+			want: NewObjectsFromStrings("new operation"),
 		},
 		{
 			name: "append",
@@ -405,7 +405,7 @@ func TestError_Operations(t *testing.T) {
 				WithOptions(SetOperations("hhh")).
 				WithOptions(AppendOperations("new operation")).
 				WithOptions(AppendOperations("new one")),
-			want: NewObjectsFromString("hhh", "new operation", "new one"),
+			want: NewObjectsFromStrings("hhh", "new operation", "new one"),
 		},
 		{
 			name: "append 2",
@@ -415,7 +415,7 @@ func TestError_Operations(t *testing.T) {
 					AppendOperations("new operation"),
 					AppendOperations("new one"),
 				),
-			want: NewObjectsFromString("hhh", "new operation", "new one"),
+			want: NewObjectsFromStrings("hhh", "new operation", "new one"),
 		},
 		{
 			name: "Empty",
@@ -427,9 +427,10 @@ func TestError_Operations(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.err.Operations()
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Error.Operations() = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want, got)
+			// if !reflect.DeepEqual(got, tt.want) {
+			// 	t.Errorf("Error.Operations() = %v, want %v", got, tt.want)
+			// }
 		})
 	}
 }

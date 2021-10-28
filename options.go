@@ -146,7 +146,7 @@ func SetOperations(o ...string) Options {
 		if e == nil || len(o) == 0 {
 			return
 		}
-		e.operations = NewObjectsFromString(o...)
+		e.operations = NewObjectsFromStrings(o...)
 	}
 }
 

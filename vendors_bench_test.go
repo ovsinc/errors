@@ -1,3 +1,4 @@
+//go:build vendors
 // +build vendors
 
 package errors_test
@@ -68,7 +69,7 @@ func BenchmarkVendorMyNewFull(b *testing.B) {
 		errors.SetErrorType("not found"),
 	)
 
-	require.Equal(b, err.Error(), "(not found)[nothing]<hello:world> -- hello1")
+	require.Equal(b, err.Error(), "(not found)[nothing]{hello:world} -- hello1")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -89,7 +90,7 @@ func BenchmarkVendorMyNewWithTranslate(b *testing.B) {
 		errors.SetLocalizer(localizer),
 	)
 
-	require.Equal(b, err.Error(), "[nothing]<hello:world> -- У John Snow имеется 5 непрочитанных сообщений.")
+	require.Equal(b, err.Error(), "[nothing]{hello:world} -- У John Snow имеется 5 непрочитанных сообщений.")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -107,7 +108,7 @@ func BenchmarkVendorMyMulti2StdErr(b *testing.B) {
 		stderrors.New("hello2"),
 	)
 
-	require.Equal(b, err.Error(), "the following errors occurred:\n* hello1\n* hello2\n")
+	require.Equal(b, err.Error(), "the following errors occurred:\n\t#1 hello1\n\t#2 hello2\n")
 
 	for i := 0; i < b.N; i++ {
 		_ = err.Error()
@@ -122,7 +123,7 @@ func BenchmarkVendorMyMulti2ErrNormal(b *testing.B) {
 		errors.New("hello2"),
 	)
 
-	require.Equal(b, err.Error(), "the following errors occurred:\n* hello1\n* hello2\n")
+	require.Equal(b, err.Error(), "the following errors occurred:\n\t#1 hello1\n\t#2 hello2\n")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -146,7 +147,7 @@ func BenchmarkVendorMyMulti2ErrMsgOnly(b *testing.B) {
 		),
 	)
 
-	require.Equal(b, err.Error(), "the following errors occurred:\n* hello1\n* hello2\n")
+	require.Equal(b, err.Error(), "the following errors occurred:\n\t#1 hello1\n\t#2 hello2\n")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
