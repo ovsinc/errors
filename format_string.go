@@ -13,13 +13,10 @@ var (
 	_multilineIndent    = []byte("\t#")                            //nolint:gochecknoglobals
 	_msgSeparator       = []byte(" -- ")                           //nolint:gochecknoglobals
 	_listSeparator      = []byte(",")                              //nolint:gochecknoglobals
+	_opDelimiter        = []byte(": ")                             //nolint:gochecknoglobals
 
-	_opDelimiterLeft    = []byte("[") //nolint:gochecknoglobals
-	_opDelimiterRight   = []byte("]") //nolint:gochecknoglobals
-	_ctxDelimiterLeft   = []byte("{") //nolint:gochecknoglobals
-	_ctxDelimiterRight  = []byte("}") //nolint:gochecknoglobals
-	_typeDelimiterLeft  = []byte("(") //nolint:gochecknoglobals
-	_typeDelimiterRight = []byte(")") //nolint:gochecknoglobals
+	_ctxDelimiterLeft  = []byte("{") //nolint:gochecknoglobals
+	_ctxDelimiterRight = []byte("}") //nolint:gochecknoglobals
 )
 
 // StringFormat функция форматирования вывода сообщения *Error в виде строки.
@@ -31,27 +28,16 @@ func StringFormat(buf io.Writer, e *Error) { //nolint:cyclop
 
 	writeDelim := false
 
-	if et := e.ErrorType().Bytes(); len(et) > 0 {
-		_, _ = buf.Write(_typeDelimiterLeft)
-		_, _ = buf.Write(et)
-		_, _ = buf.Write(_typeDelimiterRight)
-		writeDelim = true
-	}
-
-	if ops := e.Operations(); len(ops) > 0 {
-		_, _ = buf.Write(_opDelimiterLeft)
-		op0 := ops[0]
-		_, _ = buf.Write(op0.Bytes())
-		for _, opN := range ops[1:] {
-			buf.Write(_listSeparator)
-			_, _ = buf.Write(opN.Bytes())
-		}
-		_, _ = buf.Write(_opDelimiterRight)
+	if op := e.Operation().Bytes(); len(op) > 0 {
+		_, _ = buf.Write(op)
+		_, _ = buf.Write(_opDelimiter)
 		writeDelim = true
 	}
 
 	if ctxs := e.ContextInfo(); len(ctxs) > 0 {
 		_, _ = buf.Write(_ctxDelimiterLeft)
+		// отсортируем по ключам запишем в буфер в формате
+		// {<key>:<value>,<key>:<value>}
 		ctxskeys := make([]string, 0, len(ctxs))
 		for i := range ctxs {
 			ctxskeys = append(ctxskeys, i)
@@ -79,7 +65,7 @@ func StringFormat(buf io.Writer, e *Error) { //nolint:cyclop
 
 // StringMultierrFormatFunc функция форматирования вывода сообщения для multierr в виде строки.
 // Используется по-умолчанию.
-func StringMultierrFormatFunc(w io.Writer, es []error) {
+func StringMultierrFormatFunc(w io.Writer, es []*Error) {
 	if len(es) == 0 {
 		_, _ = io.WriteString(w, "")
 		return

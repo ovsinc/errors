@@ -17,5 +17,5 @@ type (
 	FormatFn func(w io.Writer, e *Error)
 
 	// MultierrFormatFn типу функции морматирования для multierr.
-	MultierrFormatFn func(w io.Writer, es []error)
+	MultierrFormatFn func(w io.Writer, es []*Error)
 )

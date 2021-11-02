@@ -37,34 +37,6 @@ func SetMsg(msg string) Options {
 	}
 }
 
-// SetSeverity устновит Severity.
-func SetSeverity(severity Severity) Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.severity = severity
-	}
-}
-
-func SetSeverityWarn() Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.severity = SeverityWarn
-	}
-}
-
-func SetSeverityErr() Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.severity = SeverityError
-	}
-}
-
 // ID
 
 // SetID установит ID ошибки.
@@ -87,66 +59,18 @@ func SetIDBytes(id []byte) Options {
 	}
 }
 
-// Error type
-
-// SetErrorType установит тип ошибки.
-func SetErrorType(etype string) Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.errorType = NewObjectFromString(etype)
-	}
-}
-
-// SetErrorTypeBytes установит тип ошибки.
-func SetErrorTypeBytes(etype []byte) Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.errorType = NewObjectFromBytes(etype)
-	}
-}
-
-// Operations
-
-// AppendOperationsBytes добавить операции, указанные как []byte.
-// Можно указать произвольное количество.
-// Если в *Error уже были записаны операции,
-// то указанные в аргументе будет добавлены к уже имеющимся.
-func AppendOperationsBytes(o ...[]byte) Options {
-	return func(e *Error) {
-		if e == nil || len(o) == 0 {
-			return
-		}
-		e.operations = e.operations.AppendBytes(o...)
-	}
-}
-
-// AppendOperations добавить операции, указанные как строки.
-// Можно указать произвольное количество.
-// Если в *Error уже были записаны операции,
-// то указанные в аргументе будет добавлены к уже имеющимся.
-func AppendOperations(o ...string) Options {
-	return func(e *Error) {
-		if e == nil || len(o) == 0 {
-			return
-		}
-		e.operations = e.operations.AppendString(o...)
-	}
-}
+// Operation
 
 // SetOperations установить операции, указанные как строки.
 // Можно указать произвольное количество.
 // Если в *Error уже были записаны операции,
 // то они будут заменены на указанные в аргументе ops.
-func SetOperations(o ...string) Options {
+func SetOperation(o string) Options {
 	return func(e *Error) {
-		if e == nil || len(o) == 0 {
+		if e == nil {
 			return
 		}
-		e.operations = NewObjectsFromStrings(o...)
+		e.operation = NewObjectFromString(o)
 	}
 }
 
@@ -154,12 +78,12 @@ func SetOperations(o ...string) Options {
 // Можно указать произвольное количество.
 // Если в *Error уже были записаны операции,
 // то они будут заменены на указанные в аргументе ops.
-func SetOperationsBytes(o ...[]byte) Options {
+func SetOperationsBytes(o []byte) Options {
 	return func(e *Error) {
 		if e == nil || len(o) == 0 {
 			return
 		}
-		e.operations = NewObjectsFromBytes(o...)
+		e.operation = NewObjectFromBytes(o)
 	}
 }
 

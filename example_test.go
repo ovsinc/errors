@@ -26,25 +26,6 @@ func itsErr(s string) error {
 	return errors.New(s)
 }
 
-// Накопление результатов выполнения каких-либо функций с проверкой на НЕ nil
-func ExampleErrorOrNil() {
-	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
-
-	var err error
-	err = errors.Combine(
-		nil,
-		itsOk(),
-		itsErr("one"),
-		errors.New("two", errors.SetSeverity(errors.SeverityWarn)),
-		itsOk(),
-	)
-	err = errors.Wrap(err, errors.New("three", errors.SetSeverity(errors.SeverityWarn)))
-
-	fmt.Printf("%v\n", errors.ErrorOrNil(err))
-	// Output:
-	// one
-}
-
 // Добавление ошибок в mutierror с логгированием
 // тут изменена функция форматирования вывода -- используется json
 func ExampleCombineWithLog() {
@@ -68,17 +49,13 @@ func someFuncWithErr() error {
 	return errors.New(
 		"connection error",
 		errors.SetContextInfo(errors.CtxMap{"hello": "world"}),
-		errors.AppendOperations("write"),
-		errors.SetSeverity(errors.SeverityUnknown),
-		errors.SetErrorType(""),
+		errors.SetOperation("write"),
 	)
 }
 
 func someFuncWithErr2() error {
 	return errors.New(
 		"connection error",
-		errors.SetSeverity(errors.SeverityUnknown),
-		errors.SetErrorType(""),
 	)
 }
 
@@ -93,7 +70,7 @@ func ExampleWrap() {
 
 	// Output:
 	// the following errors occurred:
-	// 	#1 [write]{hello:world} -- connection error
+	// 	#1 write: {hello:world} -- connection error
 	// 	#2 connection error
 }
 
@@ -117,28 +94,6 @@ func ExampleNewWithLog() {
 	// ovsinc/errors three
 }
 
-func someErrFunc() error {
-	return errors.New("connection error", errors.SetErrorType("NOT_FOUND"))
-}
-
-func ExampleGetErrorType() {
-	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
-
-	err := someErrFunc()
-
-	switch errors.GetErrorType(err) {
-	case "NOT_FOUND":
-		fmt.Printf("Got error with type NOT_FOUND")
-	case UnknownErrorType.String():
-		fmt.Printf("Got error with type %s", UnknownErrorType.String())
-	default:
-		fmt.Printf("Got some unknown")
-	}
-
-	// Output:
-	// Got error with type NOT_FOUND
-}
-
 func someTimedCast() (err error) {
 	begin := time.Now()
 	defer func() {
@@ -146,7 +101,7 @@ func someTimedCast() (err error) {
 			WithOptions(errors.SetContextInfo(
 				errors.CtxMap{
 					"duration": time.Since(begin).Round(time.Second),
-					"call":     errors.DefaultCaller(),
+					"call":     errors.HandlerCaller().FilePosition,
 				},
 			))
 	}()
@@ -165,13 +120,13 @@ func ExampleLog() {
 	errors.Log(someTimedCast())
 
 	// Output:
-	// ovsinc/errors {call:example_test.go:165,duration:1s} -- some call
+	// ovsinc/errors {call:example_test.go:104,duration:1s} -- some call
 }
 
 func localizePrepare() *i18n.Localizer {
 	bundle := i18n.NewBundle(language.English)
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
-	bundle.MustLoadMessageFile("./internal/examples/translate/testdata/active.ru.toml")
+	bundle.MustLoadMessageFile("./_examples/translate/testdata/active.ru.toml")
 
 	return i18n.NewLocalizer(bundle, "es", "ru", "en")
 }
@@ -211,8 +166,7 @@ func ExampleError_WithOptions() {
 
 	e2 := e1.WithOptions(
 		errors.AppendContextInfo("hello", "world"),
-		errors.AppendOperations("test op"),
-		errors.SetErrorType("test type"),
+		errors.SetOperation("test op"),
 	)
 
 	fmt.Println(e1.Error())
@@ -220,7 +174,7 @@ func ExampleError_WithOptions() {
 
 	// Output:
 	// hello
-	// (test type)[test op]{hello:world} -- hello
+	// test op: {hello:world} -- hello
 }
 
 func ExampleError_TranslateMsg() {
@@ -230,7 +184,6 @@ func ExampleError_TranslateMsg() {
 	e1 := errors.New(
 		"fallback message",
 		errors.SetID("ErrEmailsUnreadMsg"),
-		errors.SetErrorType("not found"),
 		errors.SetTranslateContext(&errEmailsUnreadMsg),
 		errors.SetLocalizer(localizer),
 	)
@@ -240,8 +193,8 @@ func ExampleError_TranslateMsg() {
 	fmt.Print(e1.TranslateMsg())
 
 	// Output:
-	// (not found) -- У John Snow имеется 5 непрочитанных сообщений.
-	// (not found) -- У John Snow имеется 5 непрочитанных сообщений.
+	// У John Snow имеется 5 непрочитанных сообщений.
+	// У John Snow имеется 5 непрочитанных сообщений.
 	// У John Snow имеется 5 непрочитанных сообщений.
 }
 

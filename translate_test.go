@@ -19,7 +19,7 @@ func BenchmarkTranslateMsg(b *testing.B) {
 
 	bundle := i18n.NewBundle(language.English)
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
-	bundle.MustLoadMessageFile("./internal/examples/translate/testdata/active.ru.toml")
+	bundle.MustLoadMessageFile("./_examples/translate/testdata/active.ru.toml")
 
 	localizer := i18n.NewLocalizer(bundle, "ru")
 
@@ -35,11 +35,10 @@ func BenchmarkTranslateMsg(b *testing.B) {
 		"fallback message",
 		SetID("ErrEmailsUnreadMsg"),
 		SetLocalizer(localizer),
-		SetErrorType("not found"),
 		SetTranslateContext(&ErrEmailsUnreadMsg),
 	)
 
-	require.Equal(b, e1.Error(), "(not found) -- У John Snow имеется 5 непрочитанных сообщений.")
+	require.Equal(b, e1.Error(), "У John Snow имеется 5 непрочитанных сообщений.")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

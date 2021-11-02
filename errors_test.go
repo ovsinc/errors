@@ -2,7 +2,6 @@ package errors
 
 import (
 	"io"
-	"reflect"
 	"testing"
 	"time"
 
@@ -16,8 +15,6 @@ func TestNewNil(t *testing.T) {
 	var err *Error
 
 	assert.Nil(t, err.WithOptions(
-		SetErrorType(UnknownErrorType.String()),
-		SetSeverity(SeverityError),
 		SetMsg("hello"),
 		SetContextInfo(CtxMap{"hello": "world"}),
 	))
@@ -25,9 +22,7 @@ func TestNewNil(t *testing.T) {
 
 func TestNew(t *testing.T) {
 	myerr1 := "some err"
-	myerrType1 := "custom err type"
 	myop1 := "read"
-	myseverity := SeverityError
 
 	type args struct {
 		ops []Options
@@ -42,20 +37,16 @@ func TestNew(t *testing.T) {
 			want: &Error{},
 		},
 		{
-			name: "With err, error type, operation, severity",
+			name: "err with operation",
 			args: args{
 				ops: []Options{
-					SetErrorType(myerrType1),
-					SetOperations(myop1),
-					SetSeverity(myseverity),
+					SetOperation(myop1),
 					SetMsg(myerr1),
 				},
 			},
 			want: &Error{
-				msg:        NewObjectFromString(myerr1),
-				errorType:  NewObjectFromString(myerrType1),
-				operations: NewObjectsFromStrings([]string{myop1}...),
-				severity:   myseverity,
+				msg:       NewObjectFromString(myerr1),
+				operation: NewObjectFromString(myop1),
 			},
 		},
 	}
@@ -162,10 +153,8 @@ func TestSetFormatFn(t *testing.T) {
 
 func TestError_Error(t *testing.T) {
 	type fields struct {
-		operations  Objects
-		errorType   Objecter
+		operation   Objecter
 		msg         Objecter
-		severity    Severity
 		contextInfo CtxMap
 	}
 	tests := []struct {
@@ -179,42 +168,33 @@ func TestError_Error(t *testing.T) {
 			want:   "",
 		},
 		{
-			name: "empty",
-			fields: fields{
-				severity:  SeverityError,
-				errorType: UnknownErrorType,
-			},
-			want: "(UNKNOWN_TYPE)",
+			name:   "empty",
+			fields: fields{},
+			want:   "",
 		},
 		{
 			name: "only msg",
 			fields: fields{
-				severity:  SeverityError,
-				errorType: UnknownErrorType,
-				msg:       NewObjectFromString("hello"),
+				msg: NewObjectFromString("hello"),
 			},
-			want: "(UNKNOWN_TYPE) -- hello",
+			want: "hello",
 		},
 		{
 			name: "with all params",
 			fields: fields{
-				operations:  NewObjectsFromStrings("write"),
-				severity:    SeverityError,
-				errorType:   NewObjectFromString("not found"),
+				operation:   NewObjectFromString("write"),
 				msg:         NewObjectFromString("hello"),
 				contextInfo: CtxMap{"hello": "world", "hi": "there"},
 			},
-			want: "(not found)[write]{hello:world,hi:there} -- hello",
+			want: "write: {hello:world,hi:there} -- hello",
 		},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			e := &Error{
-				operations:  tt.fields.operations,
-				errorType:   tt.fields.errorType,
+				operation:   tt.fields.operation,
 				msg:         tt.fields.msg,
-				severity:    tt.fields.severity,
 				contextInfo: tt.fields.contextInfo,
 			}
 			if got := e.Error(); got != tt.want {
@@ -228,10 +208,8 @@ func TestError_WithOptions(t *testing.T) {
 	err1 := "hello"
 
 	type fields struct {
-		operations  Objects
-		errorType   Objecter
+		operation   Objecter
 		msg         Objecter
-		severity    Severity
 		contextInfo CtxMap
 	}
 	type args struct {
@@ -250,13 +228,8 @@ func TestError_WithOptions(t *testing.T) {
 					SetContextInfo(CtxMap{"duration": time.Second}),
 				},
 			},
-			fields: fields{
-				severity:  SeverityError,
-				errorType: UnknownErrorType,
-			},
+			fields: fields{},
 			want: &Error{
-				severity:    SeverityError,
-				errorType:   UnknownErrorType,
 				contextInfo: CtxMap{"duration": time.Second},
 			},
 		},
@@ -267,14 +240,9 @@ func TestError_WithOptions(t *testing.T) {
 					SetMsg(err1),
 				},
 			},
-			fields: fields{
-				severity:  SeverityError,
-				errorType: UnknownErrorType,
-			},
+			fields: fields{},
 			want: &Error{
-				severity:  SeverityError,
-				errorType: UnknownErrorType,
-				msg:       NewObjectFromString(err1),
+				msg: NewObjectFromString(err1),
 			},
 		},
 		{
@@ -282,20 +250,15 @@ func TestError_WithOptions(t *testing.T) {
 			args: args{
 				ops: []Options{
 					SetMsg(err1),
-					SetErrorType("my type"),
-					SetOperations("write", "read"),
-					SetSeverity(SeverityWarn),
+					SetOperation("read"),
 				},
 			},
 			fields: fields{
-				severity:  SeverityError,
-				errorType: UnknownErrorType,
+				operation: NewObjectFromString("read"),
 			},
 			want: &Error{
-				operations: NewObjectsFromStrings("write", "read"),
-				severity:   SeverityWarn,
-				errorType:  NewObjectFromString("my type"),
-				msg:        NewObjectFromString(err1),
+				operation: NewObjectFromString("read"),
+				msg:       NewObjectFromString(err1),
 			},
 		},
 		{
@@ -303,19 +266,12 @@ func TestError_WithOptions(t *testing.T) {
 			args: args{
 				ops: []Options{
 					SetMsg(err1),
-					SetErrorType("my type"),
-					SetOperations("write", "read"),
-					SetSeverity(SeverityWarn),
+					SetOperation("write"),
 				},
 			},
-			fields: fields{
-				severity:  SeverityError,
-				errorType: UnknownErrorType,
-			},
+			fields: fields{},
 			want: New("").WithOptions(
-				SetOperations("write", "read"),
-				SetSeverity(SeverityWarn),
-				SetErrorType("my type"),
+				SetOperation("write"),
 				SetMsg(err1),
 			),
 		},
@@ -324,24 +280,16 @@ func TestError_WithOptions(t *testing.T) {
 			args: args{
 				ops: []Options{
 					SetMsg(err1),
-					SetErrorType("my type"),
-					SetOperations("write", "read"),
-					SetSeverity(SeverityWarn),
+					SetOperation("write"),
 				},
 			},
-			fields: fields{
-				severity:  SeverityError,
-				errorType: UnknownErrorType,
-			},
+			fields: fields{},
 			want: New("").
 				WithOptions(
-					SetOperations("write", "read"),
+					SetOperation("read"),
 				).
 				WithOptions(
-					SetSeverity(SeverityWarn),
-				).
-				WithOptions(
-					SetErrorType("my type"),
+					SetOperation("write"),
 				).
 				WithOptions(
 					SetMsg(err1),
@@ -352,10 +300,8 @@ func TestError_WithOptions(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			e := &Error{
-				operations:  tt.fields.operations,
-				errorType:   tt.fields.errorType,
+				operation:   tt.fields.operation,
 				msg:         tt.fields.msg,
-				severity:    tt.fields.severity,
 				contextInfo: tt.fields.contextInfo,
 			}
 			if got := e.WithOptions(tt.args.ops...); got.Error() != tt.want.Error() {
@@ -368,143 +314,40 @@ func TestError_WithOptions(t *testing.T) {
 func TestError_Operations(t *testing.T) {
 	tests := []struct {
 		name string
-		want Objects
+		want Objecter
 		err  *Error
 	}{
 		{
 			name: "New. set",
-			err:  New("", SetOperations("new operation")),
-			want: NewObjectsFromStrings("new operation"),
+			err:  New("", SetOperation("new operation")),
+			want: NewObjectFromString("new operation"),
 		},
 		{
 			name: "Set",
-			err:  New("").WithOptions(SetOperations("new operation")),
-			want: NewObjectsFromStrings("new operation"),
+			err:  New("").WithOptions(SetOperation("new operation")),
+			want: NewObjectFromString("new operation"),
 		},
 		{
 			name: "Set 2",
 			err: New("").
-				WithOptions(SetOperations("new one")).
-				WithOptions(AppendOperations()).
-				WithOptions(SetOperations("new operation")),
-			want: NewObjectsFromStrings("new operation"),
-		},
-		{
-			name: "Set 3",
-			err: New("").
-				WithOptions(
-					SetOperations("new one"),
-					AppendOperations("hhh"),
-					SetOperations("new operation"),
-				),
-			want: NewObjectsFromStrings("new operation"),
-		},
-		{
-			name: "append",
-			err: New("", SetOperations("unknown")).
-				WithOptions(SetOperations("hhh")).
-				WithOptions(AppendOperations("new operation")).
-				WithOptions(AppendOperations("new one")),
-			want: NewObjectsFromStrings("hhh", "new operation", "new one"),
-		},
-		{
-			name: "append 2",
-			err: New("", SetOperations("unknown")).
-				WithOptions(
-					SetOperations("hhh"),
-					AppendOperations("new operation"),
-					AppendOperations("new one"),
-				),
-			want: NewObjectsFromStrings("hhh", "new operation", "new one"),
+				WithOptions(SetOperation("new one")).
+				WithOptions(SetOperation("new operation")),
+			want: NewObjectFromString("new operation"),
 		},
 		{
 			name: "Empty",
 			err:  New(""),
-			want: NewObjects(),
+			want: NewObjectEmpty(),
 		},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			got := tt.err.Operations()
+			got := tt.err.Operation()
 			assert.Equal(t, tt.want, got)
 			// if !reflect.DeepEqual(got, tt.want) {
 			// 	t.Errorf("Error.Operations() = %v, want %v", got, tt.want)
 			// }
-		})
-	}
-}
-
-func TestError_ErrorType(t *testing.T) {
-	tests := []struct {
-		name string
-		err  *Error
-		want string
-	}{
-		{
-			name: "empty",
-			err:  &Error{},
-			want: "",
-		},
-		{
-			name: "New. Empty ",
-			err:  New(""),
-			want: "",
-		},
-		{
-			name: "New. Set",
-			err:  New("", SetErrorType("my type")),
-			want: "my type",
-		},
-		{
-			name: "Set",
-			err:  New("").WithOptions(SetErrorType("my type")),
-			want: "my type",
-		},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.err.ErrorType(); got == nil || got.String() != tt.want {
-				t.Errorf("Error.ErrorType() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestError_Severity(t *testing.T) {
-	tests := []struct {
-		name string
-		err  *Error
-		want Severity
-	}{
-		{
-			name: "empty",
-			err:  &Error{},
-			want: SeverityUnknown,
-		},
-		{
-			name: "New",
-			err:  New(""),
-			want: SeverityError,
-		},
-		{
-			name: "New. Set",
-			err:  New("", SetSeverity(SeverityWarn)),
-			want: SeverityWarn,
-		},
-		{
-			name: "Set",
-			err:  New("").WithOptions(SetSeverity(SeverityWarn)),
-			want: SeverityWarn,
-		},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.err.Severity(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Error.Severity() = %v, want %v", got, tt.want)
-			}
 		})
 	}
 }
@@ -546,48 +389,6 @@ func TestError_Sdump(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.err.Sdump(); got != tt.want {
 				t.Errorf("Error.Sdump() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestError_ErrorOrNil(t *testing.T) {
-	var mynil *Error = &Error{}
-	mye1 := New("")
-
-	tests := []struct {
-		err     *Error
-		name    string
-		want    *Error
-		wantNil bool
-	}{
-		{
-			name:    "nil",
-			err:     mynil,
-			want:    nil,
-			wantNil: true,
-		},
-		{
-			name:    "not nil",
-			err:     mye1,
-			want:    mye1,
-			wantNil: false,
-		},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.err.ErrorOrNil()
-
-			if tt.wantNil {
-				if err != nil {
-					t.Errorf("Error.ErrorOrNil() want nil but do not")
-				}
-				return
-			}
-
-			if err != nil && tt.want != nil && err.Error() != tt.want.Error() {
-				t.Errorf("Error.ErrorOrNil() error = _%v_, want _%v_", err, tt.want)
 			}
 		})
 	}

@@ -11,40 +11,37 @@ import (
 )
 
 var (
-	_ error = (*Error)(nil)
-	_ interface {
-		WithOptions(ops ...Options) *Error
-
-		ID() Objecter
-		Severity() Severity
-		Msg() Objecter
-		ContextInfo() CtxMap
-		Operations() Objects
-		ErrorType() Objecter
-
-		Sdump() string
-		ErrorOrNil() error
-
-		Format(s fmt.State, verb rune)
-		Error() string
-
-		TranslateContext() *TranslateContext
-		Localizer() *i18n.Localizer
-		WriteTranslateMsg(w io.Writer) (int, error)
-		TranslateMsg() string
-
-		Log(l ...multilog.Logger)
-	} = (*Error)(nil)
+	_ error   = (*Error)(nil)
+	_ errorer = (*Error)(nil)
 )
+
+type errorer interface {
+	WithOptions(ops ...Options) *Error
+
+	ID() Objecter
+	Msg() Objecter
+	ContextInfo() CtxMap
+	Operation() Objecter
+
+	Sdump() string
+
+	Format(s fmt.State, verb rune)
+	Error() string
+
+	TranslateContext() *TranslateContext
+	Localizer() *i18n.Localizer
+	WriteTranslateMsg(w io.Writer) (int, error)
+	TranslateMsg() string
+
+	Log(l ...multilog.Logger)
+}
 
 // Error структура кастомной ошибки.
 // Это потоко-безопасный объект.
 type Error struct {
 	id               Objecter
 	msg              Objecter
-	severity         Severity
-	errorType        Objecter
-	operations       Objects
+	operation        Objecter
 	formatFn         FormatFn
 	translateContext *TranslateContext
 	localizer        *i18n.Localizer
@@ -58,8 +55,7 @@ type Error struct {
 // ** *Error
 func New(msg string, ops ...Options) *Error {
 	e := &Error{
-		severity: SeverityError,
-		msg:      NewObjectFromString(msg),
+		msg: NewObjectFromString(msg),
 	}
 	for _, op := range ops {
 		op(e)
@@ -100,15 +96,6 @@ func (e *Error) ID() Objecter {
 	return e.id
 }
 
-// Severity возвращает критичность ошибки
-func (e *Error) Severity() Severity {
-	if e == nil {
-		return 0
-	}
-
-	return e.severity
-}
-
 // Msg возвращает исходное сообщение об ошибке.
 // Это безопасный метод, всегда возвращает не nil.
 func (e *Error) Msg() Objecter {
@@ -119,23 +106,13 @@ func (e *Error) Msg() Objecter {
 	return e.msg
 }
 
-// ErrorType вернет тип ошибки.
-// Это безопасный метод, всегда возвращает не nil.
-func (e *Error) ErrorType() Objecter {
-	if e == nil || e.errorType == nil {
-		return NewObjectEmpty()
-	}
-
-	return e.errorType
-}
-
 // Operations вернет список операций.
 // Это безопасный метод, всегда возвращает не nil.
-func (e *Error) Operations() Objects {
-	if e == nil || e.operations == nil {
-		return NewObjects()
+func (e *Error) Operation() Objecter {
+	if e == nil || e.operation == nil {
+		return NewObjectEmpty()
 	}
-	return e.operations
+	return e.operation
 }
 
 // TranslateContext вернет *TranslateContext.
@@ -188,13 +165,7 @@ func (e *Error) Format(s fmt.State, verb rune) {
 		fmt.Fprintf(s, "%v\n", e.ContextInfo())
 
 	case 'o':
-		fmt.Fprintf(s, "%v\n", e.Operations())
-
-	case 'l':
-		_, _ = io.WriteString(s, e.Severity().String())
-
-	case 't':
-		_, _ = s.Write(e.ErrorType().Bytes())
+		fmt.Fprintf(s, "%v\n", e.Operation())
 
 	case 'v':
 		if s.Flag('+') {
@@ -241,22 +212,16 @@ func (e *Error) Sdump() string {
 	return spew.Sdump(e)
 }
 
-// ErrorOrNil вернет ошибку или nil.
-// ошибкой считается *Error != nil и Severity == SeverityError
-// т.е. SeverityWarn НЕ ошибка
-func (e *Error) ErrorOrNil() error {
-	if e != nil && e.Severity() == SeverityError {
-		return e
-	}
-	return nil
-}
-
 // log
 
 // Log выполнит логгирование ошибки с ипользованием логгера l[0].
 // Если l не указан, то в качестве логгера будет использоваться логгер по-умолчанию.
 func (e *Error) Log(l ...multilog.Logger) {
-	customlog(getLogger(l...), e, e.Severity())
+	logger := getLogger(l...)
+	if logger == nil {
+		return
+	}
+	logger.Errorf(e.Error())
 }
 
 func (e *Error) Is(target error) bool {
