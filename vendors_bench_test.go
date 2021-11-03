@@ -65,11 +65,10 @@ func BenchmarkVendorMyNewFull(b *testing.B) {
 		"hello1",
 		errors.AppendContextInfo("hello", "world"),
 		errors.SetID("IDhello1"),
-		errors.SetOperations("nothing"),
-		errors.SetErrorType("not found"),
+		errors.SetOperation("nothing"),
 	)
 
-	require.Equal(b, err.Error(), "(not found)[nothing]{hello:world} -- hello1")
+	require.Equal(b, err.Error(), "nothing: {hello:world} -- hello1")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -84,13 +83,13 @@ func BenchmarkVendorMyNewWithTranslate(b *testing.B) {
 	err := errors.New(
 		"hello1",
 		errors.AppendContextInfo("hello", "world"),
-		errors.SetOperations("nothing"),
+		errors.SetOperation("nothing"),
 		errors.SetID("ErrEmailsUnreadMsg"),
 		errors.SetTranslateContext(&errEmailsUnreadMsg),
 		errors.SetLocalizer(localizer),
 	)
 
-	require.Equal(b, err.Error(), "[nothing]{hello:world} -- У John Snow имеется 5 непрочитанных сообщений.")
+	require.Equal(b, err.Error(), "nothing: {hello:world} -- У John Snow имеется 5 непрочитанных сообщений.")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -101,8 +100,6 @@ func BenchmarkVendorMyNewWithTranslate(b *testing.B) {
 // mutierr
 
 func BenchmarkVendorMyMulti2StdErr(b *testing.B) {
-	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
-
 	err := errors.Wrap(
 		stderrors.New("hello1"),
 		stderrors.New("hello2"),
@@ -116,8 +113,6 @@ func BenchmarkVendorMyMulti2StdErr(b *testing.B) {
 }
 
 func BenchmarkVendorMyMulti2ErrNormal(b *testing.B) {
-	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
-
 	err := errors.Wrap(
 		errors.New("hello1"),
 		errors.New("hello2"),
@@ -132,18 +127,12 @@ func BenchmarkVendorMyMulti2ErrNormal(b *testing.B) {
 }
 
 func BenchmarkVendorMyMulti2ErrMsgOnly(b *testing.B) {
-	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
-
 	err := errors.Wrap(
 		errors.New(
 			"hello1",
-			errors.SetErrorType(""),
-			errors.SetSeverity(errors.SeverityUnknown),
 		),
 		errors.New(
 			"hello2",
-			errors.SetErrorType(""),
-			errors.SetSeverity(errors.SeverityUnknown),
 		),
 	)
 
@@ -197,8 +186,6 @@ func BenchmarkVendorUberMulti2StdErr(b *testing.B) {
 }
 
 func BenchmarkVendorUberMulti2MyNormalErr(b *testing.B) {
-	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
-
 	err := ubermulierr.Append(
 		errors.New("hello1"),
 		errors.New("hello2"),

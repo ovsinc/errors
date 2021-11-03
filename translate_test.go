@@ -10,8 +10,6 @@ import (
 )
 
 func BenchmarkTranslateMsg(b *testing.B) {
-	DefaultMultierrFormatFunc = StringMultierrFormatFunc
-
 	var (
 		unreadEmailCount = 5
 		name             = "John Snow"

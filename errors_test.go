@@ -1,7 +1,6 @@
 package errors
 
 import (
-	"io"
 	"testing"
 	"time"
 
@@ -53,7 +52,9 @@ func TestNew(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			if got := New("", tt.args.ops...); got == nil || tt.want == nil || got.Error() != tt.want.Error() {
+			if got := New("", tt.args.ops...); got == nil ||
+				tt.want == nil ||
+				got.Error() != tt.want.Error() {
 				t.Errorf("New() = %+v, want %+v.", got, tt.want)
 			}
 		})
@@ -107,54 +108,10 @@ func TestSetMsg(t *testing.T) {
 	}
 }
 
-func TestSetFormatFn(t *testing.T) {
-	myerr := &Error{}
-
-	var testFormatFn FormatFn = func(w io.Writer, e *Error) {}
-
-	type args struct {
-		fn FormatFn
-	}
-	tests := []struct {
-		name string
-		args args
-		err  *Error
-		want *Error
-	}{
-		{
-			name: "nil",
-			err:  nil,
-			want: nil,
-			args: args{
-				DefaultFormatFn,
-			},
-		},
-		{
-			name: "simple",
-			err:  myerr,
-			want: myerr,
-			args: args{
-				testFormatFn,
-			},
-		},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			got := SetFormatFn(tt.args.fn)
-			got(tt.err)
-
-			if tt.err != nil && tt.want != nil && tt.err.Error() != tt.want.Error() {
-				t.Errorf("SetFormatFn() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestError_Error(t *testing.T) {
 	type fields struct {
-		operation   Objecter
-		msg         Objecter
+		operation   Object
+		msg         Object
 		contextInfo CtxMap
 	}
 	tests := []struct {
@@ -183,8 +140,8 @@ func TestError_Error(t *testing.T) {
 			name: "with all params",
 			fields: fields{
 				operation:   NewObjectFromString("write"),
-				msg:         NewObjectFromString("hello"),
 				contextInfo: CtxMap{"hello": "world", "hi": "there"},
+				msg:         NewObjectFromString("hello"),
 			},
 			want: "write: {hello:world,hi:there} -- hello",
 		},
@@ -204,12 +161,12 @@ func TestError_Error(t *testing.T) {
 	}
 }
 
-func TestError_WithOptions(t *testing.T) {
+func TestError_WithOptions(t *testing.T) { //nolint:funlen
 	err1 := "hello"
 
 	type fields struct {
-		operation   Objecter
-		msg         Objecter
+		operation   Object
+		msg         Object
 		contextInfo CtxMap
 	}
 	type args struct {
@@ -314,7 +271,7 @@ func TestError_WithOptions(t *testing.T) {
 func TestError_Operations(t *testing.T) {
 	tests := []struct {
 		name string
-		want Objecter
+		want Object
 		err  *Error
 	}{
 		{

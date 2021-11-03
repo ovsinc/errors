@@ -5,10 +5,50 @@ import (
 	"strconv"
 
 	json "github.com/goccy/go-json"
+	"github.com/valyala/bytebufferpool"
 )
 
-// JSONFormat функция форматирования вывода сообщения *Error в JSON.
-func JSONFormat(buf io.Writer, e *Error) {
+var (
+	ErrUnknownType = New("unknown type")
+
+	_ Marshaller = (*MarshalJSON)(nil)
+)
+
+type MarshalJSON struct{}
+
+func (MarshalJSON) MarshalTo(i interface{}, dst io.Writer) error {
+	return jsonMarshalTo(i, dst)
+}
+
+func jsonMarshalTo(i interface{}, dst io.Writer) error {
+	if i == nil {
+		return nil
+	}
+
+	switch t := i.(type) { //nolint:errorlint
+	case Multierror:
+		jsonMultierrFormat(dst, t.Errors())
+
+	case *Error:
+		jsonFormat(dst, t)
+	}
+	return nil
+}
+
+func (MarshalJSON) Marshal(i interface{}) ([]byte, error) {
+	if i == nil {
+		return []byte{}, nil
+	}
+
+	buf := bytebufferpool.Get()
+	defer bytebufferpool.Put(buf)
+
+	_ = jsonMarshalTo(i, buf)
+
+	return buf.Bytes(), nil
+}
+
+func jsonFormat(buf io.Writer, e *Error) {
 	if e == nil {
 		_, _ = io.WriteString(buf, "null")
 		return
@@ -19,13 +59,14 @@ func JSONFormat(buf io.Writer, e *Error) {
 	// ID
 	_, _ = io.WriteString(buf, "\"id\":")
 	_, _ = io.WriteString(buf, "\"")
-	_, _ = buf.Write(e.ID().Bytes())
+	_, _ = e.ID().Write(buf)
 	_, _ = io.WriteString(buf, "\",")
 
 	// Operation
 	_, _ = io.WriteString(buf, "\"operation\":")
 	_, _ = io.WriteString(buf, "\"")
-	_, _ = buf.Write(e.Operation().Bytes())
+
+	_, _ = e.Operation().Write(buf)
 	_, _ = io.WriteString(buf, "\",")
 
 	// ContextInfo
@@ -52,27 +93,29 @@ func JSONFormat(buf io.Writer, e *Error) {
 }
 
 // JSONMultierrFuncFormat функция форматирования вывода сообщения для multierr в виде JSON.
-func JSONMultierrFuncFormat(w io.Writer, es []*Error) {
-	if len(es) == 0 {
+func jsonMultierrFormat(w io.Writer, es []*Error) {
+	l := len(es)
+	if l == 0 {
 		_, _ = io.WriteString(w, "null")
+		return
 	}
 
 	_, _ = io.WriteString(w, "{")
 
 	_, _ = io.WriteString(w, "\"count\":")
-	_, _ = io.WriteString(w, strconv.Itoa(len(es)))
+	_, _ = io.WriteString(w, strconv.Itoa(l))
 	_, _ = io.WriteString(w, ",")
 
 	_, _ = io.WriteString(w, "\"messages\":")
 	_, _ = io.WriteString(w, "[")
-	switch len(es) {
+	switch l {
 	case 1:
-		JSONFormat(w, es[0])
+		jsonFormat(w, es[0])
 	default:
-		JSONFormat(w, es[0])
+		jsonFormat(w, es[0])
 		for _, e := range es[1:] {
 			_, _ = io.WriteString(w, ",")
-			JSONFormat(w, e)
+			jsonFormat(w, e)
 		}
 	}
 	_, _ = io.WriteString(w, "]")

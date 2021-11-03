@@ -1,44 +1,44 @@
 package errors
 
-import "bytes"
+import "io"
 
-type Objecter interface {
-	String() string
-	Bytes() []byte
-	Buffer() *bytes.Buffer
+// type Objecter interface {
+// 	String() string
+// 	Bytes() []byte
+// 	Buffer() *bytes.Buffer
+// }
+
+type Object []byte
+
+func NewObjectEmpty() Object {
+	return Object{}
 }
 
-type object []byte
-
-func NewObjectEmpty() Objecter {
-	return object{}
+func NewObjectFromBytes(v []byte) Object {
+	return Object(v)
 }
 
-func NewObjectFromBytes(v []byte) Objecter {
-	return object(v)
+func NewObjectFromString(s string) Object {
+	return Object(s)
 }
 
-func NewObjectFromString(s string) Objecter {
-	return object(s)
-}
-
-func (o object) String() string {
-	if len(o) == 0 {
+func (o Object) String() string {
+	if o == nil {
 		return ""
 	}
 	return string(o)
 }
 
-func (o object) Bytes() []byte {
-	if len(o) == 0 {
+func (o Object) Bytes() []byte {
+	if o == nil {
 		return []byte{}
 	}
 	return o
 }
 
-func (o object) Buffer() *bytes.Buffer {
-	if len(o) == 0 {
-		return &bytes.Buffer{}
+func (o Object) Write(w io.Writer) (int, error) {
+	if o == nil {
+		return 0, nil
 	}
-	return bytes.NewBuffer(o)
+	return w.Write(o)
 }

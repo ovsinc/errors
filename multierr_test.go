@@ -1,12 +1,11 @@
 package errors_test
 
 import (
+	origerrors "errors"
 	"testing"
 
 	"github.com/ovsinc/errors"
 	"github.com/stretchr/testify/assert"
-
-	origerrors "errors"
 )
 
 var (
@@ -50,7 +49,7 @@ func TestWrapSimple(t *testing.T) {
 				left:  nil,
 				right: me1,
 			},
-			want: "write: {hello:world,my:name} -- hello1",
+			want: "the following errors occurred:\n\t#1 write: {hello:world,my:name} -- hello1\n",
 		},
 		{
 			name: "nil left std",
@@ -58,7 +57,7 @@ func TestWrapSimple(t *testing.T) {
 				left:  nil,
 				right: errMe3,
 			},
-			want: "hello",
+			want: "the following errors occurred:\n\t#1 hello\n",
 		},
 		{
 			name: "nil right",
@@ -66,7 +65,7 @@ func TestWrapSimple(t *testing.T) {
 				left:  me2,
 				right: nil,
 			},
-			want: "read: {hello2:world,my2:name} -- hello2",
+			want: "the following errors occurred:\n\t#1 read: {hello2:world,my2:name} -- hello2\n",
 		},
 	}
 

@@ -5,9 +5,7 @@ import (
 	"io"
 
 	"github.com/davecgh/go-spew/spew"
-	i18n "github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/ovsinc/multilog"
-	"github.com/valyala/bytebufferpool"
 )
 
 var (
@@ -18,20 +16,20 @@ var (
 type errorer interface {
 	WithOptions(ops ...Options) *Error
 
-	ID() Objecter
-	Msg() Objecter
+	ID() Object
+	Msg() Object
 	ContextInfo() CtxMap
-	Operation() Objecter
+	Operation() Object
 
 	Sdump() string
 
 	Format(s fmt.State, verb rune)
+	Marshal(fn ...Marshaller) ([]byte, error)
+
 	Error() string
 
-	TranslateContext() *TranslateContext
-	Localizer() *i18n.Localizer
-	WriteTranslateMsg(w io.Writer) (int, error)
 	TranslateMsg() string
+	WriteTranslateMsg(w io.Writer) (int, error)
 
 	Log(l ...multilog.Logger)
 }
@@ -39,12 +37,11 @@ type errorer interface {
 // Error структура кастомной ошибки.
 // Это потоко-безопасный объект.
 type Error struct {
-	id               Objecter
-	msg              Objecter
-	operation        Objecter
-	formatFn         FormatFn
+	id               Object
+	msg              Object
+	operation        Object
 	translateContext *TranslateContext
-	localizer        *i18n.Localizer
+	localizer        Localizer
 	contextInfo      CtxMap
 }
 
@@ -88,7 +85,7 @@ func (e *Error) WithOptions(ops ...Options) *Error {
 
 // ID возвращает ID ошибки.
 // Это безопасный метод, всегда возвращает не nil.
-func (e *Error) ID() Objecter {
+func (e *Error) ID() Object {
 	if e == nil || e.id == nil {
 		return NewObjectEmpty()
 	}
@@ -98,7 +95,7 @@ func (e *Error) ID() Objecter {
 
 // Msg возвращает исходное сообщение об ошибке.
 // Это безопасный метод, всегда возвращает не nil.
-func (e *Error) Msg() Objecter {
+func (e *Error) Msg() Object {
 	if e == nil || e.msg == nil {
 		return NewObjectEmpty()
 	}
@@ -108,7 +105,7 @@ func (e *Error) Msg() Objecter {
 
 // Operations вернет список операций.
 // Это безопасный метод, всегда возвращает не nil.
-func (e *Error) Operation() Objecter {
+func (e *Error) Operation() Object {
 	if e == nil || e.operation == nil {
 		return NewObjectEmpty()
 	}
@@ -120,11 +117,6 @@ func (e *Error) TranslateContext() *TranslateContext {
 	return e.translateContext
 }
 
-// Localizer вернет локализатор *i18n.Localizer.
-func (e *Error) Localizer() *i18n.Localizer {
-	return e.localizer
-}
-
 // Error methods
 
 // Error возвращает строковое представление ошибки.
@@ -132,26 +124,24 @@ func (e *Error) Localizer() *i18n.Localizer {
 // Метод произволит перевод сообщения об ошибки, если localizer != nil.
 // Для идентификации сообщения перевода используется ID ошибки.
 func (e *Error) Error() string {
-	if e == nil {
-		return ""
-	}
+	marshal := &MarshalString{}
+	data, _ := marshal.Marshal(e)
+	return string(data)
+}
 
-	var fn FormatFn
+var ErrUnknownMarshaller = New("marshaller not found")
+
+func (e *Error) Marshal(fn ...Marshaller) ([]byte, error) {
+	var marshal Marshaller
 	switch {
-	case e.formatFn != nil:
-		fn = e.formatFn
-	case DefaultFormatFn != nil:
-		fn = DefaultFormatFn
+	case len(fn) > 0:
+		marshal = fn[0]
+	case DefaultMarshaller != nil:
+		marshal = DefaultMarshaller
 	default:
-		fn = StringFormat
+		return nil, ErrUnknownMarshaller
 	}
-
-	buf := bytebufferpool.Get()
-	defer bytebufferpool.Put(buf)
-
-	fn(buf, e)
-
-	return buf.String()
+	return marshal.Marshal(e)
 }
 
 // Format производит форматирование строки, для поддержки fmt.Printf().
@@ -177,25 +167,6 @@ func (e *Error) Format(s fmt.State, verb rune) {
 	case 's', 'q':
 		_, _ = io.WriteString(s, e.Error())
 	}
-}
-
-// translate
-
-// WriteTranslateMsg запишет перевод сообщения ошибки в буфер.
-// Если не удастся выполнить перевод в буфер w будет записано оригинальное сообщение.
-func (e *Error) WriteTranslateMsg(w io.Writer) (int, error) {
-	return writeTranslateMsg(e, w)
-}
-
-// TranslateMsg вернет перевод сообщения ошибки.
-// Если не удастся выполнить перевод, вернет оригинальное сообщение.
-func (e *Error) TranslateMsg() string {
-	buf := bytebufferpool.Get()
-	defer bytebufferpool.Put(buf)
-
-	_, _ = e.WriteTranslateMsg(buf)
-
-	return buf.String()
 }
 
 // дополнительные методы

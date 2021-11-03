@@ -60,8 +60,6 @@ func someFuncWithErr2() error {
 }
 
 func ExampleWrap() {
-	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
-
 	err := someFuncWithErr()
 
 	err = errors.Wrap(err, someFuncWithErr2())
@@ -76,7 +74,6 @@ func ExampleWrap() {
 
 func ExampleNewWithLog() {
 	multilog.DefaultLogger = golog.New(log.New(os.Stdout, "ovsinc/errors ", 0))
-	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
 
 	_ = errors.Combine(
 		nil,
@@ -115,12 +112,11 @@ func someTimedCast() (err error) {
 
 func ExampleLog() {
 	multilog.DefaultLogger = golog.New(log.New(os.Stdout, "ovsinc/errors ", 0))
-	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
 
 	errors.Log(someTimedCast())
 
 	// Output:
-	// ovsinc/errors {call:example_test.go:104,duration:1s} -- some call
+	// ovsinc/errors {call:example_test.go:101,duration:1s} -- some call
 }
 
 func localizePrepare() *i18n.Localizer {

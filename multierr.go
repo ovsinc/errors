@@ -5,9 +5,6 @@ package errors
 
 import (
 	"fmt"
-	"io"
-
-	"github.com/valyala/bytebufferpool"
 )
 
 // Errors returns a slice containing zero or more errors that the supplied
@@ -21,94 +18,76 @@ import (
 //
 // Callers of this function are free to modify the returned slice.
 func Errors(err error) []*Error {
-	if eg, ok := err.(multiError); ok { //nolint:errorlint
-		return eg
+	if eg, ok := err.(Multierror); ok { //nolint:errorlint
+		return eg.Errors()
 	}
 
 	return appendError(make([]*Error, 0, 1), err)
 }
 
-var _ Multierror = (multiError)(nil)
+var _ Multierror = (*multiError)(nil)
 
 type Multierror interface {
 	Errors() []*Error
 	Error() string
 	Format(f fmt.State, c rune)
+	Marshal(fn ...Marshaller) ([]byte, error)
+	Len() int
 }
 
-// multiError is an error that holds one or more errors.
-//
-// An instance of this is guaranteed to be non-empty and flattened. That is,
-// none of the errors inside multiError are other multiErrors.
-//
-// multiError formats to a semi-colon delimited list of error messages with
-// %v and with a more readable multi-line format with %+v.
-type multiError []*Error
+type multiError struct {
+	errors []*Error
+	len    int
+	last   int
+}
 
 // Errors returns the list of underlying errors.
 //
 // This slice MUST NOT be modified.
-func (merr multiError) Errors() []*Error {
-	return merr
-}
-
-func (merr multiError) Error() string {
-	if len(merr) == 0 {
-		return ""
+func (merr *multiError) Errors() []*Error {
+	if merr == nil || merr.errors == nil {
+		return []*Error{}
 	}
-
-	buff := bytebufferpool.Get()
-	defer bytebufferpool.Put(buff)
-
-	merr.writeLines(buff)
-
-	return buff.String()
+	return merr.errors
 }
 
-func (merr multiError) Format(f fmt.State, c rune) {
+func (merr *multiError) Error() string {
+	marshal := &MarshalString{}
+	data, _ := marshal.Marshal(merr)
+	return string(data)
+}
+
+func (merr *multiError) Marshal(fn ...Marshaller) ([]byte, error) {
+	var marshal Marshaller
+	switch {
+	case len(fn) > 0:
+		marshal = fn[0]
+	case DefaultMarshaller != nil:
+		marshal = DefaultMarshaller
+	}
+	return marshal.Marshal(merr)
+}
+
+func (merr *multiError) Format(f fmt.State, c rune) {
+	var marshal Marshaller
 	switch c {
 	case 'w', 'v', 's':
-		merr.writeLines(f)
+		marshal = &MarshalString{}
 	case 'j':
-		JSONMultierrFuncFormat(f, merr)
+		marshal = &MarshalJSON{}
 	}
+
+	data, _ := marshal.Marshal(merr)
+	_, _ = f.Write(data)
 }
 
-func (merr multiError) writeLines(w io.Writer) {
-	if DefaultMultierrFormatFunc == nil {
-		StringMultierrFormatFunc(w, merr)
-		return
-	}
-	DefaultMultierrFormatFunc(w, merr)
+func (merr *multiError) Len() int {
+	return merr.len
 }
 
-type inspectResult struct {
-	// Number of top-level non-nil errors
-	Count int
-
-	// Total number of errors including multiErrors
-	Capacity int
-}
-
-// Inspects the given slice of errors so that we can efficiently allocate
-// space for it.
-func inspect(errors []error) (res inspectResult) {
-	for _, err := range errors {
-		if err == nil {
-			continue
-		}
-
-		res.Count++
-		if merr, ok := err.(multiError); ok { //nolint:errorlint
-			res.Capacity += len(merr)
-		} else {
-			res.Capacity++
-		}
-	}
-	return
-}
-
-func appendError(errors multiError, err error) []*Error {
+// append err to []*Error
+// errors must not be nil
+func appendError(errors []*Error, err interface{}) []*Error {
 	switch t := err.(type) {
 	case nil:
 		return nil
@@ -128,12 +107,7 @@ func appendError(errors multiError, err error) []*Error {
 
 // fromSlice converts the given list of errors into a single error.
 func fromSlice(errors []error) Multierror {
-	res := inspect(errors)
-	if res.Count == 0 {
-		return nil
-	}
-
-	nonNilErrs := make(multiError, 0, res.Capacity)
+	nonNilErrs := make([]*Error, 0)
 	for _, err := range errors {
 		if err == nil {
 			continue
@@ -141,36 +115,41 @@ func fromSlice(errors []error) Multierror {
 		nonNilErrs = appendError(nonNilErrs, err)
 	}
 
-	return nonNilErrs
+	last := 0
+	len := len(nonNilErrs)
+	if len > 0 {
+		last = len - 1
+	}
+
+	return &multiError{
+		errors: nonNilErrs,
+		len:    len,
+		last:   last,
+	}
 }
 
 // Combine создаст цепочку ошибок из ошибок ...errors.
 // Допускается использование `nil` в аргументах.
-func Combine(errors ...error) error {
+func Combine(errors ...error) Multierror {
 	return fromSlice(errors)
 }
 
 // Wrap обернет ошибку `left` ошибкой `right`, получив цепочку.
 // Допускается использование `nil` в одном из аргументов.
-func Wrap(left error, right error) error {
-	switch {
-	case left == nil:
-		return right
-	case right == nil:
-		return left
-	}
+func Wrap(left error, right error) Multierror {
 	return fromSlice([]error{left, right})
 }
 
 // Unwrap вернет самую новую ошибку в стеке
-func (merr multiError) Unwrap() error {
-	if len(merr) == 0 {
+func (merr *multiError) Unwrap() error {
+	es := merr.Errors()
+	if len(es) == 0 {
 		return nil
 	}
-	return merr[len(merr)-1]
+	return es[merr.last]
 }
 
-func (merr multiError) As(target interface{}) bool {
+func (merr *multiError) As(target interface{}) bool {
 	if x, ok := target.(*Multierror); ok { //nolint:errorlint
 		*x = merr
 		return true
@@ -178,9 +157,9 @@ func (merr multiError) As(target interface{}) bool {
 	return false
 }
 
-func (merr multiError) Is(target error) bool {
+func (merr *multiError) Is(target error) bool {
 	if x, ok := target.(Multierror); ok { //nolint:errorlint
-		return x == &merr
+		return x == merr
 	}
 	return false
 }

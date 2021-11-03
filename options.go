@@ -1,19 +1,7 @@
 package errors
 
-import i18n "github.com/nicksnyder/go-i18n/v2/i18n"
-
 // Options опции из параметра ошибки.
 type Options func(e *Error)
-
-// SetFormatFn установит пользовательскую функцию-форматирования.
-func SetFormatFn(fn FormatFn) Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.formatFn = fn
-	}
-}
 
 // Msg
 
@@ -102,7 +90,7 @@ func SetTranslateContext(tctx *TranslateContext) Options {
 // SetLocalizer установит локализатор.
 // Этот локализатор будет использован для данной ошибки даже,
 // если был установлен DefaultLocalizer.
-func SetLocalizer(localizer *i18n.Localizer) Options {
+func SetLocalizer(localizer Localizer) Options {
 	return func(e *Error) {
 		if e == nil {
 			return

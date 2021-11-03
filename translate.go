@@ -4,11 +4,16 @@ import (
 	"io"
 
 	i18n "github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/valyala/bytebufferpool"
 )
 
 // DefaultLocalizer локализатор по-умолчанию.
 // Для каждой ошибки можно переопределить локализатор.
-var DefaultLocalizer *i18n.Localizer //nolint:gochecknoglobals
+var DefaultLocalizer Localizer //nolint:gochecknoglobals
+
+type Localizer interface {
+	Localize(*i18n.LocalizeConfig) (string, error)
+}
 
 // TranslateContext контекст перевода. Не является обязательным для корректного перевода.
 type TranslateContext struct {
@@ -21,23 +26,30 @@ type TranslateContext struct {
 	DefaultMessage *i18n.Message
 }
 
-func writeTranslateMsg(e *Error, w io.Writer) (int, error) {
-	buf := e.Msg().Bytes()
+// TranslateMsg вернет перевод сообщения ошибки.
+// Если не удастся выполнить перевод, вернет оригинальное сообщение.
+func (e *Error) TranslateMsg() string {
+	buf := bytebufferpool.Get()
+	defer bytebufferpool.Put(buf)
 
-	if len(buf) == 0 {
-		return 0, nil
-	}
+	_, _ = e.WriteTranslateMsg(buf)
 
-	var localizer *i18n.Localizer
+	return buf.String()
+}
+
+// WriteTranslateMsg запишет перевод сообщения ошибки в буфер.
+// Если не удастся выполнить перевод в буфер w будет записано оригинальное сообщение.
+func (e *Error) WriteTranslateMsg(w io.Writer) (int, error) {
+	var loc Localizer
 	switch {
+	// case e.msg == nil:
+	// 	return 0, nil
 	case e.localizer != nil:
-		localizer = e.localizer
+		loc = e.localizer
 	case DefaultLocalizer != nil:
-		localizer = DefaultLocalizer
-	}
-
-	if localizer == nil {
-		return w.Write(buf)
+		loc = DefaultLocalizer
+	default:
+		return e.Msg().Write(w)
 	}
 
 	i18nConf := &i18n.LocalizeConfig{
@@ -49,10 +61,14 @@ func writeTranslateMsg(e *Error, w io.Writer) (int, error) {
 		i18nConf.TemplateData = e.translateContext.TemplateData
 	}
 
-	msg, _, err := e.localizer.LocalizeWithTag(i18nConf)
+	str, err := translateMsgInternal(loc, i18nConf)
 	if err != nil {
-		return w.Write(buf)
+		return e.Msg().Write(w)
 	}
 
-	return io.WriteString(w, msg)
+	return io.WriteString(w, str)
+}
+
+func translateMsgInternal(localizer Localizer, lc *i18n.LocalizeConfig) (string, error) {
+	return localizer.Localize(lc)
 }

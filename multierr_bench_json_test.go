@@ -28,16 +28,16 @@ var (
 )
 
 func BenchmarkJsonFn(b *testing.B) {
-	errors.DefaultFormatFn = errors.JSONFormat
-
 	e := errors.New(
 		"hello",
 		errors.SetOperation("write"),
 		errors.SetContextInfo(errors.CtxMap{"hello": "world", "hi": "there"}),
-		errors.SetFormatFn(errors.JSONFormat),
 	)
 
-	require.JSONEq(b, e.Error(), "{\"id\":\"\",\"operation\":\"write\",\"context\":{\"hello\":\"world\",\"hi\":\"there\"},\"msg\":\"hello\"}")
+	data, err := e.Marshal(&errors.MarshalJSON{})
+	require.Nil(b, err)
+
+	require.JSONEq(b, string(data), "{\"id\":\"\",\"operation\":\"write\",\"context\":{\"hello\":\"world\",\"hi\":\"there\"},\"msg\":\"hello\"}")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -46,12 +46,13 @@ func BenchmarkJsonFn(b *testing.B) {
 }
 
 func BenchmarkJsonMultierrFuncFormat3Errs(b *testing.B) {
-	errors.DefaultMultierrFormatFunc = errors.JSONMultierrFuncFormat
-	errors.DefaultFormatFn = errors.JSONFormat
-
 	e := errors.Combine(je1, je2, je3)
 
-	require.JSONEq(b, e.Error(), "{\"count\":3,\"messages\":[{\"id\":\"\",\"operation\":\"write\",\"context\":{\"hello\":\"world\",\"my\":\"name\"},\"msg\":\"hello1\"},{\"id\":\"\",\"operation\":\"read\",\"context\":{\"hello2\":\"world\",\"my2\":\"name\"},\"msg\":\"hello2\"},{\"id\":\"\",\"operation\":\"read\",\"context\":{\"hello3\":\"world\",\"my3\":\"name\"},\"msg\":\"hello3\"}]}")
+	marshal := &errors.MarshalJSON{}
+	data, err := marshal.Marshal(e)
+	require.Nil(b, err)
+
+	require.JSONEq(b, string(data), "{\"count\":3,\"messages\":[{\"id\":\"\",\"operation\":\"write\",\"context\":{\"hello\":\"world\",\"my\":\"name\"},\"msg\":\"hello1\"},{\"id\":\"\",\"operation\":\"read\",\"context\":{\"hello2\":\"world\",\"my2\":\"name\"},\"msg\":\"hello2\"},{\"id\":\"\",\"operation\":\"read\",\"context\":{\"hello3\":\"world\",\"my3\":\"name\"},\"msg\":\"hello3\"}]}")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -60,12 +61,13 @@ func BenchmarkJsonMultierrFuncFormat3Errs(b *testing.B) {
 }
 
 func BenchmarkJsonMultierrFuncFormat2Errs(b *testing.B) {
-	errors.DefaultMultierrFormatFunc = errors.JSONMultierrFuncFormat
-	errors.DefaultFormatFn = errors.JSONFormat
-
 	e := errors.Wrap(je1, je2)
 
-	require.JSONEq(b, e.Error(), "{\"count\":2,\"messages\":[{\"id\":\"\",\"operation\":\"write\",\"context\":{\"hello\":\"world\",\"my\":\"name\"},\"msg\":\"hello1\"},{\"id\":\"\",\"operation\":\"read\",\"context\":{\"hello2\":\"world\",\"my2\":\"name\"},\"msg\":\"hello2\"}]}")
+	marshal := &errors.MarshalJSON{}
+	data, err := marshal.Marshal(e)
+	require.Nil(b, err)
+
+	require.JSONEq(b, string(data), "{\"count\":2,\"messages\":[{\"id\":\"\",\"operation\":\"write\",\"context\":{\"hello\":\"world\",\"my\":\"name\"},\"msg\":\"hello1\"},{\"id\":\"\",\"operation\":\"read\",\"context\":{\"hello2\":\"world\",\"my2\":\"name\"},\"msg\":\"hello2\"}]}")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -74,12 +76,13 @@ func BenchmarkJsonMultierrFuncFormat2Errs(b *testing.B) {
 }
 
 func BenchmarkJsonMultierrFuncFormat1Err(b *testing.B) {
-	errors.DefaultMultierrFormatFunc = errors.JSONMultierrFuncFormat
-	errors.DefaultFormatFn = errors.JSONFormat
-
 	e := errors.Wrap(nil, je2)
 
-	require.JSONEq(b, e.Error(), "{\"id\":\"\",\"operation\":\"read\",\"context\":{\"hello2\":\"world\",\"my2\":\"name\"},\"msg\":\"hello2\"}")
+	marshal := &errors.MarshalJSON{}
+	data, err := marshal.Marshal(e)
+	require.Nil(b, err)
+
+	require.JSONEq(b, string(data), "{\"count\":1,\"messages\":[{\"id\":\"\",\"operation\":\"read\",\"context\":{\"hello2\":\"world\",\"my2\":\"name\"},\"msg\":\"hello2\"}]}")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

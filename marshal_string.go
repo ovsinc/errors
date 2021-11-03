@@ -5,6 +5,8 @@ import (
 	"io"
 	"sort"
 	"strconv"
+
+	"github.com/valyala/bytebufferpool"
 )
 
 var (
@@ -17,19 +19,54 @@ var (
 
 	_ctxDelimiterLeft  = []byte("{") //nolint:gochecknoglobals
 	_ctxDelimiterRight = []byte("}") //nolint:gochecknoglobals
+
+	_ Marshaller = (*MarshalString)(nil)
 )
 
-// StringFormat функция форматирования вывода сообщения *Error в виде строки.
-// Используется по-умолчанию.
-func StringFormat(buf io.Writer, e *Error) { //nolint:cyclop
+type MarshalString struct{}
+
+func (MarshalString) MarshalTo(i interface{}, dst io.Writer) error {
+	return stringMarshalTo(i, dst)
+}
+
+func stringMarshalTo(i interface{}, dst io.Writer) error {
+	if i == nil {
+		return nil
+	}
+
+	switch t := i.(type) { //nolint:errorlint
+	case Multierror: // multiError
+		stringMultierrFormat(dst, t.Errors())
+
+	case *Error:
+		stringFormat(dst, t)
+	}
+
+	return nil
+}
+
+func (MarshalString) Marshal(i interface{}) ([]byte, error) {
+	if i == nil {
+		return []byte{}, nil
+	}
+
+	buf := bytebufferpool.Get()
+	defer bytebufferpool.Put(buf)
+
+	_ = stringMarshalTo(i, buf)
+
+	return buf.Bytes(), nil
+}
+
+func stringFormat(buf io.Writer, e *Error) { //nolint:cyclop
 	if e == nil {
 		return
 	}
 
 	writeDelim := false
 
-	if op := e.Operation().Bytes(); len(op) > 0 {
-		_, _ = buf.Write(op)
+	n, _ := e.Operation().Write(buf)
+	if n > 0 {
 		_, _ = buf.Write(_opDelimiter)
 		writeDelim = true
 	}
@@ -45,7 +82,7 @@ func StringFormat(buf io.Writer, e *Error) { //nolint:cyclop
 		sort.Strings(ctxskeys)
 		_, _ = fmt.Fprintf(buf, "%s:%v", ctxskeys[0], ctxs[ctxskeys[0]])
 		for _, i := range ctxskeys[1:] {
-			buf.Write(_listSeparator)
+			_, _ = buf.Write(_listSeparator)
 			_, _ = fmt.Fprintf(buf, "%s:%v", i, ctxs[i])
 		}
 		_, _ = buf.Write(_ctxDelimiterRight)
@@ -59,13 +96,7 @@ func StringFormat(buf io.Writer, e *Error) { //nolint:cyclop
 	_, _ = e.WriteTranslateMsg(buf)
 }
 
-//
-
-// multierr
-
-// StringMultierrFormatFunc функция форматирования вывода сообщения для multierr в виде строки.
-// Используется по-умолчанию.
-func StringMultierrFormatFunc(w io.Writer, es []*Error) {
+func stringMultierrFormat(w io.Writer, es []*Error) {
 	if len(es) == 0 {
 		_, _ = io.WriteString(w, "")
 		return

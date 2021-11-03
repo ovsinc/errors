@@ -126,7 +126,7 @@ func TestIs(t *testing.T) {
 	}
 }
 
-func TestAs(t *testing.T) {
+func TestAs(t *testing.T) { //nolint:funlen
 	err1 := New("1")
 
 	var err2 error = err1
@@ -134,9 +134,9 @@ func TestAs(t *testing.T) {
 	var errE1 *Error
 	var errE2 errorer
 
-	// merr1 := Combine(err1, err2)
-	// // var merr1cast Multierror
-	// merr2cast := merr1.(multiError)
+	merr1 := Combine(err1, err2)
+	var merr1cast Multierror
+	merr2cast := merr1.(*multiError)
 
 	testCases := []struct {
 		err    error
@@ -168,12 +168,12 @@ func TestAs(t *testing.T) {
 			true,
 			err1,
 		},
-		// {
-		// 	merr1,
-		// 	&merr2cast,
-		// 	true,
-		// 	merr2cast,
-		// },
+		{
+			merr1,
+			&merr1cast,
+			true,
+			merr2cast,
+		},
 	}
 	for i, tc := range testCases {
 		tc := tc

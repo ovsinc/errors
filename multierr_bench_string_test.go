@@ -29,15 +29,16 @@ var (
 )
 
 func BenchmarkStringFn(b *testing.B) {
-	errors.DefaultFormatFn = errors.StringFormat
-
 	e := errors.New(
 		"hello",
 		errors.SetOperation("write"),
 		errors.SetContextInfo(errors.CtxMap{"hello": "world", "my": "name"}),
 	)
 
-	require.Equal(b, e.Error(), "write: {hello:world,my:name} -- hello")
+	data, err := e.Marshal(&errors.MarshalString{})
+	require.Nil(b, err)
+
+	require.Equal(b, string(data), "write: {hello:world,my:name} -- hello")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -46,15 +47,16 @@ func BenchmarkStringFn(b *testing.B) {
 }
 
 func BenchmarkFormatFmt(b *testing.B) {
-	errors.DefaultFormatFn = errors.StringFormat
-
 	e := errors.New(
 		"hello",
 		errors.SetOperation("write"),
 		errors.SetContextInfo(errors.CtxMap{"hello": "world", "name": "john"}),
 	)
 
-	require.Equal(b, e.Error(), "write: {hello:world,name:john} -- hello")
+	data, err := e.Marshal(&errors.MarshalString{})
+	require.Nil(b, err)
+
+	require.Equal(b, string(data), "write: {hello:world,name:john} -- hello")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -64,12 +66,13 @@ func BenchmarkFormatFmt(b *testing.B) {
 }
 
 func BenchmarkStringMultierrFuncFormat3Errs(b *testing.B) {
-	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
-	errors.DefaultFormatFn = errors.StringFormat
-
 	e := errors.Combine(se1, se2, se3)
 
-	require.Equal(b, e.Error(), "the following errors occurred:\n\t#1 write: {hello:world,my:name} -- hello1\n\t#2 read: {hello2:world,my2:name} -- hello2\n\t#3 read: {hello3:world,my3:name} -- hello3\n")
+	marshal := &errors.MarshalString{}
+	data, err := marshal.Marshal(e)
+	require.Nil(b, err)
+
+	require.Equal(b, string(data), "the following errors occurred:\n\t#1 write: {hello:world,my:name} -- hello1\n\t#2 read: {hello2:world,my2:name} -- hello2\n\t#3 read: {hello3:world,my3:name} -- hello3\n")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -78,12 +81,13 @@ func BenchmarkStringMultierrFuncFormat3Errs(b *testing.B) {
 }
 
 func BenchmarkStringMultierrFuncFormat2Errs(b *testing.B) {
-	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
-	errors.DefaultFormatFn = errors.StringFormat
-
 	e := errors.Wrap(se1, se2)
 
-	require.Equal(b, e.Error(), "the following errors occurred:\n\t#1 write: {hello:world,my:name} -- hello1\n\t#2 read: {hello2:world,my2:name} -- hello2\n")
+	marshal := &errors.MarshalString{}
+	data, err := marshal.Marshal(e)
+	require.Nil(b, err)
+
+	require.Equal(b, string(data), "the following errors occurred:\n\t#1 write: {hello:world,my:name} -- hello1\n\t#2 read: {hello2:world,my2:name} -- hello2\n")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -92,12 +96,13 @@ func BenchmarkStringMultierrFuncFormat2Errs(b *testing.B) {
 }
 
 func BenchmarkStringMultierrFuncFormat1Err(b *testing.B) {
-	errors.DefaultMultierrFormatFunc = errors.StringMultierrFormatFunc
-	errors.DefaultFormatFn = errors.StringFormat
-
 	e := errors.Wrap(nil, se2)
 
-	require.Equal(b, e.Error(), "read: {hello2:world,my2:name} -- hello2")
+	marshal := &errors.MarshalString{}
+	data, err := marshal.Marshal(e)
+	require.Nil(b, err)
+
+	require.Equal(b, string(data), "the following errors occurred:\n\t#1 read: {hello2:world,my2:name} -- hello2\n")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
