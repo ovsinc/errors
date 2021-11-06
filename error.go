@@ -13,6 +13,8 @@ var (
 	_ errorer = (*Error)(nil)
 )
 
+var ErrUnknownMarshaller = New("marshaller not found")
+
 type errorer interface {
 	WithOptions(ops ...Options) *Error
 
@@ -34,6 +36,13 @@ type errorer interface {
 	Log(l ...multilog.Logger)
 }
 
+// CtxMap map контекста ошибки.
+// В качестве ключа всегда должна быть строка, а значение - любой тип.
+// При преобразовании ошибки в строку CtxMap может использоваться различные методы.
+// Для функции JSONFormat CtxMap будет преобразовываться с помощью JSON marshall.
+// Для функции StringFormat CtxMap будет преобразовываться с помощью fmt.Sprintf.
+type CtxMap map[string]interface{}
+
 // Error структура кастомной ошибки.
 // Это потоко-безопасный объект.
 type Error struct {
@@ -44,23 +53,6 @@ type Error struct {
 	localizer        Localizer
 	contextInfo      CtxMap
 }
-
-// New конструктор на необязательных параметрах
-// * ops ...Options -- параметризация через функции-парметры.
-// См. options.go
-//
-// ** *Error
-func New(msg string, ops ...Options) *Error {
-	e := &Error{
-		msg: NewObjectFromString(msg),
-	}
-	for _, op := range ops {
-		op(e)
-	}
-	return e
-}
-
-// setters
 
 // WithOptions производит параметризацию *Error с помощью функции-парметры Options.
 // Допускается указывать произвольно количество ops.
@@ -117,19 +109,7 @@ func (e *Error) TranslateContext() *TranslateContext {
 	return e.translateContext
 }
 
-// Error methods
-
-// Error возвращает строковое представление ошибки.
-// Метод для реализации интерфейса error.
-// Метод произволит перевод сообщения об ошибки, если localizer != nil.
-// Для идентификации сообщения перевода используется ID ошибки.
-func (e *Error) Error() string {
-	marshal := &MarshalString{}
-	data, _ := marshal.Marshal(e)
-	return string(data)
-}
-
-var ErrUnknownMarshaller = New("marshaller not found")
+// методы форматирования
 
 func (e *Error) Marshal(fn ...Marshaller) ([]byte, error) {
 	var marshal Marshaller
@@ -169,6 +149,13 @@ func (e *Error) Format(s fmt.State, verb rune) {
 	}
 }
 
+// context info
+
+// ContextInfo вернет контекст CtxMap ошибки.
+func (e *Error) ContextInfo() CtxMap {
+	return e.contextInfo
+}
+
 // дополнительные методы
 
 // Sdump вернет текстовый дамп ошибки *Error.
@@ -193,6 +180,18 @@ func (e *Error) Log(l ...multilog.Logger) {
 		return
 	}
 	logger.Errorf(e.Error())
+}
+
+// Error methods
+
+// Error возвращает строковое представление ошибки.
+// Метод для реализации интерфейса error.
+// Метод произволит перевод сообщения об ошибки, если localizer != nil.
+// Для идентификации сообщения перевода используется ID ошибки.
+func (e *Error) Error() string {
+	marshal := &MarshalString{}
+	data, _ := marshal.Marshal(e)
+	return string(data)
 }
 
 func (e *Error) Is(target error) bool {

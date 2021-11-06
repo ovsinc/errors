@@ -13,21 +13,6 @@ func GetID(err error) (id string) {
 	return
 }
 
-func simpleCast(err error) (*Error, bool) {
-	e, ok := err.(*Error) //nolint:errorlint
-	return e, ok
-}
-
-// Cast преобразует тип error в *Error
-// Если error не соответствует *Error, то будет создан *Error с сообщением err.Error().
-// Для err == nil, вернется nil.
-func Cast(err error) *Error {
-	if e, ok := simpleCast(err); ok {
-		return e
-	}
-	return New(err.Error())
-}
-
 func findByID(err error, id []byte) (*Error, bool) {
 	switch t := err.(type) { //nolint:errorlint
 	case Multierror: // multiError

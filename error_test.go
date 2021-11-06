@@ -10,58 +10,7 @@ import (
 
 var UnknownErrorType = NewObjectFromString("UNKNOWN_TYPE")
 
-func TestNewNil(t *testing.T) {
-	var err *Error
-
-	assert.Nil(t, err.WithOptions(
-		SetMsg("hello"),
-		SetContextInfo(CtxMap{"hello": "world"}),
-	))
-}
-
-func TestNew(t *testing.T) {
-	myerr1 := "some err"
-	myop1 := "read"
-
-	type args struct {
-		ops []Options
-	}
-	tests := []struct {
-		name string
-		args args
-		want *Error
-	}{
-		{
-			name: "empty",
-			want: &Error{},
-		},
-		{
-			name: "err with operation",
-			args: args{
-				ops: []Options{
-					SetOperation(myop1),
-					SetMsg(myerr1),
-				},
-			},
-			want: &Error{
-				msg:       NewObjectFromString(myerr1),
-				operation: NewObjectFromString(myop1),
-			},
-		},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			if got := New("", tt.args.ops...); got == nil ||
-				tt.want == nil ||
-				got.Error() != tt.want.Error() {
-				t.Errorf("New() = %+v, want %+v.", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestSetMsg(t *testing.T) {
+func TestError_SetMsg(t *testing.T) {
 	myerr := &Error{}
 
 	type args struct {
@@ -276,7 +225,7 @@ func TestError_Operations(t *testing.T) {
 	}{
 		{
 			name: "New. set",
-			err:  New("", SetOperation("new operation")),
+			err:  New(SetOperation("new operation")),
 			want: NewObjectFromString("new operation"),
 		},
 		{

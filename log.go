@@ -39,11 +39,3 @@ func Log(err error, l ...multilog.Logger) {
 	}
 	loggger.Errorf(err.Error())
 }
-
-// NewWithLog конструктор *Error, как и New,
-// но при этом будет осуществлено логгирование с помощь логгера по-умолчанию.
-func NewWithLog(msg string, ops ...Options) *Error {
-	e := New(msg, ops...)
-	e.Log()
-	return e
-}

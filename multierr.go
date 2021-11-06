@@ -85,61 +85,6 @@ func (merr *multiError) Len() int {
 	return merr.len
 }
 
-// append err to []*Error
-// errors must not be nil
-func appendError(errors []*Error, err interface{}) []*Error {
-	switch t := err.(type) {
-	case nil:
-		return nil
-
-	case *Error:
-		return append(errors, t)
-
-	case Multierror:
-		return append(errors, t.Errors()...)
-
-	case error:
-		return append(errors, New(t.Error()))
-	}
-
-	return errors
-}
-
-// fromSlice converts the given list of errors into a single error.
-func fromSlice(errors []error) Multierror {
-	nonNilErrs := make([]*Error, 0)
-	for _, err := range errors {
-		if err == nil {
-			continue
-		}
-		nonNilErrs = appendError(nonNilErrs, err)
-	}
-
-	last := 0
-	len := len(nonNilErrs)
-	if len > 0 {
-		last = len - 1
-	}
-
-	return &multiError{
-		errors: nonNilErrs,
-		len:    len,
-		last:   last,
-	}
-}
-
-// Combine создаст цепочку ошибок из ошибок ...errors.
-// Допускается использование `nil` в аргументах.
-func Combine(errors ...error) Multierror {
-	return fromSlice(errors)
-}
-
-// Wrap обернет ошибку `left` ошибкой `right`, получив цепочку.
-// Допускается использование `nil` в одном из аргументов.
-func Wrap(left error, right error) Multierror {
-	return fromSlice([]error{left, right})
-}
-
 // Unwrap вернет самую новую ошибку в стеке
 func (merr *multiError) Unwrap() error {
 	es := merr.Errors()

@@ -9,28 +9,28 @@ import (
 )
 
 var (
-	se1 = errors.New(
-		"hello1",
+	se1 = errors.NewWith(
+		errors.SetMsg("hello1"),
 		errors.SetOperation("write"),
 		errors.SetContextInfo(errors.CtxMap{"hello": "world", "my": "name"}),
 	)
 
-	se2 = errors.New(
-		"hello2",
+	se2 = errors.NewWith(
+		errors.SetMsg("hello2"),
 		errors.SetOperation("read"),
 		errors.SetContextInfo(errors.CtxMap{"hello2": "world", "my2": "name"}),
 	)
 
-	se3 = errors.New(
-		"hello3",
+	se3 = errors.NewWith(
+		errors.SetMsg("hello4"),
 		errors.SetOperation("read"),
 		errors.SetContextInfo(errors.CtxMap{"hello3": "world", "my3": "name"}),
 	)
 )
 
 func BenchmarkStringFn(b *testing.B) {
-	e := errors.New(
-		"hello",
+	e := errors.NewWith(
+		errors.SetMsg("hello"),
 		errors.SetOperation("write"),
 		errors.SetContextInfo(errors.CtxMap{"hello": "world", "my": "name"}),
 	)
@@ -47,8 +47,8 @@ func BenchmarkStringFn(b *testing.B) {
 }
 
 func BenchmarkFormatFmt(b *testing.B) {
-	e := errors.New(
-		"hello",
+	e := errors.NewWith(
+		errors.SetMsg("hello"),
 		errors.SetOperation("write"),
 		errors.SetContextInfo(errors.CtxMap{"hello": "world", "name": "john"}),
 	)

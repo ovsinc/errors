@@ -29,8 +29,8 @@ func BenchmarkTranslateMsg(b *testing.B) {
 		PluralCount: unreadEmailCount,
 	}
 
-	e1 := New(
-		"fallback message",
+	e1 := NewWith(
+		SetMsg("fallback message"),
 		SetID("ErrEmailsUnreadMsg"),
 		SetLocalizer(localizer),
 		SetTranslateContext(&ErrEmailsUnreadMsg),

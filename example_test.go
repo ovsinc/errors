@@ -46,8 +46,8 @@ func ExampleCombineWithLog() {
 }
 
 func someFuncWithErr() error {
-	return errors.New(
-		"connection error",
+	return errors.NewWith(
+		errors.SetMsg("connection error"),
 		errors.SetContextInfo(errors.CtxMap{"hello": "world"}),
 		errors.SetOperation("write"),
 	)
@@ -177,8 +177,8 @@ func ExampleError_TranslateMsg() {
 	errEmailsUnreadMsg := localTransContext()
 	localizer := localizePrepare()
 
-	e1 := errors.New(
-		"fallback message",
+	e1 := errors.NewWith(
+		errors.SetMsg("fallback message"),
 		errors.SetID("ErrEmailsUnreadMsg"),
 		errors.SetTranslateContext(&errEmailsUnreadMsg),
 		errors.SetLocalizer(localizer),

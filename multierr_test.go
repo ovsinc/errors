@@ -9,14 +9,14 @@ import (
 )
 
 var (
-	me1 = errors.New(
-		"hello1",
+	me1 = errors.NewWith(
+		errors.SetMsg("hello1"),
 		errors.SetOperation("write"),
 		errors.SetContextInfo(errors.CtxMap{"hello": "world", "my": "name"}),
 	)
 
-	me2 = errors.New(
-		"hello2",
+	me2 = errors.NewWith(
+		errors.SetMsg("hello2"),
 		errors.SetOperation("read"),
 		errors.SetContextInfo(errors.CtxMap{"hello2": "world", "my2": "name"}),
 	)

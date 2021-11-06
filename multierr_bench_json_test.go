@@ -8,28 +8,28 @@ import (
 )
 
 var (
-	je1 = errors.New(
-		"hello1",
+	je1 = errors.NewWith(
+		errors.SetMsg("hello1"),
 		errors.SetOperation("write"),
 		errors.SetContextInfo(errors.CtxMap{"hello": "world", "my": "name"}),
 	)
 
-	je2 = errors.New(
-		"hello2",
+	je2 = errors.NewWith(
+		errors.SetMsg("hello2"),
 		errors.SetOperation("read"),
 		errors.SetContextInfo(errors.CtxMap{"hello2": "world", "my2": "name"}),
 	)
 
-	je3 = errors.New(
-		"hello3",
+	je3 = errors.NewWith(
+		errors.SetMsg("hello3"),
 		errors.SetOperation("read"),
 		errors.SetContextInfo(errors.CtxMap{"hello3": "world", "my3": "name"}),
 	)
 )
 
 func BenchmarkJsonFn(b *testing.B) {
-	e := errors.New(
-		"hello",
+	e := errors.NewWith(
+		errors.SetMsg("hello"),
 		errors.SetOperation("write"),
 		errors.SetContextInfo(errors.CtxMap{"hello": "world", "hi": "there"}),
 	)

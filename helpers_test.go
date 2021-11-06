@@ -11,8 +11,8 @@ import (
 
 func TestUnwrapByID(t *testing.T) {
 	id1 := "myid"
-	e1 := New(
-		"e1",
+	e1 := NewWith(
+		SetMsg("e1"),
 		SetID(id1),
 	)
 
@@ -43,16 +43,21 @@ func TestUnwrapByID(t *testing.T) {
 		{
 			name: "multi",
 			args: args{
-				err: Combine(New("first"), nil, e1, New("hello1"), nil, New("hello2", SetID("two"))),
-				id:  id1,
+				err: Combine(
+					New("first"), nil, e1,
+					New("hello1"), nil,
+					NewWith(SetMsg("hello2"), SetID("two"))),
+				id: id1,
 			},
 			want: e1,
 		},
 		{
 			name: "not found",
 			args: args{
-				err: Combine(New("first"), nil, New("hello1"), nil, New("hello2", SetID("two"))),
-				id:  id1,
+				err: Combine(New("first"), nil,
+					New("hello1"), nil,
+					NewWith(SetMsg("hello2"), SetID("two"))),
+				id: id1,
 			},
 			want: nil,
 		},
@@ -70,12 +75,14 @@ func TestUnwrapByID(t *testing.T) {
 
 func BenchmarkUnwrapByID(b *testing.B) {
 	id1 := "myid"
-	e1 := New(
-		"e1",
+	e1 := NewWith(
+		SetMsg("e1"),
 		SetID(id1),
 	)
 
-	err := Combine(New("first"), e1, New("hello1"), nil, New("hello2", SetID("two")))
+	err := Combine(
+		New("first"), e1, New("hello1"), nil,
+		NewWith(SetMsg("hello2"), SetID("two")))
 
 	findErr := UnwrapByID(err, id1)
 	require.NotNil(b, findErr)
