@@ -18,6 +18,7 @@ var (
 	_multilineSeparator = []byte("\n")                             //nolint:gochecknoglobals
 	_multilineIndent    = []byte("\t#")                            //nolint:gochecknoglobals
 	_msgSeparator       = []byte(" -- ")                           //nolint:gochecknoglobals
+	_listSeparator      = []byte(",")                              //nolint:gochecknoglobals
 )
 
 type (

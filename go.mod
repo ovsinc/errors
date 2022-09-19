@@ -3,11 +3,10 @@ module github.com/ovsinc/errors
 go 1.14
 
 require (
-	github.com/BurntSushi/toml v0.3.1
+	github.com/BurntSushi/toml v1.0.0
 	github.com/davecgh/go-spew v1.1.1
-	github.com/goccy/go-json v0.7.10
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/nicksnyder/go-i18n/v2 v2.1.2
+	github.com/nicksnyder/go-i18n/v2 v2.2.0
 	github.com/ovsinc/multilog v1.0.4
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0

@@ -6,6 +6,7 @@ type Objecter interface {
 	String() string
 	Bytes() []byte
 	Buffer() *bytes.Buffer
+	Len() int
 }
 
 type object struct {
@@ -47,6 +48,13 @@ func (o *object) Buffer() *bytes.Buffer {
 		return &bytes.Buffer{}
 	}
 	return bytes.NewBuffer(o.data)
+}
+
+func (o *object) Len() int {
+	if o == nil {
+		return 0
+	}
+	return len(o.data)
 }
 
 //
