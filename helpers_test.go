@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUnwrapByID(t *testing.T) {
+func TestUnwrapByID(t *testing.T) { //nolint:funlen
 	id1 := "myid"
 	e1 := NewWith(
 		SetMsg("e1"),

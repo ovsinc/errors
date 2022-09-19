@@ -1,6 +1,8 @@
 package errors
 
-import "io"
+import (
+	"io"
+)
 
 type Marshaller interface {
 	Marshal(interface{}) ([]byte, error)

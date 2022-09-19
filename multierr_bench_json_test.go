@@ -37,7 +37,7 @@ func BenchmarkJsonFn(b *testing.B) {
 	data, err := e.Marshal(&errors.MarshalJSON{})
 	require.Nil(b, err)
 
-	require.JSONEq(b, string(data), "{\"id\":\"\",\"operation\":\"write\",\"context\":{\"hello\":\"world\",\"hi\":\"there\"},\"msg\":\"hello\"}")
+	require.JSONEq(b, string(data), "{\"id\":\"\",\"operation\":\"[write]\",\"context\":{\"hello\":\"world\",\"hi\":\"there\"},\"msg\":\"hello\",\"fileLine\":\"\"}")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -52,7 +52,7 @@ func BenchmarkJsonMultierrFuncFormat3Errs(b *testing.B) {
 	data, err := marshal.Marshal(e)
 	require.Nil(b, err)
 
-	require.JSONEq(b, string(data), "{\"count\":3,\"messages\":[{\"id\":\"\",\"operation\":\"write\",\"context\":{\"hello\":\"world\",\"my\":\"name\"},\"msg\":\"hello1\"},{\"id\":\"\",\"operation\":\"read\",\"context\":{\"hello2\":\"world\",\"my2\":\"name\"},\"msg\":\"hello2\"},{\"id\":\"\",\"operation\":\"read\",\"context\":{\"hello3\":\"world\",\"my3\":\"name\"},\"msg\":\"hello3\"}]}")
+	require.JSONEq(b, string(data), "{\"count\":3,\"messages\":[{\"fileLine\":\"\",\"id\":\"\",\"operation\":\"[write]\",\"context\":{\"hello\":\"world\",\"my\":\"name\"},\"msg\":\"hello1\"},{\"fileLine\":\"\",\"id\":\"\",\"operation\":\"[read]\",\"context\":{\"hello2\":\"world\",\"my2\":\"name\"},\"msg\":\"hello2\"},{\"id\":\"\",\"operation\":\"[read]\",\"context\":{\"hello3\":\"world\",\"my3\":\"name\"},\"msg\":\"hello3\",\"fileLine\":\"\"}]}")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -67,7 +67,7 @@ func BenchmarkJsonMultierrFuncFormat2Errs(b *testing.B) {
 	data, err := marshal.Marshal(e)
 	require.Nil(b, err)
 
-	require.JSONEq(b, string(data), "{\"count\":2,\"messages\":[{\"id\":\"\",\"operation\":\"write\",\"context\":{\"hello\":\"world\",\"my\":\"name\"},\"msg\":\"hello1\"},{\"id\":\"\",\"operation\":\"read\",\"context\":{\"hello2\":\"world\",\"my2\":\"name\"},\"msg\":\"hello2\"}]}")
+	require.JSONEq(b, string(data), "{\"count\":2,\"messages\":[{\"fileLine\":\"\",\"id\":\"\",\"operation\":\"[write]\",\"context\":{\"hello\":\"world\",\"my\":\"name\"},\"msg\":\"hello1\"},{\"fileLine\":\"\",\"id\":\"\",\"operation\":\"[read]\",\"context\":{\"hello2\":\"world\",\"my2\":\"name\"},\"msg\":\"hello2\"}]}")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -82,7 +82,7 @@ func BenchmarkJsonMultierrFuncFormat1Err(b *testing.B) {
 	data, err := marshal.Marshal(e)
 	require.Nil(b, err)
 
-	require.JSONEq(b, string(data), "{\"count\":1,\"messages\":[{\"id\":\"\",\"operation\":\"read\",\"context\":{\"hello2\":\"world\",\"my2\":\"name\"},\"msg\":\"hello2\"}]}")
+	require.JSONEq(b, string(data), "{\"count\":1,\"messages\":[{\"fileLine\":\"\",\"id\":\"\",\"operation\":\"[read]\",\"context\":{\"hello2\":\"world\",\"my2\":\"name\"},\"msg\":\"hello2\"}]}")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

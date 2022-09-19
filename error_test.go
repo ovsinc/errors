@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var UnknownErrorType = NewObjectFromString("UNKNOWN_TYPE")
+var UnknownErrorType = NewObjectFromString("UNKNOWN_TYPE", nil, nil)
 
 func TestError_SetMsg(t *testing.T) {
 	myerr := &Error{}
@@ -59,8 +59,8 @@ func TestError_SetMsg(t *testing.T) {
 
 func TestError_Error(t *testing.T) {
 	type fields struct {
-		operation   Object
-		msg         Object
+		operation   Objecter
+		msg         Objecter
 		contextInfo CtxMap
 	}
 	tests := []struct {
@@ -81,18 +81,18 @@ func TestError_Error(t *testing.T) {
 		{
 			name: "only msg",
 			fields: fields{
-				msg: NewObjectFromString("hello"),
+				msg: NewObjectFromString("hello", nil, nil),
 			},
 			want: "hello",
 		},
 		{
 			name: "with all params",
 			fields: fields{
-				operation:   NewObjectFromString("write"),
+				operation:   NewOperationFromString("write"),
 				contextInfo: CtxMap{"hello": "world", "hi": "there"},
-				msg:         NewObjectFromString("hello"),
+				msg:         NewMsgFromString("hello"),
 			},
-			want: "write: {hello:world,hi:there} -- hello",
+			want: "[write] {hello:world,hi:there} hello",
 		},
 	}
 	for _, tt := range tests {
@@ -114,8 +114,8 @@ func TestError_WithOptions(t *testing.T) { //nolint:funlen
 	err1 := "hello"
 
 	type fields struct {
-		operation   Object
-		msg         Object
+		operation   Objecter
+		msg         Objecter
 		contextInfo CtxMap
 	}
 	type args struct {
@@ -148,7 +148,7 @@ func TestError_WithOptions(t *testing.T) { //nolint:funlen
 			},
 			fields: fields{},
 			want: &Error{
-				msg: NewObjectFromString(err1),
+				msg: NewObjectFromString(err1, nil, nil),
 			},
 		},
 		{
@@ -160,11 +160,11 @@ func TestError_WithOptions(t *testing.T) { //nolint:funlen
 				},
 			},
 			fields: fields{
-				operation: NewObjectFromString("read"),
+				operation: NewObjectFromString("read", _opDelimiterLeft, _opDelimiterRight),
 			},
 			want: &Error{
-				operation: NewObjectFromString("read"),
-				msg:       NewObjectFromString(err1),
+				operation: NewObjectFromString("read", _opDelimiterLeft, _opDelimiterRight),
+				msg:       NewObjectFromString(err1, nil, nil),
 			},
 		},
 		{
@@ -220,25 +220,25 @@ func TestError_WithOptions(t *testing.T) { //nolint:funlen
 func TestError_Operations(t *testing.T) {
 	tests := []struct {
 		name string
-		want Object
+		want Objecter
 		err  *Error
 	}{
 		{
 			name: "New. set",
-			err:  New(SetOperation("new operation")),
-			want: NewObjectFromString("new operation"),
+			err:  NewWith(SetOperation("new operation")),
+			want: NewObjectFromString("new operation", _opDelimiterLeft, _opDelimiterRight),
 		},
 		{
 			name: "Set",
 			err:  New("").WithOptions(SetOperation("new operation")),
-			want: NewObjectFromString("new operation"),
+			want: NewObjectFromString("new operation", _opDelimiterLeft, _opDelimiterRight),
 		},
 		{
 			name: "Set 2",
 			err: New("").
 				WithOptions(SetOperation("new one")).
 				WithOptions(SetOperation("new operation")),
-			want: NewObjectFromString("new operation"),
+			want: NewObjectFromString("new operation", _opDelimiterLeft, _opDelimiterRight),
 		},
 		{
 			name: "Empty",

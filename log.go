@@ -4,7 +4,13 @@ import (
 	"github.com/ovsinc/multilog"
 )
 
-func getLogger(l ...multilog.Logger) multilog.Logger {
+var DefaultLogger = NewLogger()
+
+type Logger interface {
+	Errorf(format string, args ...interface{})
+}
+
+func NewLogger(l ...multilog.Logger) Logger {
 	logger := multilog.DefaultLogger
 	if len(l) > 0 {
 		logger = l[0]
@@ -32,10 +38,10 @@ func WrapWithLog(olderr error, err error) error {
 
 // Log выполнить логгирование ошибки err с ипользованием логгера l[0].
 // Если l не указан, то в качестве логгера будет использоваться логгер по-умолчанию.
-func Log(err error, l ...multilog.Logger) {
-	loggger := getLogger(l...)
-	if err == nil || loggger == nil {
-		return
+func Log(err error, lg ...Logger) {
+	l := DefaultLogger
+	if len(lg) > 0 {
+		l = lg[0]
 	}
-	loggger.Errorf(err.Error())
+	l.Errorf(err.Error())
 }

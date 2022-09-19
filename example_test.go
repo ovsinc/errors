@@ -11,12 +11,11 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/ovsinc/errors"
-	"github.com/ovsinc/multilog"
 	"github.com/ovsinc/multilog/golog"
 	"golang.org/x/text/language"
 )
 
-var UnknownErrorType = errors.NewObjectFromString("UNKNOWN_TYPE")
+var UnknownErrorType = errors.NewObjectFromString("UNKNOWN_TYPE", nil, nil)
 
 func itsOk() error {
 	return nil
@@ -26,10 +25,26 @@ func itsErr(s string) error {
 	return errors.New(s)
 }
 
+func ExampleCombine() {
+	e := errors.Combine(
+		nil,
+		itsOk(),
+		itsErr("one"),
+		itsErr("two"),
+		itsOk(),
+	)
+	fmt.Println(e)
+
+	// Output:
+	// the following errors occurred:
+	// 	#1 one
+	// 	#2 two
+}
+
 // Добавление ошибок в mutierror с логгированием
 // тут изменена функция форматирования вывода -- используется json
 func ExampleCombineWithLog() {
-	multilog.DefaultLogger = golog.New(log.New(os.Stdout, "ovsinc/errors ", 0))
+	errors.DefaultLogger = golog.New(log.New(os.Stdout, "ovsinc/errors ", 0))
 
 	_ = errors.CombineWithLog(
 		nil,
@@ -68,12 +83,12 @@ func ExampleWrap() {
 
 	// Output:
 	// the following errors occurred:
-	// 	#1 write: {hello:world} -- connection error
+	// 	#1 [write] {hello:world} connection error
 	// 	#2 connection error
 }
 
 func ExampleNewWithLog() {
-	multilog.DefaultLogger = golog.New(log.New(os.Stdout, "ovsinc/errors ", 0))
+	errors.DefaultLogger = golog.New(log.New(os.Stdout, "ovsinc/errors ", 0))
 
 	_ = errors.Combine(
 		nil,
@@ -98,7 +113,7 @@ func someTimedCast() (err error) {
 			WithOptions(errors.SetContextInfo(
 				errors.CtxMap{
 					"duration": time.Since(begin).Round(time.Second),
-					"call":     errors.HandlerCaller().FilePosition,
+					"call":     errors.Caller(errors.DefaultCallDepth)(),
 				},
 			))
 	}()
@@ -111,12 +126,12 @@ func someTimedCast() (err error) {
 }
 
 func ExampleLog() {
-	multilog.DefaultLogger = golog.New(log.New(os.Stdout, "ovsinc/errors ", 0))
+	errors.DefaultLogger = golog.New(log.New(os.Stdout, "ovsinc/errors ", 0))
 
 	errors.Log(someTimedCast())
 
 	// Output:
-	// ovsinc/errors {call:example_test.go:101,duration:1s} -- some call
+	// ovsinc/errors {call:example_test.go:131: ExampleLog(),duration:1s} some call
 }
 
 func localizePrepare() *i18n.Localizer {
@@ -170,7 +185,7 @@ func ExampleError_WithOptions() {
 
 	// Output:
 	// hello
-	// test op: {hello:world} -- hello
+	// [test op] {hello:world} hello
 }
 
 func ExampleError_TranslateMsg() {

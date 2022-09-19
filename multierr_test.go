@@ -49,7 +49,7 @@ func TestWrapSimple(t *testing.T) {
 				left:  nil,
 				right: me1,
 			},
-			want: "the following errors occurred:\n\t#1 write: {hello:world,my:name} -- hello1\n",
+			want: "the following errors occurred:\n\t#1 [write] {hello:world,my:name} hello1\n",
 		},
 		{
 			name: "nil left std",
@@ -65,7 +65,7 @@ func TestWrapSimple(t *testing.T) {
 				left:  me2,
 				right: nil,
 			},
-			want: "the following errors occurred:\n\t#1 read: {hello2:world,my2:name} -- hello2\n",
+			want: "the following errors occurred:\n\t#1 [read] {hello2:world,my2:name} hello2\n",
 		},
 	}
 
@@ -99,7 +99,7 @@ func TestWrapMultierr(t *testing.T) {
 				left:  me2,
 				right: me1,
 			},
-			want: "the following errors occurred:\n\t#1 read: {hello2:world,my2:name} -- hello2\n\t#2 write: {hello:world,my:name} -- hello1\n",
+			want: "the following errors occurred:\n\t#1 [read] {hello2:world,my2:name} hello2\n\t#2 [write] {hello:world,my:name} hello1\n",
 		},
 		{
 			name: "two std",
@@ -107,7 +107,7 @@ func TestWrapMultierr(t *testing.T) {
 				left:  errMe3,
 				right: me1,
 			},
-			want: "the following errors occurred:\n\t#1 hello\n\t#2 write: {hello:world,my:name} -- hello1\n",
+			want: "the following errors occurred:\n\t#1 hello\n\t#2 [write] {hello:world,my:name} hello1\n",
 		},
 	}
 	for _, tt := range tests {
@@ -144,14 +144,14 @@ func TestCombine(t *testing.T) {
 			args: args{
 				errors: []error{me1},
 			},
-			want: "the following errors occurred:\n\t#1 write: {hello:world,my:name} -- hello1\n",
+			want: "the following errors occurred:\n\t#1 [write] {hello:world,my:name} hello1\n",
 		},
 		{
 			name: "many with nil",
 			args: args{
 				errors: []error{nil, me1, nil, se2, nil, se3, nil},
 			},
-			want: "the following errors occurred:\n\t#1 write: {hello:world,my:name} -- hello1\n\t#2 read: {hello2:world,my2:name} -- hello2\n\t#3 read: {hello3:world,my3:name} -- hello3\n",
+			want: "the following errors occurred:\n\t#1 [write] {hello:world,my:name} hello1\n\t#2 [read] {hello2:world,my2:name} hello2\n\t#3 [read] {hello3:world,my3:name} hello3\n",
 		},
 	}
 	for _, tt := range tests {

@@ -5,7 +5,6 @@ import (
 	"io"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/ovsinc/multilog"
 )
 
 var (
@@ -18,10 +17,10 @@ var ErrUnknownMarshaller = New("marshaller not found")
 type errorer interface {
 	WithOptions(ops ...Options) *Error
 
-	ID() Object
-	Msg() Object
+	ID() Objecter
+	Msg() Objecter
 	ContextInfo() CtxMap
-	Operation() Object
+	Operation() Objecter
 
 	Sdump() string
 
@@ -33,7 +32,7 @@ type errorer interface {
 	TranslateMsg() string
 	WriteTranslateMsg(w io.Writer) (int, error)
 
-	Log(l ...multilog.Logger)
+	Log(l ...Logger)
 }
 
 // CtxMap map контекста ошибки.
@@ -46,12 +45,11 @@ type CtxMap map[string]interface{}
 // Error структура кастомной ошибки.
 // Это потоко-безопасный объект.
 type Error struct {
-	id               Object
-	msg              Object
-	operation        Object
-	translateContext *TranslateContext
-	localizer        Localizer
-	contextInfo      CtxMap
+	id, msg, operation, errorType Objecter
+	caller                        func() Objecter
+	translateContext              *TranslateContext
+	localizer                     Localizer
+	contextInfo                   CtxMap
 }
 
 // WithOptions производит параметризацию *Error с помощью функции-парметры Options.
@@ -77,7 +75,7 @@ func (e *Error) WithOptions(ops ...Options) *Error {
 
 // ID возвращает ID ошибки.
 // Это безопасный метод, всегда возвращает не nil.
-func (e *Error) ID() Object {
+func (e *Error) ID() Objecter {
 	if e == nil || e.id == nil {
 		return NewObjectEmpty()
 	}
@@ -87,7 +85,7 @@ func (e *Error) ID() Object {
 
 // Msg возвращает исходное сообщение об ошибке.
 // Это безопасный метод, всегда возвращает не nil.
-func (e *Error) Msg() Object {
+func (e *Error) Msg() Objecter {
 	if e == nil || e.msg == nil {
 		return NewObjectEmpty()
 	}
@@ -97,15 +95,35 @@ func (e *Error) Msg() Object {
 
 // Operations вернет список операций.
 // Это безопасный метод, всегда возвращает не nil.
-func (e *Error) Operation() Object {
+func (e *Error) Operation() Objecter {
 	if e == nil || e.operation == nil {
 		return NewObjectEmpty()
 	}
 	return e.operation
 }
 
+// ErrorType вернет тип ошибки.
+// Это безопасный метод, всегда возвращает не nil.
+func (e *Error) ErrorType() Objecter {
+	if e == nil || e.errorType == nil {
+		return NewObjectEmpty()
+	}
+
+	return e.errorType
+}
+
+func (e *Error) FileLine() Objecter {
+	if e == nil || e.caller == nil {
+		return NewObjectEmpty()
+	}
+	return e.caller()
+}
+
 // TranslateContext вернет *TranslateContext.
 func (e *Error) TranslateContext() *TranslateContext {
+	if e == nil || e.caller == nil {
+		return new(TranslateContext)
+	}
 	return e.translateContext
 }
 
@@ -174,12 +192,8 @@ func (e *Error) Sdump() string {
 
 // Log выполнит логгирование ошибки с ипользованием логгера l[0].
 // Если l не указан, то в качестве логгера будет использоваться логгер по-умолчанию.
-func (e *Error) Log(l ...multilog.Logger) {
-	logger := getLogger(l...)
-	if logger == nil {
-		return
-	}
-	logger.Errorf(e.Error())
+func (e *Error) Log(l ...Logger) {
+	Log(e, l...)
 }
 
 // Error methods

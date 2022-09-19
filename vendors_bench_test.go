@@ -61,14 +61,14 @@ func BenchmarkVendorMyNewNormal(b *testing.B) {
 }
 
 func BenchmarkVendorMyNewFull(b *testing.B) {
-	err := errors.New(
-		"hello1",
+	err := errors.NewWith(
+		errors.SetMsg("hello1"),
 		errors.AppendContextInfo("hello", "world"),
 		errors.SetID("IDhello1"),
 		errors.SetOperation("nothing"),
 	)
 
-	require.Equal(b, err.Error(), "nothing: {hello:world} -- hello1")
+	require.Equal(b, err.Error(), "[nothing] {hello:world} hello1")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -80,8 +80,8 @@ func BenchmarkVendorMyNewWithTranslate(b *testing.B) {
 	errEmailsUnreadMsg := localTransContext()
 	localizer := localizePrepare()
 
-	err := errors.New(
-		"hello1",
+	err := errors.NewWith(
+		errors.SetMsg("hello1"),
 		errors.AppendContextInfo("hello", "world"),
 		errors.SetOperation("nothing"),
 		errors.SetID("ErrEmailsUnreadMsg"),
@@ -89,7 +89,7 @@ func BenchmarkVendorMyNewWithTranslate(b *testing.B) {
 		errors.SetLocalizer(localizer),
 	)
 
-	require.Equal(b, err.Error(), "nothing: {hello:world} -- У John Snow имеется 5 непрочитанных сообщений.")
+	require.Equal(b, err.Error(), "[nothing] {hello:world} У John Snow имеется 5 непрочитанных сообщений.")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

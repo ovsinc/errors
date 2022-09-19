@@ -28,18 +28,10 @@ func NewWith(ops ...Options) *Error {
 	return &e
 }
 
-// NewWithLog конструктор *Error, как и NewWith,
+// NewLog конструктор *Error, как и New,
 // но при этом будет осуществлено логгирование с помощь логгера по-умолчанию.
 func NewWithLog(i interface{}) *Error {
 	e := New(i)
-	e.Log()
-	return e
-}
-
-// NewLog конструктор *Error, как и New,
-// но при этом будет осуществлено логгирование с помощь логгера по-умолчанию.
-func NewLog(ops ...Options) *Error {
-	e := NewWith(ops...)
 	e.Log()
 	return e
 }
@@ -108,23 +100,13 @@ type Options func(e *Error)
 
 // Msg
 
-// SetMsgBytes установит сообщение об ошибке, указаннов в виде []byte.
-func SetMsgBytes(msg []byte) Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.msg = NewObjectFromBytes(msg)
-	}
-}
-
 // SetMsg установит сообщение об ошибке, указанное в виде строки.
 func SetMsg(msg string) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
 		}
-		e.msg = NewObjectFromString(msg)
+		e.msg = NewMsgFromString(msg)
 	}
 }
 
@@ -136,24 +118,13 @@ func SetID(id string) Options {
 		if e == nil {
 			return
 		}
-		e.id = NewObjectFromString(id)
-	}
-}
-
-// SetIDBytes установит ID ошибки.
-func SetIDBytes(id []byte) Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.id = NewObjectFromBytes(id)
+		e.id = NewIDFromString(id)
 	}
 }
 
 // Operation
 
-// SetOperations установить операции, указанные как строки.
-// Можно указать произвольное количество.
+// SetOperation установит операцию, как строку.
 // Если в *Error уже были записаны операции,
 // то они будут заменены на указанные в аргументе ops.
 func SetOperation(o string) Options {
@@ -161,20 +132,34 @@ func SetOperation(o string) Options {
 		if e == nil {
 			return
 		}
-		e.operation = NewObjectFromString(o)
+		e.operation = NewOperationFromString(o)
 	}
 }
 
-// SetOperationsBytes установить операции, указанные как []byte.
-// Можно указать произвольное количество.
-// Если в *Error уже были записаны операции,
-// то они будут заменены на указанные в аргументе ops.
-func SetOperationsBytes(o []byte) Options {
+func WithCaller(depth ...CallDepth) Options {
 	return func(e *Error) {
-		if e == nil || len(o) == 0 {
+		if e == nil {
 			return
 		}
-		e.operation = NewObjectFromBytes(o)
+		d := DefaultCallDepth
+		if len(depth) > 0 {
+			d = depth[0]
+		}
+		e.caller = Caller(d)
+	}
+}
+
+// Error type
+
+// SetErrorType установит тип, как строку.
+// Если в *Error уже были записаны операции,
+// то они будут заменены на указанные в аргументе ops.
+func SetErrorType(o string) Options {
+	return func(e *Error) {
+		if e == nil {
+			return
+		}
+		e.operation = NewErrorTypeFromString(o)
 	}
 }
 

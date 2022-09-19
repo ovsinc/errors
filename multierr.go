@@ -10,8 +10,8 @@ import (
 // Errors returns a slice containing zero or more errors that the supplied
 // error is composed of. If the error is nil, a nil slice is returned.
 //
-// 	err := multierr.Append(r.Close(), w.Close())
-// 	errors := multierr.Errors(err)
+//	err := multierr.Append(r.Close(), w.Close())
+//	errors := multierr.Errors(err)
 //
 // If the error is not composed of other errors, the returned slice contains
 // just the error that was passed in.
@@ -33,6 +33,7 @@ type Multierror interface {
 	Format(f fmt.State, c rune)
 	Marshal(fn ...Marshaller) ([]byte, error)
 	Len() int
+	Log(l ...Logger)
 }
 
 type multiError struct {
@@ -107,4 +108,10 @@ func (merr *multiError) Is(target error) bool {
 		return x == merr
 	}
 	return false
+}
+
+// Log выполнит логгирование ошибки с ипользованием логгера l[0].
+// Если l не указан, то в качестве логгера будет использоваться логгер по-умолчанию.
+func (merr *multiError) Log(l ...Logger) {
+	Log(merr, l...)
 }

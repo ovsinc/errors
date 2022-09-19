@@ -42,13 +42,14 @@ func (e *Error) TranslateMsg() string {
 func (e *Error) WriteTranslateMsg(w io.Writer) (int, error) {
 	var loc Localizer
 	switch {
-	// case e.msg == nil:
-	// 	return 0, nil
+	case e.msg == nil:
+		return 0, nil
 	case e.localizer != nil:
 		loc = e.localizer
 	case DefaultLocalizer != nil:
 		loc = DefaultLocalizer
 	default:
+		// no localizer
 		return e.Msg().Write(w)
 	}
 
@@ -61,14 +62,11 @@ func (e *Error) WriteTranslateMsg(w io.Writer) (int, error) {
 		i18nConf.TemplateData = e.translateContext.TemplateData
 	}
 
-	str, err := translateMsgInternal(loc, i18nConf)
+	str, err := loc.Localize(i18nConf)
+	// fallback
 	if err != nil {
 		return e.Msg().Write(w)
 	}
 
 	return io.WriteString(w, str)
-}
-
-func translateMsgInternal(localizer Localizer, lc *i18n.LocalizeConfig) (string, error) {
-	return localizer.Localize(lc)
 }

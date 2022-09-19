@@ -1,10 +1,11 @@
 package errors
 
 import (
+	"fmt"
 	"io"
+	"sort"
 	"strconv"
 
-	json "github.com/goccy/go-json"
 	"github.com/valyala/bytebufferpool"
 )
 
@@ -65,17 +66,30 @@ func jsonFormat(buf io.Writer, e *Error) {
 	// Operation
 	_, _ = io.WriteString(buf, "\"operation\":")
 	_, _ = io.WriteString(buf, "\"")
-
 	_, _ = e.Operation().Write(buf)
+	_, _ = io.WriteString(buf, "\",")
+
+	// FileLine
+	_, _ = io.WriteString(buf, "\"fileLine\":")
+	_, _ = io.WriteString(buf, "\"")
+	_, _ = e.FileLine().Write(buf)
 	_, _ = io.WriteString(buf, "\",")
 
 	// ContextInfo
 	_, _ = io.WriteString(buf, "\"context\":")
-	cxtInfo := e.ContextInfo()
-	if len(cxtInfo) > 0 {
-		enc := json.NewEncoder(buf)
-		enc.SetIndent("", "")
-		_ = enc.Encode(e.ContextInfo())
+	if cxtInfo := e.ContextInfo(); len(cxtInfo) > 0 {
+		_, _ = io.WriteString(buf, "{")
+		ctxskeys := make([]string, 0, len(cxtInfo))
+		for i := range cxtInfo {
+			ctxskeys = append(ctxskeys, i)
+		}
+		sort.Strings(ctxskeys)
+		_, _ = fmt.Fprintf(buf, "\"%s\":\"%v\"", ctxskeys[0], cxtInfo[ctxskeys[0]])
+		for _, i := range ctxskeys[1:] {
+			_, _ = buf.Write(_listSeparator)
+			_, _ = fmt.Fprintf(buf, "\"%s\":\"%v\"", i, cxtInfo[i])
+		}
+		_, _ = io.WriteString(buf, "}")
 	} else {
 		_, _ = io.WriteString(buf, "null")
 	}

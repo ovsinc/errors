@@ -15,7 +15,7 @@ func TestNewOnNil(t *testing.T) {
 	))
 }
 
-func TestNewWith(t *testing.T) {
+func TestNewWith(t *testing.T) { //nolint:funlen
 	myop1 := "read"
 	msg := "hello"
 	myctx := CtxMap{
@@ -42,7 +42,7 @@ func TestNewWith(t *testing.T) {
 				},
 			},
 			want: &Error{
-				operation: NewObjectFromString(myop1),
+				operation: NewObjectFromString(myop1, _opDelimiterLeft, _opDelimiterRight),
 			},
 		},
 		{
@@ -53,7 +53,7 @@ func TestNewWith(t *testing.T) {
 				},
 			},
 			want: &Error{
-				msg: NewObjectFromString(msg),
+				msg: NewObjectFromString(msg, nil, nil),
 			},
 		},
 		{
@@ -76,7 +76,7 @@ func TestNewWith(t *testing.T) {
 				},
 			},
 			want: &Error{
-				msg: NewObjectFromString("new"),
+				msg: NewObjectFromString("new", nil, nil),
 			},
 		},
 	}
@@ -102,14 +102,14 @@ func (a *stru) String() string {
 	return a.msg
 }
 
-func TestNew(t *testing.T) {
+func TestNew(t *testing.T) { //nolint:funlen
 	a := &stru{msg: "hello"}
 
 	fn := func() string {
 		return "hello"
 	}
 
-	helloMsg := NewObjectFromString("hello")
+	helloMsg := NewObjectFromString("hello", nil, nil)
 
 	type unknownType map[int]int
 
@@ -161,6 +161,7 @@ func TestNew(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if got := New(tt.args.i); (got == nil || tt.want == nil) ||
 				!assert.Equal(t, got.Error(), tt.want.Error()) {
