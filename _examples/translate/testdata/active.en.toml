@@ -6,3 +6,7 @@ other = "{{.Name}} have {{.PluralCount}} unread emails."
 [ErrFileNotFoundMsg]
 description = "The File not found message"
 other = "File {{.FName}} not found"
+
+[ErrUnknownErrorMsg]
+description = "Unknown error"
+other = "Unknown error occured"

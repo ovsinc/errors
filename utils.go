@@ -25,16 +25,14 @@ var (
 
 	RuntimeCaller = Caller(RuntimeCallDepth) //nolint:gochecknoglobals
 
-	// HandlerCaller is a Valuer that returns then CallInfo where the
-	// method was invoked. It can only be used within handler method.
 	HandlerCaller = Caller(HandlerCallDepth) //nolint:gochecknoglobals
 )
 
 // Caller returns a Valuer that returns a CallInfo from a specified depth
 // in the callstack. Users will probably want to use DefaultCaller.
-func Caller(depth CallDepth) func() Objecter {
-	return func() Objecter {
-		pc, file, line, _ := runtime.Caller(int(depth))
+func Caller(skip CallDepth) func() string {
+	return func() string {
+		pc, file, line, _ := runtime.Caller(int(skip))
 
 		idx := strings.LastIndexByte(file, '/')
 
@@ -51,6 +49,6 @@ func Caller(depth CallDepth) func() Objecter {
 			fpos = fpos + ": " + funcName + "()"
 
 		}
-		return NewFileLineFromString(fpos)
+		return fpos
 	}
 }

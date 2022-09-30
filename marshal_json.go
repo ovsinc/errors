@@ -18,25 +18,18 @@ var (
 type MarshalJSON struct{}
 
 func (MarshalJSON) MarshalTo(i interface{}, dst io.Writer) error {
-	return jsonMarshalTo(i, dst)
-}
-
-func jsonMarshalTo(i interface{}, dst io.Writer) error {
-	if i == nil {
-		return nil
-	}
-
 	switch t := i.(type) { //nolint:errorlint
+	case nil:
+		return nil
 	case Multierror:
 		jsonMultierrFormat(dst, t.Errors())
-
 	case *Error:
 		jsonFormat(dst, t)
 	}
 	return nil
 }
 
-func (MarshalJSON) Marshal(i interface{}) ([]byte, error) {
+func (m *MarshalJSON) Marshal(i interface{}) ([]byte, error) {
 	if i == nil {
 		return []byte{}, nil
 	}
@@ -44,7 +37,7 @@ func (MarshalJSON) Marshal(i interface{}) ([]byte, error) {
 	buf := bytebufferpool.Get()
 	defer bytebufferpool.Put(buf)
 
-	_ = jsonMarshalTo(i, buf)
+	_ = m.MarshalTo(i, buf)
 
 	return buf.Bytes(), nil
 }
@@ -60,19 +53,13 @@ func jsonFormat(buf io.Writer, e *Error) {
 	// ID
 	_, _ = io.WriteString(buf, "\"id\":")
 	_, _ = io.WriteString(buf, "\"")
-	_, _ = e.ID().Write(buf)
+	_, _ = buf.Write(e.ID())
 	_, _ = io.WriteString(buf, "\",")
 
 	// Operation
 	_, _ = io.WriteString(buf, "\"operation\":")
 	_, _ = io.WriteString(buf, "\"")
-	_, _ = e.Operation().Write(buf)
-	_, _ = io.WriteString(buf, "\",")
-
-	// FileLine
-	_, _ = io.WriteString(buf, "\"fileLine\":")
-	_, _ = io.WriteString(buf, "\"")
-	_, _ = e.FileLine().Write(buf)
+	_, _ = buf.Write(e.Operation())
 	_, _ = io.WriteString(buf, "\",")
 
 	// ContextInfo
@@ -98,9 +85,7 @@ func jsonFormat(buf io.Writer, e *Error) {
 	// Msg
 	_, _ = io.WriteString(buf, "\"msg\":")
 	_, _ = io.WriteString(buf, "\"")
-	if len(e.Msg().Bytes()) > 0 {
-		_, _ = e.WriteTranslateMsg(buf)
-	}
+	_, _ = buf.Write(e.Msg())
 	_, _ = io.WriteString(buf, "\"")
 
 	_, _ = io.WriteString(buf, "}")

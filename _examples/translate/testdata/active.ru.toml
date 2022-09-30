@@ -10,3 +10,8 @@ other = "У {{.Name}} имеется {{.PluralCount}} непрочитанных
 description = "The File not found message"
 hash = "sha1-844f2f1bf1ca030f786a5482f2d123ef16262cc5"
 other = "Файл {{.FName}} не найден"
+
+[ErrUnknownErrorMsg]
+description = "Unknown error"
+hash = "sha1-11b9bff9ad9b015cbf0e18d8dbfe42903b02f36f"
+other = "Неизвестная ошибка"

@@ -7,33 +7,14 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
+const verboseStr = "id:%s operation:%s errorType:%s contextInfo:%v msg:%s"
+
 var (
-	_ error   = (*Error)(nil)
-	_ errorer = (*Error)(nil)
+	ErrUnknownMarshaller = New("marshaller not found")
+
+	_ error         = (*Error)(nil)
+	_ fmt.Formatter = (*Error)(nil)
 )
-
-var ErrUnknownMarshaller = New("marshaller not found")
-
-type errorer interface {
-	WithOptions(ops ...Options) *Error
-
-	ID() Objecter
-	Msg() Objecter
-	ContextInfo() CtxMap
-	Operation() Objecter
-
-	Sdump() string
-
-	Format(s fmt.State, verb rune)
-	Marshal(fn ...Marshaller) ([]byte, error)
-
-	Error() string
-
-	TranslateMsg() string
-	WriteTranslateMsg(w io.Writer) (int, error)
-
-	Log(l ...Logger)
-}
 
 // CtxMap map контекста ошибки.
 // В качестве ключа всегда должна быть строка, а значение - любой тип.
@@ -42,14 +23,56 @@ type errorer interface {
 // Для функции StringFormat CtxMap будет преобразовываться с помощью fmt.Sprintf.
 type CtxMap map[string]interface{}
 
+// New конструктор на необязательных параметрах
+// * ops ...Options -- параметризация через функции-парметры.
+// См. options.go
+//
+// ** *Error
+func New(i interface{}) *Error {
+	var msg string
+	switch t := i.(type) {
+	case string:
+		msg = t
+	case error:
+		msg = t.Error()
+	case interface{ String() string }:
+		msg = t.String()
+	case func() string:
+		msg = t()
+	}
+	return NewWith(SetMsg(msg))
+}
+
+// NewLog конструктор *Error, как и New,
+// но при этом будет осуществлено логгирование с помощь логгера по-умолчанию.
+func NewLog(i interface{}) *Error {
+	e := New(i)
+	e.Log()
+	return e
+}
+
+func NewWith(ops ...Options) *Error {
+	e := Error{}
+	for _, op := range ops {
+		op(&e)
+	}
+	return &e
+}
+
+func NewWithLog(ops ...Options) *Error {
+	e := NewWith(ops...)
+	e.Log()
+	return e
+}
+
 // Error структура кастомной ошибки.
 // Это потоко-безопасный объект.
 type Error struct {
-	id, msg, operation, errorType Objecter
-	caller                        func() Objecter
-	translateContext              *TranslateContext
-	localizer                     Localizer
-	contextInfo                   CtxMap
+	id, msg, operation, errorType []byte
+	// type like a:
+	// http - https://cs.opensource.google/go/go/+/refs/tags/go1.19.1:src/net/http/status.go;l=9
+	// grpc - https://pkg.go.dev/google.golang.org/grpc/codes
+	contextInfo CtxMap
 }
 
 // WithOptions производит параметризацию *Error с помощью функции-парметры Options.
@@ -75,61 +98,49 @@ func (e *Error) WithOptions(ops ...Options) *Error {
 
 // ID возвращает ID ошибки.
 // Это безопасный метод, всегда возвращает не nil.
-func (e *Error) ID() Objecter {
-	if e == nil || e.id == nil {
-		return NewObjectEmpty()
+func (e *Error) ID() []byte {
+	if e == nil {
+		return nil
 	}
-
 	return e.id
 }
 
 // Msg возвращает исходное сообщение об ошибке.
 // Это безопасный метод, всегда возвращает не nil.
-func (e *Error) Msg() Objecter {
-	if e == nil || e.msg == nil {
-		return NewObjectEmpty()
+func (e *Error) Msg() []byte {
+	if e == nil {
+		return nil
 	}
-
 	return e.msg
 }
 
 // Operations вернет список операций.
 // Это безопасный метод, всегда возвращает не nil.
-func (e *Error) Operation() Objecter {
-	if e == nil || e.operation == nil {
-		return NewObjectEmpty()
+func (e *Error) Operation() []byte {
+	if e == nil {
+		return nil
 	}
 	return e.operation
 }
 
 // ErrorType вернет тип ошибки.
 // Это безопасный метод, всегда возвращает не nil.
-func (e *Error) ErrorType() Objecter {
-	if e == nil || e.errorType == nil {
-		return NewObjectEmpty()
+func (e *Error) ErrorType() []byte {
+	if e == nil {
+		return nil
 	}
 
 	return e.errorType
 }
 
-func (e *Error) FileLine() Objecter {
-	if e == nil || e.caller == nil {
-		return NewObjectEmpty()
-	}
-	return e.caller()
-}
-
-// TranslateContext вернет *TranslateContext.
-func (e *Error) TranslateContext() *TranslateContext {
-	if e == nil || e.caller == nil {
-		return new(TranslateContext)
-	}
-	return e.translateContext
+// ContextInfo вернет контекст CtxMap ошибки.
+func (e *Error) ContextInfo() CtxMap {
+	return e.contextInfo
 }
 
 // методы форматирования
 
-func (e *Error) Marshal(fn ...Marshaller) ([]byte, error) {
+func mustMarshaler(fn ...Marshaller) Marshaller {
 	var marshal Marshaller
 	switch {
 	case len(fn) > 0:
@@ -137,8 +148,13 @@ func (e *Error) Marshal(fn ...Marshaller) ([]byte, error) {
 	case DefaultMarshaller != nil:
 		marshal = DefaultMarshaller
 	default:
-		return nil, ErrUnknownMarshaller
+		panic(ErrUnknownMarshaller)
 	}
+	return marshal
+}
+
+func (e *Error) Marshal(fn ...Marshaller) ([]byte, error) {
+	marshal := mustMarshaler(fn...)
 	return marshal.Marshal(e)
 }
 
@@ -150,38 +166,55 @@ func (e *Error) Format(s fmt.State, verb rune) {
 
 	switch verb {
 	case 'c':
-		fmt.Fprintf(s, "%v\n", e.ContextInfo())
+		ctxi := e.ContextInfo()
+		contextInfoFormat(s, &ctxi, false)
 
 	case 'o':
-		fmt.Fprintf(s, "%v\n", e.Operation())
+		_, _ = s.Write(e.Operation())
 
-	case 'v':
+	case 't':
+		_, _ = s.Write(e.ErrorType())
+
+	case 'f':
+		_, _ = io.WriteString(s, Caller(7)())
+
+	case 's':
 		if s.Flag('+') {
-			_, _ = io.WriteString(s, e.Sdump())
+			// Translate в случае ошибки перевода
+			// возвращает оригинальное сообщение
+			io.WriteString(s, DefaultTranslate(e))
 			return
 		}
-		_, _ = io.WriteString(s, e.Error())
+		_, _ = s.Write(e.Msg())
 
-	case 's', 'q':
-		_, _ = io.WriteString(s, e.Error())
+	case 'v':
+		if s.Flag('#') {
+			spew.Fdump(s, e)
+			return
+		}
+		mustMarshaler().MarshalTo(e, s)
+
+	case 'q':
+		fmt.Fprintf(
+			s,
+			verboseStr,
+			e.ID(),
+			e.Operation(),
+			e.ErrorType(),
+			e.ContextInfo(),
+			e.Msg(),
+		)
+
+	case 'j':
+		jmarshal := &MarshalJSON{}
+		jmarshal.MarshalTo(e, s)
 	}
-}
-
-// context info
-
-// ContextInfo вернет контекст CtxMap ошибки.
-func (e *Error) ContextInfo() CtxMap {
-	return e.contextInfo
 }
 
 // дополнительные методы
 
 // Sdump вернет текстовый дамп ошибки *Error.
 func (e *Error) Sdump() string {
-	if e == nil {
-		return ""
-	}
-
 	if e == nil {
 		return ""
 	}
@@ -203,8 +236,10 @@ func (e *Error) Log(l ...Logger) {
 // Метод произволит перевод сообщения об ошибки, если localizer != nil.
 // Для идентификации сообщения перевода используется ID ошибки.
 func (e *Error) Error() string {
-	marshal := &MarshalString{}
-	data, _ := marshal.Marshal(e)
+	data, err := e.Marshal()
+	if err != nil {
+		return ""
+	}
 	return string(data)
 }
 
@@ -213,7 +248,6 @@ func (e *Error) Is(target error) bool {
 	case *Error:
 		return e == x
 	}
-
 	return false
 }
 

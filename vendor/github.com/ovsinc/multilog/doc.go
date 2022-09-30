@@ -9,7 +9,6 @@
 //
 // It is possible to combine supported loggers in a chain.
 //
-//
 // RU:
 // Простая обёртка для распространенных систем логгирования.
 // Поддерживаются следующие логгеры:
@@ -21,6 +20,4 @@
 // * zap (https://pkg.go.dev/go.uber.org/zap)
 //
 // Возможно объединение логгеров в цепочку.
-//
-//
 package multilog // import "github.com/ovsinc/multilog"

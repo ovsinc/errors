@@ -1,6 +1,3 @@
-//go:build vendors
-// +build vendors
-
 package errors_test
 
 import (
@@ -15,6 +12,12 @@ import (
 	"golang.org/x/xerrors"
 )
 
+//
+// stderrors
+//
+
+// Vendors
+
 func BenchmarkVendorStandartError(b *testing.B) {
 	e := stderrors.New("hello1")
 
@@ -23,6 +26,17 @@ func BenchmarkVendorStandartError(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = e.Error()
+	}
+}
+
+func BenchmarkVendorStandartConstructor(b *testing.B) {
+	e := stderrors.New("hello1")
+
+	require.Equal(b, e.Error(), "hello1")
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = stderrors.New("hello1")
 	}
 }
 
@@ -47,12 +61,70 @@ func BenchmarkVendorXerrors(b *testing.B) {
 	}
 }
 
+func BenchmarkVendorXerrorsConstructor(b *testing.B) {
+	e := xerrors.New("hello1")
+
+	require.Equal(b, e.Error(), "hello1")
+
+	for i := 0; i < b.N; i++ {
+		_ = xerrors.New("hello1")
+	}
+}
+
+// MY
+
 func BenchmarkVendorMyNewNormal(b *testing.B) {
-	err := errors.New(
-		"hello1",
-	)
+	err := errors.New("hello1")
 
 	require.Equal(b, err.Error(), "hello1")
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = err.Error()
+	}
+}
+
+func BenchmarkVendorMyConstructorNormal(b *testing.B) {
+	err := errors.New("hello1")
+
+	require.Equal(b, err.Error(), "hello1")
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = errors.New("hello1")
+	}
+}
+
+func BenchmarkVendorMyConstructorFullNoCtx(b *testing.B) {
+	err := errors.NewWith(
+		errors.SetMsg("hello1"),
+		errors.SetID("IDhello1"),
+		errors.SetOperation("nothing"),
+		errors.SetErrorType("myerrtype"),
+	)
+
+	require.Equal(b, err.Error(), "(myerrtype) [nothing] hello1")
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = errors.NewWith(
+			errors.SetMsg("hello1"),
+			errors.SetID("IDhello1"),
+			errors.SetOperation("nothing"),
+			errors.SetErrorType("myerrtype"),
+		)
+	}
+}
+
+func BenchmarkVendorMyNewFullNoCtx(b *testing.B) {
+	err := errors.NewWith(
+		errors.SetMsg("hello1"),
+		errors.SetID("IDhello1"),
+		errors.SetOperation("nothing"),
+		errors.SetErrorType("myerrtype"),
+	)
+
+	require.Equal(b, err.Error(), "(myerrtype) [nothing] hello1")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -76,28 +148,32 @@ func BenchmarkVendorMyNewFull(b *testing.B) {
 	}
 }
 
-func BenchmarkVendorMyNewWithTranslate(b *testing.B) {
-	errEmailsUnreadMsg := localTransContext()
-	localizer := localizePrepare()
+// func BenchmarkVendorMyNewWithTranslate(b *testing.B) {
+// 	errEmailsUnreadMsg := localTransContext()
+// 	localizer := localizePrepare()
 
-	err := errors.NewWith(
-		errors.SetMsg("hello1"),
-		errors.AppendContextInfo("hello", "world"),
-		errors.SetOperation("nothing"),
-		errors.SetID("ErrEmailsUnreadMsg"),
-		errors.SetTranslateContext(&errEmailsUnreadMsg),
-		errors.SetLocalizer(localizer),
-	)
+// 	err := errors.NewWith(
+// 		errors.SetMsg("hello1"),
+// 		errors.AppendContextInfo("hello", "world"),
+// 		errors.SetOperation("nothing"),
+// 		errors.SetID("ErrEmailsUnreadMsg"),
+// 		errors.SetTranslateContext(&errEmailsUnreadMsg),
+// 		errors.SetLocalizer(localizer),
+// 	)
 
-	require.Equal(b, err.Error(), "[nothing] {hello:world} У John Snow имеется 5 непрочитанных сообщений.")
+// 	require.Equal(b, err.Error(), "[nothing] {hello:world} У John Snow имеется 5 непрочитанных сообщений.")
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_ = err.Error()
-	}
-}
+// 	b.ResetTimer()
+// 	for i := 0; i < b.N; i++ {
+// 		_ = err.Error()
+// 	}
+// }
 
-// mutierr
+//
+// multierr
+//
+
+// MY
 
 func BenchmarkVendorMyMulti2StdErr(b *testing.B) {
 	err := errors.Wrap(
@@ -112,7 +188,23 @@ func BenchmarkVendorMyMulti2StdErr(b *testing.B) {
 	}
 }
 
-func BenchmarkVendorMyMulti2ErrNormal(b *testing.B) {
+func BenchmarkVendorMyMulti2StdErrConstructor(b *testing.B) {
+	err := errors.Wrap(
+		stderrors.New("hello1"),
+		stderrors.New("hello2"),
+	)
+
+	require.Equal(b, err.Error(), "the following errors occurred:\n\t#1 hello1\n\t#2 hello2\n")
+
+	for i := 0; i < b.N; i++ {
+		_ = errors.Wrap(
+			stderrors.New("hello1"),
+			stderrors.New("hello2"),
+		)
+	}
+}
+
+func BenchmarkVendorMyMulti2MySimple(b *testing.B) {
 	err := errors.Wrap(
 		errors.New("hello1"),
 		errors.New("hello2"),
@@ -126,23 +218,24 @@ func BenchmarkVendorMyMulti2ErrNormal(b *testing.B) {
 	}
 }
 
-func BenchmarkVendorMyMulti2ErrMsgOnly(b *testing.B) {
+func BenchmarkVendorMyMulti2MySimpleConstructor(b *testing.B) {
 	err := errors.Wrap(
-		errors.New(
-			"hello1",
-		),
-		errors.New(
-			"hello2",
-		),
+		errors.New("hello1"),
+		errors.New("hello2"),
 	)
 
 	require.Equal(b, err.Error(), "the following errors occurred:\n\t#1 hello1\n\t#2 hello2\n")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = err.Error()
+		_ = errors.Wrap(
+			errors.New("hello1"),
+			errors.New("hello2"),
+		)
 	}
 }
+
+// Vendor
 
 func BenchmarkVendorHashiMulti2StdErr(b *testing.B) {
 	err := hashmultierr.Append(
@@ -155,6 +248,23 @@ func BenchmarkVendorHashiMulti2StdErr(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = err.Error()
+	}
+}
+
+func BenchmarkVendorHashiMulti2StdErrConstructor(b *testing.B) {
+	err := hashmultierr.Append(
+		stderrors.New("hello1"),
+		stderrors.New("hello2"),
+	)
+
+	require.Equal(b, err.Error(), "2 errors occurred:\n\t* hello1\n\t* hello2\n\n")
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = hashmultierr.Append(
+			stderrors.New("hello1"),
+			stderrors.New("hello2"),
+		)
 	}
 }
 
@@ -185,7 +295,23 @@ func BenchmarkVendorUberMulti2StdErr(b *testing.B) {
 	}
 }
 
-func BenchmarkVendorUberMulti2MyNormalErr(b *testing.B) {
+func BenchmarkVendorUberMulti2StdErrConstructor(b *testing.B) {
+	err := ubermulierr.Append(
+		stderrors.New("hello1"),
+		stderrors.New("hello2"),
+	)
+
+	require.Equal(b, err.Error(), "hello1; hello2")
+
+	for i := 0; i < b.N; i++ {
+		_ = ubermulierr.Append(
+			stderrors.New("hello1"),
+			stderrors.New("hello2"),
+		)
+	}
+}
+
+func BenchmarkVendorUberMulti2MyErr(b *testing.B) {
 	err := ubermulierr.Append(
 		errors.New("hello1"),
 		errors.New("hello2"),
@@ -193,7 +319,6 @@ func BenchmarkVendorUberMulti2MyNormalErr(b *testing.B) {
 
 	require.Equal(b, err.Error(), "hello1; hello2")
 
-	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = err.Error()
 	}

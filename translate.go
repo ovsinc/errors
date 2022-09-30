@@ -1,15 +1,17 @@
 package errors
 
 import (
-	"io"
-
 	i18n "github.com/nicksnyder/go-i18n/v2/i18n"
-	"github.com/valyala/bytebufferpool"
 )
 
 // DefaultLocalizer локализатор по-умолчанию.
 // Для каждой ошибки можно переопределить локализатор.
 var DefaultLocalizer Localizer //nolint:gochecknoglobals
+
+var (
+	ErrNoLocalizer = New("localizer is no set")
+	ErrNotError    = New("not *Error")
+)
 
 type Localizer interface {
 	Localize(*i18n.LocalizeConfig) (string, error)
@@ -26,47 +28,44 @@ type TranslateContext struct {
 	DefaultMessage *i18n.Message
 }
 
-// TranslateMsg вернет перевод сообщения ошибки.
-// Если не удастся выполнить перевод, вернет оригинальное сообщение.
-func (e *Error) TranslateMsg() string {
-	buf := bytebufferpool.Get()
-	defer bytebufferpool.Put(buf)
-
-	_, _ = e.WriteTranslateMsg(buf)
-
-	return buf.String()
+func DefaultTranslate(e error) string {
+	msg, _ := Translate(e, nil, nil)
+	return msg
 }
 
-// WriteTranslateMsg запишет перевод сообщения ошибки в буфер.
-// Если не удастся выполнить перевод в буфер w будет записано оригинальное сообщение.
-func (e *Error) WriteTranslateMsg(w io.Writer) (int, error) {
+// Translate вернет перевод сообщения ошибки.
+// Если не удастся выполнить перевод, вернет оригинальное сообщение.
+func Translate(e error, l Localizer, tctx *TranslateContext) (string, error) {
+	err, ok := e.(*Error)
 	var loc Localizer
+
 	switch {
-	case e.msg == nil:
-		return 0, nil
-	case e.localizer != nil:
-		loc = e.localizer
+	case !ok:
+		return e.Error(), ErrNotError
+
+	case l != nil:
+		loc = l
+
 	case DefaultLocalizer != nil:
 		loc = DefaultLocalizer
+
 	default:
 		// no localizer
-		return e.Msg().Write(w)
+		return string(err.Msg()), ErrNoLocalizer
 	}
 
-	i18nConf := &i18n.LocalizeConfig{
-		MessageID: e.id.String(),
+	i18nConf := i18n.LocalizeConfig{
+		MessageID: string(err.ID()),
 	}
-	if e.translateContext != nil {
-		i18nConf.DefaultMessage = e.translateContext.DefaultMessage
-		i18nConf.PluralCount = e.translateContext.PluralCount
-		i18nConf.TemplateData = e.translateContext.TemplateData
-	}
-
-	str, err := loc.Localize(i18nConf)
-	// fallback
-	if err != nil {
-		return e.Msg().Write(w)
+	if tctx != nil {
+		i18nConf.DefaultMessage = tctx.DefaultMessage
+		i18nConf.PluralCount = tctx.PluralCount
+		i18nConf.TemplateData = tctx.TemplateData
 	}
 
-	return io.WriteString(w, str)
+	if msg, err := loc.Localize(&i18nConf); err == nil {
+		return msg, err
+	}
+
+	return string(err.Msg()), nil
 }

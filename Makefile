@@ -65,13 +65,18 @@ msan: ## Run memory sanitizer
 	${test} -msan ${PKG_LIST}
 
 
+.PHONY: escape_analysis
+escape_analysis: ## Lint the files
+	go build -gcflags "-m -m" .
+
+
 .PHONY: bench
 bench: ## Run benchmark tests
 	@${test} -benchmem -run=^# -bench=. ${_CURDIR}
 
 .PHONY: bench_vendors
 bench_vendors: ## Run benchmarks tests for comparison with other vendors
-	@${test} -tags=vendors -benchmem -run=^# -bench=Vendor ${_CURDIR}
+	@${test} -benchmem -run=^# -bench=Vendor ${_CURDIR}
 
 
 .PHONY: coverage
