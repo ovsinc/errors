@@ -1,0 +1,23 @@
+[ErrBadContent]
+description = "Некорректные входные данные"
+other = "Incorrect input data."
+
+[ErrDBDuplicate]
+description = "Такая запись в базе уже естьб дубликат"
+other = "Duplicate entity."
+
+[ErrDBInternal]
+description = "Любая внутренняя ошибка"
+other = "Internal error."
+
+[ErrDBNotFound]
+description = "Запись в базе не найдена"
+other = "Entity not found."
+
+[ErrUserEmpty]
+description = "Входные данные пусты или nil"
+other = "Empty entity."
+
+[ErrUserValidation]
+description = "Провал валидации"
+other = "Validation error."

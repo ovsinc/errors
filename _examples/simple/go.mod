@@ -1,6 +1,6 @@
-module example-simple
+module simple-err
 
-go 1.17
+go 1.19
 
 require github.com/ovsinc/errors v1.2.3
 
