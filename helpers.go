@@ -115,6 +115,9 @@ func Cast(err error) (*Error, bool) {
 	case *Error:
 		return t, true
 
+	case Multierror:
+		return t.Last(), true
+
 	default:
 		return New(err), true
 	}

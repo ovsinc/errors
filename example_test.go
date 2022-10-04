@@ -133,22 +133,16 @@ func ExampleTranslate() {
 	msg, _ = errors.Translate(e1, nil, &errEmailsUnreadMsg)
 	fmt.Println(msg)
 
-	// Output:
-	// У John Snow имеется 5 непрочитанных сообщений.
-	// У John Snow имеется 5 непрочитанных сообщений.
-}
-
-func ExampleTranslate_Format() {
-	errors.DefaultLocalizer = localizePrepare()
-
-	e := errors.NewWith(
+	eunknown := errors.NewWith(
 		errors.SetMsg("fallback unknown message"),
 		errors.SetID("ErrUnknownErrorMsg"),
 	)
 
-	fmt.Printf("%+s\n", e)
+	fmt.Printf("%+s\n", eunknown)
 
 	// Output:
+	// У John Snow имеется 5 непрочитанных сообщений.
+	// У John Snow имеется 5 непрочитанных сообщений.
 	// Неизвестная ошибка
 }
 

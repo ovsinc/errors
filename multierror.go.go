@@ -39,6 +39,8 @@ type Multierror interface {
 	Marshal(fn ...Marshaller) ([]byte, error)
 	Len() int
 	Log(l ...Logger)
+	Unwrap() error
+	Last() *Error
 }
 
 type multiError struct {
@@ -47,9 +49,7 @@ type multiError struct {
 	last   int
 }
 
-// Errors returns the list of underlying errors.
-//
-// This slice MUST NOT be modified.
+// Errors returns the copy list of underlying errors.
 func (merr *multiError) Errors() []*Error {
 	if merr == nil || merr.errors == nil {
 		return []*Error{}
@@ -93,6 +93,11 @@ func (merr *multiError) Len() int {
 
 // Unwrap вернет самую новую ошибку в стеке
 func (merr *multiError) Unwrap() error {
+	return merr.Last()
+}
+
+// Last вернет самую новую (*Error) ошибку в стеке
+func (merr *multiError) Last() *Error {
 	es := merr.Errors()
 	if len(es) == 0 {
 		return nil
