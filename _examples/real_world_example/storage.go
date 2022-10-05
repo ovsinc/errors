@@ -4,8 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/ovsinc/errors"
-
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -34,6 +32,10 @@ func (s *Storage) GetUserByID(_ context.Context, id string) (*User, error) {
 		return nil, result.Error
 	}
 
+	if boorand.Bool() {
+		return nil, ErrRandomError
+	}
+
 	return &User{
 		ID:        usr.ID,
 		FirstName: usr.FirstName,
@@ -45,9 +47,8 @@ func (s *Storage) GetUserByID(_ context.Context, id string) (*User, error) {
 func (s *Storage) CreateUser(ctx context.Context, u *User) error {
 	id := u.ID
 
-	//sqite драйвер не поддерживает проверку уникальности, нет ошибки ErrDuplicateKey
 	if _, err := s.GetUserByID(ctx, id); err == nil {
-		return ErrDBDuplicate.WithOptions(errors.SetOperation("CreateUser"))
+		return ErrDuplicateKey
 	}
 
 	now := time.Now()
@@ -61,30 +62,24 @@ func (s *Storage) CreateUser(ctx context.Context, u *User) error {
 		CreatedAt: now,
 	}
 
-	if result := s.db.Create(&usr); result.Error != nil {
-		return errors.Wrap(
-			ErrDBInternal.WithOptions(errors.SetOperation("CreateUser")),
-			result.Error)
+	result := s.db.Create(&usr)
+
+	if boorand.Bool() {
+		return ErrRandomError
 	}
 
-	return nil
+	return result.Error
 }
 
 func (s *Storage) DeleteUserByID(ctx context.Context, id string) error {
-	result := s.db.Delete(&UserModel{}, id)
-
-	switch {
-	case result.Error == nil:
-		return nil
-
-	case errors.Is(result.Error, gorm.ErrRecordNotFound):
-		return errors.Wrap(
-			ErrDBNotFound.WithOptions(errors.SetOperation("DeleteUserByID")),
-			result.Error)
-
-	default:
-		return errors.Wrap(
-			ErrDBInternal.WithOptions(errors.SetOperation("DeleteUserByID")),
-			result.Error)
+	result := s.db.Delete(&UserModel{ID: id})
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
 	}
+
+	if boorand.Bool() {
+		return ErrRandomError
+	}
+
+	return result.Error
 }

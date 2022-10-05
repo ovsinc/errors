@@ -209,7 +209,7 @@ func TestAs(t *testing.T) { //nolint:funlen
 
 	merr1 := Combine(err1, err2)
 	var merr1cast Multierror
-	merr2cast := merr1.(*multiError)
+	merr2cast := merr1.(*multiError) //nolint:errorlint
 
 	testCases := []struct {
 		err    error

@@ -36,7 +36,7 @@ func DefaultTranslate(e error) string {
 // Translate вернет перевод сообщения ошибки.
 // Если не удастся выполнить перевод, вернет оригинальное сообщение.
 func Translate(e error, l Localizer, tctx *TranslateContext) (string, error) {
-	err, ok := e.(*Error)
+	err, ok := e.(*Error) //nolint:errorlint
 	var loc Localizer
 
 	switch {
@@ -64,7 +64,7 @@ func Translate(e error, l Localizer, tctx *TranslateContext) (string, error) {
 	}
 
 	if msg, err := loc.Localize(&i18nConf); err == nil {
-		return msg, err
+		return msg, nil
 	}
 
 	return string(err.Msg()), nil

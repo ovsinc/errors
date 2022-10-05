@@ -19,6 +19,8 @@ const (
 	ErrDBNotFoundID  = "ErrDBNotFound"
 	ErrDBDuplicateID = "ErrDBDuplicate"
 	ErrDBInternalID  = "ErrDBInternal"
+
+	ErrUnknownID = "ErrUnknown"
 )
 
 var (
@@ -51,6 +53,11 @@ var (
 		ID:          ErrBadContentID,
 		Other:       "Incorrect input data.",
 		Description: "Некорректные входные данные",
+	}
+	EUnknownMsg = &i18n.Message{
+		ID:          ErrUnknownID,
+		Other:       "Unknown error.",
+		Description: "Внезапная ошибка",
 	}
 )
 

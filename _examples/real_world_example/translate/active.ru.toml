@@ -18,6 +18,11 @@ description = "Запись в базе не найдена"
 hash = "sha1-fbd903daa9173f3964825bdbe27f89a3a6a06cd8"
 other = "Запись в базе не найдена."
 
+[ErrUnknown]
+description = "Внезапная ошибка"
+hash = "sha1-c45e15a4b26e1d49c489b6024db7c4e6ef3c4d47"
+other = "Внезапная ошибка."
+
 [ErrUserEmpty]
 description = "Входные данные пусты или nil"
 hash = "sha1-5d6976ed9b1bdfa770f4fe0462d4cfe2cdf3a104"

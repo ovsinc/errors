@@ -37,7 +37,7 @@ func (m *MarshalString) MarshalTo(i interface{}, dst io.Writer) error {
 		return nil
 	case interface{ Errors() []error }: // multiError
 		stringMultierrFormat(dst, t.Errors())
-	case error: //one
+	case error: // one
 		stringFormat(dst, t)
 	}
 

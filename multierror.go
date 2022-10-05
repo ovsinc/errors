@@ -31,8 +31,8 @@ func Wrap(left error, right error) error {
 		return left
 	}
 
-	if _, ok := right.(*multiError); !ok {
-		if l, ok := left.(*multiError); ok && !l.copyNeeded.Swap(true) {
+	if _, ok := right.(*multiError); !ok { //nolint:errorlint
+		if l, ok := left.(*multiError); ok && !l.copyNeeded.Swap(true) { //nolint:errorlint
 			// Common case where the error on the left is constantly being
 			// appended to.
 			return &multiError{
@@ -161,14 +161,14 @@ func (merr *multiError) FindByID(id []byte) (error, bool) {
 		return nil, false
 	}
 
-	if e, ok := merr.errors[merr.cur.Load()].(*Error); ok {
+	if e, ok := merr.errors[merr.cur.Load()].(*Error); ok { //nolint:errorlint
 		if bytes.Equal(e.ID(), id) {
 			return e, true
 		}
 	}
 
 	for i, e := range merr.errors {
-		if ee, ok := e.(*Error); ok {
+		if ee, ok := e.(*Error); ok { //nolint:errorlint
 			if bytes.Equal(ee.ID(), id) {
 				merr.cur.Store(int32(i))
 				return e, true
@@ -209,7 +209,7 @@ func inspect(errors []error) (res inspectResult) {
 			res.firstErrorIdx = i
 		}
 
-		if merr, ok := err.(*multiError); ok {
+		if merr, ok := err.(*multiError); ok { //nolint:errorlint
 			res.capacity += len(merr.errors)
 			res.containsMultiError = true
 		} else {
@@ -253,7 +253,7 @@ func fromSlice(errors []error) error {
 			continue
 		}
 
-		if nested, ok := err.(*multiError); ok {
+		if nested, ok := err.(*multiError); ok { //nolint:errorlint
 			nonNilErrs = append(nonNilErrs, nested.errors...)
 		} else {
 			nonNilErrs = append(nonNilErrs, err)

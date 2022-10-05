@@ -77,6 +77,8 @@ func (r IntErr) Status() int {
 		status = http.StatusGone
 	case EInputBody:
 		status = http.StatusBadRequest
+	case EUnknown:
+		status = http.StatusTeapot
 	}
 
 	return status

@@ -159,7 +159,7 @@ func (e *Error) Marshal(fn ...Marshaller) ([]byte, error) {
 }
 
 // Format производит форматирование строки, для поддержки fmt.Printf().
-func (e *Error) Format(s fmt.State, verb rune) {
+func (e *Error) Format(s fmt.State, verb rune) { //nolint:cyclop
 	if e == nil {
 		return
 	}
@@ -182,7 +182,7 @@ func (e *Error) Format(s fmt.State, verb rune) {
 		if s.Flag('+') {
 			// Translate в случае ошибки перевода
 			// возвращает оригинальное сообщение
-			io.WriteString(s, DefaultTranslate(e))
+			_, _ = io.WriteString(s, DefaultTranslate(e))
 			return
 		}
 		_, _ = s.Write(e.Msg())
@@ -192,7 +192,7 @@ func (e *Error) Format(s fmt.State, verb rune) {
 			spew.Fdump(s, e)
 			return
 		}
-		mustMarshaler().MarshalTo(e, s)
+		_ = mustMarshaler().MarshalTo(e, s)
 
 	case 'q':
 		fmt.Fprintf(
@@ -207,7 +207,7 @@ func (e *Error) Format(s fmt.State, verb rune) {
 
 	case 'j':
 		jmarshal := &MarshalJSON{}
-		jmarshal.MarshalTo(e, s)
+		_ = jmarshal.MarshalTo(e, s)
 	}
 }
 

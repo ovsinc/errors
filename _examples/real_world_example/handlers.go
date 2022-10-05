@@ -50,7 +50,8 @@ func (h *Handler) Register(app *echo.Echo) {
 
 var ErrErrHandle = errors.New("can`t error handling")
 
-func (h *Handler) prepareMsg(err *errors.Error, lang string) (int, *Response) {
+func (h *Handler) prepareMsg(e error, lang string) (int, *Response) {
+	err, _ := errors.Cast(e)
 	return ParseIntErr(string(err.ErrorType())).Status(),
 		&Response{
 			Data:   nil,
@@ -76,7 +77,7 @@ func (h *Handler) errHandle(c echo.Context, err error) error {
 
 	errors.Log(err)
 
-	var e *errors.Error
+	var e error
 	switch {
 	case errors.ContainsByID(err, EBadContentMsg.ID):
 		e = errors.UnwrapByID(err, EBadContentMsg.ID)
@@ -95,6 +96,9 @@ func (h *Handler) errHandle(c echo.Context, err error) error {
 
 	case errors.ContainsByID(err, EInternalMsg.ID):
 		e = errors.UnwrapByID(err, EInternalMsg.ID)
+
+	case errors.ContainsByID(err, EUnknownMsg.ID):
+		e = errors.UnwrapByID(err, EUnknownMsg.ID)
 
 	default:
 		e = ErrDBInternal

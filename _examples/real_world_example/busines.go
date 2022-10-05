@@ -38,6 +38,12 @@ var (
 		errors.SetID(EInternalMsg.ID),
 		errors.SetErrorType(EInternal.String()),
 	)
+
+	ErrUnknown = errors.NewWith(
+		errors.SetMsg(EUnknownMsg.Other),
+		errors.SetID(EUnknownMsg.ID),
+		errors.SetErrorType(EUnknown.String()),
+	)
 )
 
 type User struct {
@@ -49,8 +55,8 @@ type User struct {
 
 func (u *User) Validate() error {
 	return validation.ValidateStruct(u,
-		validation.Field(&u.FirstName, validation.Required, validation.Length(5, 20)),
-		validation.Field(&u.LastName, validation.Required, validation.Length(5, 20)),
+		validation.Field(&u.FirstName, validation.Required, validation.Length(1, 20)),
+		validation.Field(&u.LastName, validation.Required, validation.Length(1, 20)),
 		validation.Field(&u.Email, validation.Required, is.Email),
 		validation.Field(&u.ID, validation.Required, is.UUID),
 	)
@@ -79,11 +85,15 @@ func (uc *UserUC) GetUser(ctx context.Context, id string) (*User, error) {
 
 	case errors.Is(err, gorm.ErrRecordNotFound):
 		return nil,
-			errors.Wrap(ErrDBNotFound.WithOptions(errors.SetOperation("storage.GetUserByID")), err)
+			errors.Wrap(ErrDBNotFound.WithOptions(errors.SetOperation("uc.GetUser")), err)
+
+	case errors.Is(err, ErrRandomError):
+		return nil,
+			errors.Wrap(ErrUnknown.WithOptions(errors.SetOperation("uc.GetUser")), err)
 
 	default:
 		return nil,
-			errors.Wrap(ErrDBInternal.WithOptions(errors.SetOperation("storage.GetUserByID")), err)
+			errors.Wrap(ErrDBInternal.WithOptions(errors.SetOperation("uc.GetUser")), err)
 	}
 }
 
@@ -96,11 +106,20 @@ func (uc *UserUC) NewUser(ctx context.Context, u *User) error {
 		return errors.Wrap(ErrUserValidation.WithOptions(errors.SetOperation("uc.NewUser")), err)
 	}
 
-	if err := uc.userStore.CreateUser(ctx, u); err != nil {
-		return errors.Wrap(ErrDBInternal.WithOptions(errors.SetOperation("uc.NewUser")), err)
-	}
+	err := uc.userStore.CreateUser(ctx, u)
+	switch {
+	case err == nil:
+		return nil
 
-	return nil
+	case errors.Is(err, ErrDuplicateKey):
+		return errors.Wrap(ErrDBDuplicate.WithOptions(errors.SetOperation("uc.NewUser")), err)
+
+	case errors.Is(err, ErrRandomError):
+		return errors.Wrap(ErrUnknown.WithOptions(errors.SetOperation("uc.NewUser")), err)
+
+	default:
+		return errors.Wrap(ErrDBInternal.WithOptions(errors.SetOperation("uc.GetUser")), err)
+	}
 }
 
 func (uc *UserUC) DeleteUser(ctx context.Context, id string) error {
@@ -114,9 +133,12 @@ func (uc *UserUC) DeleteUser(ctx context.Context, id string) error {
 		return nil
 
 	case errors.Is(err, gorm.ErrRecordNotFound):
-		return errors.Wrap(ErrDBNotFound.WithOptions(errors.SetOperation("storage.DeleteUserByID")), err)
+		return errors.Wrap(ErrDBNotFound.WithOptions(errors.SetOperation("uc.DeleteUser")), err)
+
+	case errors.Is(err, ErrRandomError):
+		return errors.Wrap(ErrUnknown.WithOptions(errors.SetOperation("uc.DeleteUser")), err)
 
 	default:
-		return errors.Wrap(ErrDBInternal.WithOptions(errors.SetOperation("storage.DeleteUserByID")), err)
+		return errors.Wrap(ErrDBInternal.WithOptions(errors.SetOperation("uc.DeleteUser")), err)
 	}
 }

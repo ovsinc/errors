@@ -36,7 +36,7 @@ func ExampleLog() {
 func ExampleNewLog() {
 	errors.DefaultLogger = golog.New(log.New(os.Stdout, "ovsinc/errors ", 0))
 
-	errors.NewLog("hello world")
+	_ = errors.NewLog("hello world")
 
 	// Output:
 	// ovsinc/errors hello world

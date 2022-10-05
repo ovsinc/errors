@@ -14,6 +14,10 @@ other = "Internal error."
 description = "Запись в базе не найдена"
 other = "Entity not found."
 
+[ErrUnknown]
+description = "Внезапная ошибка"
+other = "Unknown error."
+
 [ErrUserEmpty]
 description = "Входные данные пусты или nil"
 other = "Empty entity."

@@ -3,15 +3,12 @@ package main
 import (
 	echo "github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/ovsinc/errors"
 )
 
 func main() {
 	e := echo.New()
 
 	e.Use(middleware.Logger())
-	errors.DefaultLogger = e.Logger
-
 	e.Use(middleware.Recover())
 
 	h := NewHandler(

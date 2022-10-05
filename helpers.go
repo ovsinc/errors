@@ -103,7 +103,7 @@ func Unwrap(err error) error {
 // Если error не соответствует *Error, то будет создан *Error с сообщением err.Error().
 // Для err == nil, вернется nil.
 func Cast(err error) (*Error, bool) {
-	switch t := err.(type) {
+	switch t := err.(type) { //nolint:errorlint
 	case nil:
 		return nil, false
 
@@ -122,7 +122,7 @@ func Cast(err error) (*Error, bool) {
 // Если error не соответствует Multierror, то будет создан Multierror с сообщением err.Error().
 // Для err == nil, вернется nil.
 func CastMultierr(err error) (Multierror, bool) {
-	switch t := err.(type) {
+	switch t := err.(type) { //nolint:errorlint
 	case nil:
 		return nil, false
 
@@ -130,6 +130,6 @@ func CastMultierr(err error) (Multierror, bool) {
 		return t, true
 
 	default:
-		return Combine(err).(Multierror), true
+		return Combine(err).(Multierror), true ////nolint:errorlint
 	}
 }
