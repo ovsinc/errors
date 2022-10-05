@@ -35,9 +35,9 @@ func (m *MarshalString) MarshalTo(i interface{}, dst io.Writer) error {
 	switch t := i.(type) { //nolint:errorlint
 	case nil:
 		return nil
-	case Multierror: // multiError
-		stringMultierrFormat(dst, t)
-	case *Error: //one
+	case interface{ Errors() []error }: // multiError
+		stringMultierrFormat(dst, t.Errors())
+	case error: //one
 		stringFormat(dst, t)
 	}
 
@@ -59,17 +59,17 @@ func (m *MarshalString) Marshal(i interface{}) ([]byte, error) {
 
 //
 
-func stringMultierrFormat(w io.Writer, e Multierror) {
+func stringMultierrFormat(w io.Writer, es []error) {
 	_, _ = w.Write(_multilinePrefix)
 	_, _ = w.Write(_multilineSeparator)
-	for i, err := range e.Errors() {
+	for i, err := range es {
 		if err == nil {
 			continue
 		}
 		_, _ = w.Write(_multilineIndent)
 		_, _ = w.Write([]byte(strconv.Itoa(i + 1)))
 		_, _ = w.Write([]byte(" "))
-		_, _ = io.WriteString(w, err.Error())
+		stringFormat(w, err)
 		_, _ = w.Write(_multilineSeparator)
 	}
 }
@@ -108,29 +108,35 @@ func contextInfoFormat(w io.Writer, ctxiptr *CtxMap, useDelimiter bool) {
 	}
 }
 
-func stringFormat(w io.Writer, e *Error) {
-	// id do not write
+func stringFormat(w io.Writer, e error) {
+	switch t := e.(type) { //nolint:errorlint
+	case *Error:
+		// id do not write
 
-	// err type
-	if t := e.ErrorType(); t != nil {
-		_, _ = w.Write(_errTypeDelimerLeft)
-		_, _ = w.Write(t)
-		_, _ = w.Write(_errTypeDelimerRight)
-		_, _ = w.Write(_separator)
+		// err type
+		if t := t.ErrorType(); t != nil {
+			_, _ = w.Write(_errTypeDelimerLeft)
+			_, _ = w.Write(t)
+			_, _ = w.Write(_errTypeDelimerRight)
+			_, _ = w.Write(_separator)
+		}
+
+		// operation
+		if op := t.Operation(); op != nil {
+			_, _ = w.Write(_opDelimiterLeft)
+			_, _ = w.Write(op)
+			_, _ = w.Write(_opDelimiterRight)
+			_, _ = w.Write(_separator)
+		}
+
+		// ctx
+		ctxi := t.ContextInfo()
+		contextInfoFormat(w, &ctxi, true)
+
+		// msg
+		_, _ = w.Write(t.Msg())
+
+	default:
+		_, _ = io.WriteString(w, t.Error())
 	}
-
-	// operation
-	if op := e.Operation(); op != nil {
-		_, _ = w.Write(_opDelimiterLeft)
-		_, _ = w.Write(op)
-		_, _ = w.Write(_opDelimiterRight)
-		_, _ = w.Write(_separator)
-	}
-
-	// ctx
-	ctxi := e.ContextInfo()
-	contextInfoFormat(w, &ctxi, true)
-
-	// msg
-	_, _ = w.Write(e.Msg())
 }

@@ -1,31 +1,9 @@
 package errors
 
-import i18n "github.com/nicksnyder/go-i18n/v2/i18n"
-
 // Options опции из параметра ошибки.
 type Options func(e *Error)
 
-// SetFormatFn установит пользовательскую функцию-форматирования.
-func SetFormatFn(fn FormatFn) Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.formatFn = fn
-	}
-}
-
 // Msg
-
-// SetMsgBytes установит сообщение об ошибке, указаннов в виде []byte.
-func SetMsgBytes(msg []byte) Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.msg = NewObjectFromBytes(msg)
-	}
-}
 
 // SetMsg установит сообщение об ошибке, указанное в виде строки.
 func SetMsg(msg string) Options {
@@ -33,35 +11,7 @@ func SetMsg(msg string) Options {
 		if e == nil {
 			return
 		}
-		e.msg = NewObjectFromString(msg)
-	}
-}
-
-// SetSeverity устновит Severity.
-func SetSeverity(severity Severity) Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.severity = severity
-	}
-}
-
-func SetSeverityWarn() Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.severity = SeverityWarn
-	}
-}
-
-func SetSeverityErr() Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.severity = SeverityError
+		e.msg = []byte(msg)
 	}
 }
 
@@ -73,116 +23,60 @@ func SetID(id string) Options {
 		if e == nil {
 			return
 		}
-		e.id = NewObjectFromString(id)
+		e.id = []byte(id)
 	}
 }
 
-// SetIDBytes установит ID ошибки.
-func SetIDBytes(id []byte) Options {
+// Operation
+
+// SetOperation установит операцию, как строку.
+// Если в *Error уже были записаны операции,
+// то они будут заменены на указанные в аргументе ops.
+func SetOperation(o string) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
 		}
-		e.id = NewObjectFromBytes(id)
+		e.operation = []byte(o)
 	}
 }
 
 // Error type
 
-// SetErrorType установит тип ошибки.
-func SetErrorType(etype string) Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.errorType = NewObjectFromString(etype)
-	}
-}
-
-// SetErrorTypeBytes установит тип ошибки.
-func SetErrorTypeBytes(etype []byte) Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.errorType = NewObjectFromBytes(etype)
-	}
-}
-
-// Operations
-
-// AppendOperationsBytes добавить операции, указанные как []byte.
-// Можно указать произвольное количество.
-// Если в *Error уже были записаны операции,
-// то указанные в аргументе будет добавлены к уже имеющимся.
-func AppendOperationsBytes(o ...[]byte) Options {
-	return func(e *Error) {
-		if e == nil || len(o) == 0 {
-			return
-		}
-		e.operations = e.operations.AppendBytes(o...)
-	}
-}
-
-// AppendOperations добавить операции, указанные как строки.
-// Можно указать произвольное количество.
-// Если в *Error уже были записаны операции,
-// то указанные в аргументе будет добавлены к уже имеющимся.
-func AppendOperations(o ...string) Options {
-	return func(e *Error) {
-		if e == nil || len(o) == 0 {
-			return
-		}
-		e.operations = e.operations.AppendString(o...)
-	}
-}
-
-// SetOperations установить операции, указанные как строки.
-// Можно указать произвольное количество.
+// SetErrorType установит тип, как строку.
 // Если в *Error уже были записаны операции,
 // то они будут заменены на указанные в аргументе ops.
-func SetOperations(o ...string) Options {
-	return func(e *Error) {
-		if e == nil || len(o) == 0 {
-			return
-		}
-		e.operations = NewObjectsFromString(o...)
-	}
-}
-
-// SetOperationsBytes установить операции, указанные как []byte.
-// Можно указать произвольное количество.
-// Если в *Error уже были записаны операции,
-// то они будут заменены на указанные в аргументе ops.
-func SetOperationsBytes(o ...[]byte) Options {
-	return func(e *Error) {
-		if e == nil || len(o) == 0 {
-			return
-		}
-		e.operations = NewObjectsFromBytes(o...)
-	}
-}
-
-// Translate
-
-// SetTranslateContext установит контекст переревода
-func SetTranslateContext(tctx *TranslateContext) Options {
+func SetErrorType(et string) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
 		}
-		e.translateContext = tctx
+		e.errorType = []byte(et)
 	}
 }
 
-// SetLocalizer установит локализатор.
-// Этот локализатор будет использован для данной ошибки даже,
-// если был установлен DefaultLocalizer.
-func SetLocalizer(localizer *i18n.Localizer) Options {
+// Context Info
+
+// SetContextInfo установить CtxMap.
+func SetContextInfo(ctxinf CtxMap) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
 		}
-		e.localizer = localizer
+		e.contextInfo = ctxinf
+	}
+}
+
+// AppendContextInfo добавить в имеющийся CtxMap значение value по ключу key.
+// Если CtxMap в *Error не установлен, то он будет предварительно установлен.
+func AppendContextInfo(key string, value interface{}) Options {
+	return func(e *Error) {
+		if e == nil {
+			return
+		}
+		if e.contextInfo == nil {
+			e.contextInfo = make(CtxMap)
+		}
+		e.contextInfo[key] = value
 	}
 }

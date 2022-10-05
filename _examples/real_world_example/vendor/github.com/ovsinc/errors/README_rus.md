@@ -174,12 +174,12 @@ func main() {
 
 | Опция | Описание |
 | ----- | -------- |
-| `Error.SetMsg(string)` | Установить сообщение об ошибке. |
-| `Error.SetOperation(string)` | Установит операцию. |
-| `Error.SetErrorType(string)` | Установит тип. |
-| `Error.SetID(string)` | Установит идентификатор. |
-| `Error.SetContextInfo(CtxMap)` | Установит контекст. |
-| `Error.AppendContextInfo(string, interface{})` | Добавит контекст к имеющимуся. Если контекст не был создан, создаст. |
+| `SetMsg(string)` | Установить сообщение об ошибке. |
+| `SetOperation(string)` | Установит операцию. |
+| `SetErrorType(string)` | Установит тип. |
+| `SetID(string)` | Установит идентификатор. |
+| `SetContextInfo(CtxMap)` | Установит контекст. |
+| `AppendContextInfo(string, interface{})` | Добавит контекст к имеющимуся. Если контекст не был создан, создаст. |
 
 #### Логгирование
 
@@ -188,7 +188,7 @@ func main() {
 Возможные варианты вызова:
 
 - из конструтороа `NewLog` (аналогично конструтору `New`, но с логгированием) или `NewWithLog` (аналогично `NewWith`, но с логгированием);
-- вызов метода `Error.Log(...Logger)`;
+- вызов метода `*Error.Log(...Logger)`;
 - хелпер `Log(error, ...Logger)`.
 
 ### Перевод сообщения ошибки
@@ -197,7 +197,7 @@ func main() {
 
 Возможные варианты вызова:
 
-- вызов метода `Error.Translate(...Translater) (string, error)`;
+- вызов метода `*Error.Translate(...Translater) (string, error)`;
 - хелпер `Translate(error, ...Translater) (string, error)`;
 - форматированныый вывод `Printf` с руной `#s` (используется дефолтный контекст перевода).
 
@@ -317,7 +317,7 @@ type Logger interface {
 Возможные варианты вызова:
 
 - метод `*Error.Log(l ...multilog.Logger)`;
-- хелпер `errors.Log(error, ...Logger)`;
+- хелпер `Log(error, ...Logger)`;
 - методы-конструкторы: `CombineWithLog`,`WrapWithLog`, `NewLog`, `NewWithLog`.
 
 Ниже приведен пример использования `github.com/ovsinc/errors` c логгированием:
@@ -352,18 +352,18 @@ func main() {
 
 Для работы переводов нужно выполнить подготовку:
 
-- инициализировать локализатор go-i18n (должен соответсвовать интерфейсу `errors.Localizer`);
+- инициализировать локализатор go-i18n (должен соответсвовать интерфейсу `Localizer`);
 См. подробности в пакете [i18n](https://github.com/nicksnyder/go-i18n).
 - при создании сообщения `*Error`, использовать конструктор `NewWith` с заданием ID.
 
-Может оказаться удобным установить локализатор `errors.DefaultLocalizer` для всего приложения. Тогда, конечно, локализатор должен содержать весь набор переводимых сообщений и настроен на использование требуемых языков.
+Может оказаться удобным установить локализатор `DefaultLocalizer` для всего приложения. Тогда, конечно, локализатор должен содержать весь набор переводимых сообщений и настроен на использование требуемых языков.
 
 Получение переведенного сообщения:
 
-- хелпер `errors.TranslateMsg(error, Localizer, *TranslateContext)`;
+- хелпер `TranslateMsg(error, Localizer, *TranslateContext)`;
 - форматированный вывода с руной `#s`.
 
-В простых случаях, если задан `errors.DefaultLocalizer` для всего приложения, то можно использовать форматированный вывода из составка `fmt` с руной `#s`. При этом необходимо учитывать, что плюральные форммы требуют задание контекста для каждого переводимого сообщения, что в случае с форматированным выводом сделать нельзя.
+В простых случаях, если задан `DefaultLocalizer` для всего приложения, то можно использовать форматированный вывода из составка `fmt` с руной `#s`. При этом необходимо учитывать, что плюральные форммы требуют задание контекста для каждого переводимого сообщения, что в случае с форматированным выводом сделать нельзя.
 
 Пример использование перевода в сообщении ошибки:
 
@@ -443,8 +443,8 @@ GetID(err error) (id string)
 Cast(err error) (*Error, bool)
 
 CastMultierr(err error) (Multierror, bool)
-UnwrapByID(err error, id string) *Error
-UnwrapByErr(err error, target error) *Error
+UnwrapByID(err error, id string) error
+UnwrapByErr(err error, target error) error
 Contains(err error, target error) bool
 ContainsByID(err error, id string) bool
 

@@ -31,8 +31,8 @@ github.com/mattn/go-sqlite3 v1.14.12 h1:TJ1bhYJPV44phC+IMu1u2K/i5RriLTPe+yc68XDJ
 github.com/mattn/go-sqlite3 v1.14.12/go.mod h1:NyWgC/yNuGj7Q9rpYnZvas74GogHl5/Z4A/KQRfk6bU=
 github.com/nicksnyder/go-i18n/v2 v2.2.0 h1:MNXbyPvd141JJqlU6gJKrczThxJy+kdCNivxZpBQFkw=
 github.com/nicksnyder/go-i18n/v2 v2.2.0/go.mod h1:4OtLfzqyAxsscyCb//3gfqSvBc81gImX91LrZzczN1o=
-github.com/ovsinc/errors v1.2.4-0.20220930145427-52d3d06b5a19 h1:FpAgPp2jGHxDwrjfVExVsGsy88kx/2BkBj7sdwoDtZI=
-github.com/ovsinc/errors v1.2.4-0.20220930145427-52d3d06b5a19/go.mod h1:2DTlVBoTskK/BqF22jkNOJBToSoAizdbwY+9+6Rksas=
+github.com/ovsinc/errors v1.2.4-0.20221005112135-3a5cdcd01b2a h1:yNfiJuoT2rhUvoPPsmNj8xN3IauVRA3jgrYr4r+riz0=
+github.com/ovsinc/errors v1.2.4-0.20221005112135-3a5cdcd01b2a/go.mod h1:7Uay1Tqo9awf4Ooj2La5+PJyi0kxL3O0ZAFf/tb8wL8=
 github.com/ovsinc/multilog v1.0.5 h1:55I9RXZMwc/6iMeRNSlBb/DCXWPqXEaw35YghbZ4qcI=
 github.com/ovsinc/multilog v1.0.5/go.mod h1:kY03dtoiKsf+j8cBtDzfeqo7Olk5mOxfiQSDbEnoZV0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
@@ -47,6 +47,7 @@ github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyC
 github.com/valyala/fasttemplate v1.2.1 h1:TVEnxayobAdVkhQfrfes2IzOB6o+z4roRkPF52WA1u4=
 github.com/valyala/fasttemplate v1.2.1/go.mod h1:KHLXt3tVN2HBp8eijSv/kGJopbvo7S+qRAEEKiv+SiQ=
 go.uber.org/atomic v1.10.0 h1:9qC72Qh0+3MqyJbAn8YU5xVq1frD8bn3JtD2oXtafVQ=
+go.uber.org/atomic v1.10.0/go.mod h1:LUxbIzbOniOlMKjJjyPfpl4v+PKK2cNJn91OQbhoJI0=
 go.uber.org/multierr v1.8.0 h1:dg6GjLku4EH+249NNmoIciG9N/jURbDG+pFlTkhzIC8=
 golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 h1:HWj/xjIHfjYU5nVXpTM0s39J9CbLn7Cc5a7IC5rwsMQ=
 golang.org/x/crypto v0.0.0-20210817164053-32db794688a5/go.mod h1:GvvjBRRGRdwPK5ydBHafDWAxML/pGHZbMvKqRZ5+Abc=

@@ -6,8 +6,8 @@ github.com/hashicorp/errwrap v1.1.0 h1:OxrOeh75EUXMY8TBjag2fzXGZ40LB6IKw45YeGUDY
 github.com/hashicorp/go-multierror v1.1.1 h1:H5DkEtf6CXdFp0N0Em5UCwQpXMWke8IA0+lD48awMYo=
 github.com/nicksnyder/go-i18n/v2 v2.2.0 h1:MNXbyPvd141JJqlU6gJKrczThxJy+kdCNivxZpBQFkw=
 github.com/nicksnyder/go-i18n/v2 v2.2.0/go.mod h1:4OtLfzqyAxsscyCb//3gfqSvBc81gImX91LrZzczN1o=
-github.com/ovsinc/errors v1.2.4-0.20220930145427-52d3d06b5a19 h1:FpAgPp2jGHxDwrjfVExVsGsy88kx/2BkBj7sdwoDtZI=
-github.com/ovsinc/errors v1.2.4-0.20220930145427-52d3d06b5a19/go.mod h1:2DTlVBoTskK/BqF22jkNOJBToSoAizdbwY+9+6Rksas=
+github.com/ovsinc/errors v1.2.4-0.20221005112135-3a5cdcd01b2a h1:yNfiJuoT2rhUvoPPsmNj8xN3IauVRA3jgrYr4r+riz0=
+github.com/ovsinc/errors v1.2.4-0.20221005112135-3a5cdcd01b2a/go.mod h1:7Uay1Tqo9awf4Ooj2La5+PJyi0kxL3O0ZAFf/tb8wL8=
 github.com/ovsinc/multilog v1.0.5 h1:55I9RXZMwc/6iMeRNSlBb/DCXWPqXEaw35YghbZ4qcI=
 github.com/ovsinc/multilog v1.0.5/go.mod h1:kY03dtoiKsf+j8cBtDzfeqo7Olk5mOxfiQSDbEnoZV0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
@@ -16,6 +16,7 @@ github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PK
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 go.uber.org/atomic v1.10.0 h1:9qC72Qh0+3MqyJbAn8YU5xVq1frD8bn3JtD2oXtafVQ=
+go.uber.org/atomic v1.10.0/go.mod h1:LUxbIzbOniOlMKjJjyPfpl4v+PKK2cNJn91OQbhoJI0=
 go.uber.org/multierr v1.8.0 h1:dg6GjLku4EH+249NNmoIciG9N/jURbDG+pFlTkhzIC8=
 golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec h1:BkDtF2Ih9xZ7le9ndzTA7KJow28VbQW3odyk/8drmuI=
 golang.org/x/text v0.3.7 h1:olpwvP2KacW1ZWvsR7uQhoyTYvKAupfQrRGBFM352Gk=
