@@ -13,7 +13,7 @@ func GetID(err error) (id string) {
 	return
 }
 
-func findByErr(err error, target error) (*Error, bool) {
+func findByErr(err error, target error) (error, bool) {
 	switch t := err.(type) { //nolint:errorlint
 	case Multierror:
 		for _, e := range t.Errors() {
@@ -37,15 +37,10 @@ func findByErr(err error, target error) (*Error, bool) {
 	return nil, false
 }
 
-func findByID(err error, id []byte) (*Error, bool) {
+func findByID(err error, id []byte) (error, bool) {
 	switch t := err.(type) { //nolint:errorlint
-	case Multierror: // multiError
-		for _, e := range t.Errors() {
-			if bytes.Equal(e.ID(), id) {
-				return e, true
-			}
-		}
-		return nil, false
+	case interface{ FindByID([]byte) (error, bool) }: // multiError
+		return t.FindByID(id)
 
 	case *Error:
 		return t, bytes.Equal(t.ID(), []byte(id))
@@ -56,7 +51,7 @@ func findByID(err error, id []byte) (*Error, bool) {
 
 // UnwrapByID вернет ошибку (*Error) с указанным ID.
 // Если ошибка с указанным ID не найдена, вернется nil.
-func UnwrapByID(err error, id string) *Error {
+func UnwrapByID(err error, id string) error {
 	if e, ok := findByID(err, []byte(id)); ok {
 		return e
 	}
@@ -65,7 +60,7 @@ func UnwrapByID(err error, id string) *Error {
 
 // UnwrapByErr вернет ошибку (*Error) соответсвующую target или nil.
 // Если ошибка не найдена, вернется nil.
-func UnwrapByErr(err error, target error) *Error {
+func UnwrapByErr(err error, target error) error {
 	if e, ok := findByErr(err, target); ok {
 		return e
 	}
@@ -115,8 +110,8 @@ func Cast(err error) (*Error, bool) {
 	case *Error:
 		return t, true
 
-	case Multierror:
-		return t.Last(), true
+	case interface{ Last() error }:
+		return New(t.Last()), true
 
 	default:
 		return New(err), true
@@ -135,6 +130,6 @@ func CastMultierr(err error) (Multierror, bool) {
 		return t, true
 
 	default:
-		return Combine(err), true
+		return Combine(err).(Multierror), true
 	}
 }

@@ -259,5 +259,5 @@ func ExampleCaller() {
 	fmt.Printf("%s\n", err.Error())
 
 	// Output:
-	// {call:example_test.go:263: ExampleCaller(),duration:1s} some call
+	// {call:example_test.go:257: ExampleCaller(),duration:1s} some call
 }

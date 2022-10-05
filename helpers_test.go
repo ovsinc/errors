@@ -73,7 +73,7 @@ func TestUnwrapByID(t *testing.T) { //nolint:funlen
 	}
 }
 
-func BenchmarkUnwrapByID(b *testing.B) {
+func BenchmarkUnwrapByIDOne(b *testing.B) {
 	id1 := "myid"
 	e1 := NewWith(
 		SetMsg("e1"),
@@ -81,8 +81,12 @@ func BenchmarkUnwrapByID(b *testing.B) {
 	)
 
 	err := Combine(
-		New("first"), e1, New("hello1"), nil,
-		NewWith(SetMsg("hello2"), SetID("two")))
+		New("first"),
+		e1,
+		New("hello1"),
+		nil,
+		NewWith(SetMsg("hello2"), SetID("two")),
+	)
 
 	findErr := UnwrapByID(err, id1)
 	require.NotNil(b, findErr)
@@ -90,6 +94,68 @@ func BenchmarkUnwrapByID(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		_ = UnwrapByID(err, id1)
+	}
+}
+
+func BenchmarkUnwrapByID2Same(b *testing.B) {
+	id1 := "myid1"
+	id2 := "myid2"
+
+	e1 := NewWith(
+		SetMsg("e1"),
+		SetID(id1),
+	)
+
+	e2 := NewWith(
+		SetMsg("e2"),
+		SetID(id2),
+	)
+
+	err := Combine(
+		e1,
+		New("first"),
+		NewWith(SetMsg("hello2"), SetID("two")),
+		nil,
+		e2,
+	)
+
+	require.Equal(b, UnwrapByID(err, id1).Error(), e1.Error())
+	require.Equal(b, UnwrapByID(err, id2).Error(), e2.Error())
+
+	for i := 0; i < b.N; i++ {
+		_ = ContainsByID(err, id1)
+		_ = UnwrapByID(err, id1)
+	}
+}
+
+func BenchmarkUnwrapByID2Differrents(b *testing.B) {
+	id1 := "myid1"
+	id2 := "myid2"
+
+	e1 := NewWith(
+		SetMsg("e1"),
+		SetID(id1),
+	)
+
+	e2 := NewWith(
+		SetMsg("e2"),
+		SetID(id2),
+	)
+
+	err := Combine(
+		e1,
+		New("first"),
+		NewWith(SetMsg("hello2"), SetID("two")),
+		nil,
+		e2,
+	)
+
+	require.Equal(b, UnwrapByID(err, id1).Error(), e1.Error())
+	require.Equal(b, UnwrapByID(err, id2).Error(), e2.Error())
+
+	for i := 0; i < b.N; i++ {
+		_ = ContainsByID(err, id1)
+		_ = UnwrapByID(err, id2)
 	}
 }
 
@@ -233,7 +299,7 @@ func TestUnwrap(t *testing.T) {
 		{
 			name: "std err in wrap",
 			args: args{
-				err: Wrap(e1, e2),
+				err: Wrap(e2, e1),
 			},
 			want: "err two",
 		},
@@ -242,7 +308,7 @@ func TestUnwrap(t *testing.T) {
 			args: args{
 				err: Combine(nil, e2, nil, e1),
 			},
-			want: "hello",
+			want: "err two",
 		},
 	}
 	for _, tt := range tests {

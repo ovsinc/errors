@@ -1,10 +1,15 @@
 package errors
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+
+	"go.uber.org/atomic"
+)
 
 // Combine создаст цепочку ошибок из ошибок ...errors.
 // Допускается использование `nil` в аргументах.
-func Combine(errors ...error) Multierror {
+func Combine(errors ...error) error {
 	return fromSlice(errors)
 }
 
@@ -18,8 +23,35 @@ func CombineWithLog(errs ...error) error {
 
 // Wrap обернет ошибку `left` ошибкой `right`, получив цепочку.
 // Допускается использование `nil` в одном из аргументов.
-func Wrap(left error, right error) Multierror {
-	return fromSlice([]error{left, right})
+func Wrap(left error, right error) error {
+	switch {
+	case left == nil:
+		return right
+	case right == nil:
+		return left
+	}
+
+	if _, ok := right.(*multiError); !ok {
+		if l, ok := left.(*multiError); ok && !l.copyNeeded.Swap(true) {
+			// Common case where the error on the left is constantly being
+			// appended to.
+			return &multiError{
+				errors: append(l.errors, right),
+				cur:    atomic.NewInt32(l.cur.Load()),
+			}
+		} else if !ok {
+			// Both errors are single errors.
+			return &multiError{
+				errors: []error{left, right},
+				cur:    atomic.NewInt32(int32(0)),
+			}
+		}
+	}
+
+	// Either right or both, left and right, are multiErrors. Rely on usual
+	// expensive logic.
+	errors := [2]error{left, right}
+	return fromSlice(errors[0:])
 }
 
 // WrapWithLog обернет ошибку olderr в err и вернет цепочку,
@@ -33,30 +65,29 @@ func WrapWithLog(olderr error, err error) error {
 var _ Multierror = (*multiError)(nil)
 
 type Multierror interface {
-	Errors() []*Error
+	Errors() []error
 	Error() string
 	Format(f fmt.State, c rune)
 	Marshal(fn ...Marshaller) ([]byte, error)
 	Len() int
 	Log(l ...Logger)
 	Unwrap() error
-	Last() *Error
+	Last() error
+	FindByID(id []byte) (error, bool)
 }
 
 type multiError struct {
-	errors []*Error
-	len    int
-	last   int
+	errors     []error
+	cur        *atomic.Int32
+	copyNeeded *atomic.Bool
 }
 
 // Errors returns the copy list of underlying errors.
-func (merr *multiError) Errors() []*Error {
+func (merr *multiError) Errors() []error {
 	if merr == nil || merr.errors == nil {
-		return []*Error{}
+		return nil
 	}
-	result := make([]*Error, len(merr.errors))
-	copy(result, merr.errors)
-	return result
+	return append(([]error)(nil), merr.errors...)
 }
 
 func (merr *multiError) Error() string {
@@ -88,7 +119,7 @@ func (merr *multiError) Format(f fmt.State, c rune) {
 }
 
 func (merr *multiError) Len() int {
-	return merr.len
+	return len(merr.errors)
 }
 
 // Unwrap вернет самую новую ошибку в стеке
@@ -97,12 +128,11 @@ func (merr *multiError) Unwrap() error {
 }
 
 // Last вернет самую новую (*Error) ошибку в стеке
-func (merr *multiError) Last() *Error {
-	es := merr.Errors()
-	if len(es) == 0 {
+func (merr *multiError) Last() error {
+	if merr.errors == nil {
 		return nil
 	}
-	return es[merr.last]
+	return merr.errors[0]
 }
 
 func (merr *multiError) As(target interface{}) bool {
@@ -126,47 +156,109 @@ func (merr *multiError) Log(l ...Logger) {
 	Log(merr, l...)
 }
 
-// Нужна оптимизация по примеру uber https://github.com/uber-go/multierr/blob/master/error.go#L333
-
-// append err to []*Error
-// errors must not be nil
-func appendError(errors []*Error, err interface{}) []*Error {
-	switch t := err.(type) {
-	case nil:
-		return nil
-
-	case *Error:
-		return append(errors, t)
-
-	case Multierror:
-		return append(errors, t.Errors()...)
-
-	case error:
-		return append(errors, New(t))
+func (merr *multiError) FindByID(id []byte) (error, bool) {
+	if merr.errors == nil {
+		return nil, false
 	}
 
-	return errors
+	if e, ok := merr.errors[merr.cur.Load()].(*Error); ok {
+		if bytes.Equal(e.ID(), id) {
+			return e, true
+		}
+	}
+
+	for i, e := range merr.errors {
+		if ee, ok := e.(*Error); ok {
+			if bytes.Equal(ee.ID(), id) {
+				merr.cur.Store(int32(i))
+				return e, true
+			}
+		}
+	}
+
+	return nil, false
 }
 
-// fromSlice converts the given list of errors into a single error.
-func fromSlice(errors []error) Multierror {
-	nonNilErrs := make([]*Error, 0, len(errors)+1)
-	for _, err := range errors {
+type inspectResult struct {
+	// Number of top-level non-nil errors
+	count int
+
+	// Total number of errors including multiErrors
+	capacity int
+
+	// Index of the first non-nil error in the list. Value is meaningless if
+	// Count is zero.
+	firstErrorIdx int
+
+	// Whether the list contains at least one multiError
+	containsMultiError bool
+}
+
+// Inspects the given slice of errors so that we can efficiently allocate
+// space for it.
+func inspect(errors []error) (res inspectResult) {
+	first := true
+	for i, err := range errors {
 		if err == nil {
 			continue
 		}
-		nonNilErrs = appendError(nonNilErrs, err)
+
+		res.count++
+		if first {
+			first = false
+			res.firstErrorIdx = i
+		}
+
+		if merr, ok := err.(*multiError); ok {
+			res.capacity += len(merr.errors)
+			res.containsMultiError = true
+		} else {
+			res.capacity++
+		}
+	}
+	return
+}
+
+// fromSlice converts the given list of errors into a single error.
+func fromSlice(errors []error) error {
+	// Don't pay to inspect small slices.
+	switch len(errors) {
+	case 0:
+		return nil
+	case 1:
+		return errors[0]
 	}
 
-	last := 0
-	len := len(nonNilErrs)
-	if len > 0 {
-		last = len - 1
+	res := inspect(errors)
+	switch res.count {
+	case 0:
+		return nil
+	case 1:
+		// only one non-nil entry
+		return errors[res.firstErrorIdx]
+	case len(errors):
+		if !res.containsMultiError {
+			// Error list is flat. Make a copy of it
+			// Otherwise "errors" escapes to the heap
+			// unconditionally for all other cases.
+			// This lets us optimize for the "no errors" case.
+			out := append(([]error)(nil), errors...)
+			return &multiError{errors: out, cur: atomic.NewInt32(int32(res.firstErrorIdx))}
+		}
 	}
 
-	return &multiError{
-		errors: nonNilErrs,
-		len:    len,
-		last:   last,
+	nonNilErrs := make([]error, 0, res.capacity)
+	for _, err := range errors[res.firstErrorIdx:] {
+		if err == nil {
+			continue
+		}
+
+		if nested, ok := err.(*multiError); ok {
+			nonNilErrs = append(nonNilErrs, nested.errors...)
+		} else {
+			nonNilErrs = append(nonNilErrs, err)
+		}
 	}
+
+	return &multiError{errors: nonNilErrs, cur: atomic.NewInt32(int32(0))}
 }

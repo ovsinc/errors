@@ -148,27 +148,6 @@ func BenchmarkVendorMyNewFull(b *testing.B) {
 	}
 }
 
-// func BenchmarkVendorMyNewWithTranslate(b *testing.B) {
-// 	errEmailsUnreadMsg := localTransContext()
-// 	localizer := localizePrepare()
-
-// 	err := errors.NewWith(
-// 		errors.SetMsg("hello1"),
-// 		errors.AppendContextInfo("hello", "world"),
-// 		errors.SetOperation("nothing"),
-// 		errors.SetID("ErrEmailsUnreadMsg"),
-// 		errors.SetTranslateContext(&errEmailsUnreadMsg),
-// 		errors.SetLocalizer(localizer),
-// 	)
-
-// 	require.Equal(b, err.Error(), "[nothing] {hello:world} У John Snow имеется 5 непрочитанных сообщений.")
-
-// 	b.ResetTimer()
-// 	for i := 0; i < b.N; i++ {
-// 		_ = err.Error()
-// 	}
-// }
-
 //
 // multierr
 //
