@@ -12,10 +12,11 @@
   - [Производительность](#Производительность)
 4. [Сценарии использования](#Сценарии-использования)
   - [Замена стандартной errors](#Замена-стандартной-errors)
-  - [Дополнительные опции](#Дополнительные-опции)
+  - [Дополнительные свойства](#Дополнительные-свойства)
   - [Логгирование](#Логгирование)
   - [Перевод сообщения ошибки](#Переводсообщения-ошибки)
   - [Цепочка ошибок](#Цепочка-ошибок)
+  - [Финальная обработка ошибок](#Финальная-обработка-ошибок)
 5. [Особенности использования](#Особенности-использования)
   - [Управление логгированием ошибки](#Управление-логгированием-ошибки)
   - [Настройка перевода сообщения ошибки](#Настройка-перевода-сообщения-ошибки)
@@ -168,7 +169,7 @@ func main() {
 
 ### Расширенное использование
 
-#### Дополнительные опции
+#### Дополнительные свойства
 
 Вызов `NewWith` позволяет создать ошибку с нужными свойствами в стиле функций-параметров.
 
@@ -193,7 +194,9 @@ func main() {
 
 ### Перевод сообщения ошибки
 
-Сообщение об ошибке можно перевести. Для корректного выполнения перевода в `*Error` должен быть установлен идентификатор.
+Сообщение об ошибке можно перевести.
+Для корректного выполнения перевода в `*Error` должен быть установлен идентификатор,
+который должен быть идентичным с объектом сообщения (`i18n.Message`).
 
 Возможные варианты вызова:
 
@@ -201,7 +204,9 @@ func main() {
 - хелпер `Translate(error, ...Translater) (string, error)`;
 - форматированныый вывод `Printf` с руной `#s` (используется дефолтный контекст перевода).
 
-В случае ошибки перевода методы вернут оригинальное сообщение.
+В случае ошибки перевода все эти методы вернут оригинальное сообщение.
+
+Подробнее описано [тут](#Настройка-перевода-сообщения-ошибки).
 
 ### Цепочка ошибок
 
@@ -297,6 +302,123 @@ func main() {
 
 Использование в разных потоках может быть не безопасным!
 В горутинах лучше использовать [errgroup](https://pkg.go.dev/golang.org/x/sync@v0.0.0-20220923202941-7f9b1623fab7/errgroup).
+
+### Финальная обработка ошибок
+
+В golang, к сожалению, нет удобного механизма обработки исключений, как в python. Принято "поднимать" ошибку на более высокий уровень вызова по цепочке.
+
+Например:
+
+```golang
+
+import "errors"
+
+var Err1 = errors.New("some error")
+
+func fn1() error {
+    return Err1
+}
+
+func fn2() error {
+    err := fn1()
+    if err != nil {
+        return err
+    }
+    return nil
+}
+
+...
+
+```
+
+Тем не мене подход в python try-except выглядит интересным.
+
+```python
+class Err1(Exception):
+    pass
+
+class Err2(Exception):
+    pass
+
+class Err3(Exception):
+    pass
+
+def fn():
+    raise Err1()
+
+def main:
+    try:
+        fn()
+    except Err1 as err:
+        print("Error: {0}".format(err))
+    except Err2 as err:
+        print("Error: {0}".format(err))
+    except:
+        raise
+```
+
+В пакете `errors` для подобной реализации есть инструменты.
+Как пример выше на python можно похоже реализовать на golang:
+
+```golang
+package main
+
+import (
+    "fmt"
+    "github.com/ovsinc/errors"
+)
+
+const (
+    Err1ID = "one"
+    Err2ID = "two"
+    Err3ID = "tree"
+)
+
+var (
+    Err1 = errors.NewWith(
+        errors.SetMsg("error one"),
+        errors.SetID(Err1ID),
+    )
+    Err2 = errors.NewWith(
+        errors.SetMsg("error two"),
+        errors.SetID(Err2ID),
+    )
+    Err3 = errors.NewWith(
+        errors.SetMsg("error tree"),
+        errors.SetID(Err3ID),
+    )
+)
+
+func fn() error {
+    return Err1
+}
+
+func main() {
+    var e error
+
+    err := fn() // try
+    switch {
+    // except named exception
+    case errors.ContainsByID(err, Err1ID):
+        e = errors.UnwrapByID(err, Err1ID)
+
+    case errors.ContainsByID(err, Err2ID):
+        e = errors.UnwrapByID(err, Err2ID)
+
+    // default except
+    default:
+        e = errors.UnwrapByID(err, Err3ID)
+    }
+
+    fmt.Printf("%v\n", e)
+}
+
+```
+
+Не стоит беспокоиться о повторном поиске по ID,
+второй раз поиск по ID выполнится быстрее из-за кеширования.
+
+Подробнее можно ознакомится в примере [real_world_example](https://github.com/ovsinc/errors/tree/new_approach/_examples/real_world_example).
 
 ## Особенности использования
 
