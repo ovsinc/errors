@@ -84,7 +84,7 @@ func BenchmarkVendorMyNewSimple(b *testing.B) {
 	}
 }
 
-func BenchmarkVendorMyNewSimpleConstructo(b *testing.B) {
+func BenchmarkVendorMyNewSimpleConstructor(b *testing.B) {
 	err := errors.New("hello1")
 
 	require.Equal(b, err.Error(), "hello1")

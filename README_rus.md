@@ -100,6 +100,39 @@ make bench
 make bench_vendors
 ```
 
+Сравнение основных возможностей для похожих решений, одна ошибка:
+
+```text
+go test -benchmem -run=^$ -bench "^(BenchmarkVendorStandartError|BenchmarkVendorStandartConstructor|BenchmarkVendorXerrors|BenchmarkVendorXerrorsConstructor|BenchmarkVendorMyNewFull|BenchmarkVendorMyNewFullConstructor|BenchmarkVendorMyNewSimple|BenchmarkVendorMyNewSimpleConstructo)$"
+goos: linux
+goarch: amd64
+pkg: github.com/ovsinc/errors
+cpu: Intel(R) Core(TM) i7-10850H CPU @ 2.70GHz
+BenchmarkVendorStandartError-12                 704312725                1.732 ns/op           0 B/op          0 allocs/op
+BenchmarkVendorStandartConstructor-12           1000000000               0.3863 ns/op          0 B/op          0 allocs/op
+BenchmarkVendorXerrors-12                       711442788                1.709 ns/op           0 B/op          0 allocs/op
+BenchmarkVendorXerrorsConstructor-12             2037637               584.4 ns/op             0 B/op          0 allocs/op
+BenchmarkVendorMyNewSimple-12                   14488196                79.01 ns/op            0 B/op          0 allocs/op
+BenchmarkVendorMyNewSimpleConstructor-12         10686228               152.0 ns/op           136 B/op          2 allocs/op
+BenchmarkVendorMyNewFull-12                      6436602               158.1 ns/op             0 B/op          0 allocs/op
+BenchmarkVendorMyNewFullConstructor-12           1848260               649.0 ns/op           472 B/op          8 allocs/op
+```
+
+Сравнение основных возможностей для похожих решений, цепочка ошибок:
+
+
+```text
+go test -benchmem -run=^$ -bench "^(BenchmarkVendorMyMulti2StdErr|BenchmarkVendorMyMulti2MySimple|BenchmarkVendorHashiMulti2StdErr|BenchmarkVendorUberMulti2StdErr)$"
+goos: linux
+goarch: amd64
+pkg: github.com/ovsinc/errors
+cpu: Intel(R) Core(TM) i7-10850H CPU @ 2.70GHz
+BenchmarkVendorMyMulti2StdErr-12         1761760               936.2 ns/op           128 B/op          6 allocs/op
+BenchmarkVendorMyMulti2MySimple-12       1661764               867.7 ns/op           128 B/op          6 allocs/op
+BenchmarkVendorHashiMulti2StdErr-12      1238654              1082 ns/op             136 B/op          6 allocs/op
+BenchmarkVendorUberMulti2StdErr-12       8818620               163.5 ns/op            16 B/op          1 allocs/op
+```
+
 [К оглавлению](#Оглавление)
 
 ## Сценарии использования
