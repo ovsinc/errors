@@ -153,7 +153,7 @@ func errWithType(eType errType, ops ...Options) *Error {
 }
 
 func IternalErrWith(ops ...Options) *Error {
-	return errWithType(Internal)
+	return errWithType(Internal, ops...)
 }
 
 func IternalErr(s string) *Error {
@@ -169,7 +169,7 @@ func ValidationErr(s string) *Error {
 }
 
 func InputBodyErrWith(ops ...Options) *Error {
-	return errWithType(InputBody)
+	return errWithType(InputBody, ops...)
 }
 
 func InputBodyErr(s string) *Error {
@@ -177,7 +177,7 @@ func InputBodyErr(s string) *Error {
 }
 
 func UnauthenticatedErrWith(ops ...Options) *Error {
-	return errWithType(Unauthenticated)
+	return errWithType(Unauthenticated, ops...)
 }
 
 func UnauthenticatedErr(s string) *Error {
@@ -185,7 +185,7 @@ func UnauthenticatedErr(s string) *Error {
 }
 
 func UnauthorizedErrWith(ops ...Options) *Error {
-	return errWithType(Unauthorized)
+	return errWithType(Unauthorized, ops...)
 }
 
 func UnauthorizedErr(s string) *Error {
@@ -193,7 +193,7 @@ func UnauthorizedErr(s string) *Error {
 }
 
 func DuplicateErrWith(ops ...Options) *Error {
-	return errWithType(Duplicate)
+	return errWithType(Duplicate, ops...)
 }
 
 func DuplicateErr(s string) *Error {
@@ -201,7 +201,7 @@ func DuplicateErr(s string) *Error {
 }
 
 func EmptyErrWith(ops ...Options) *Error {
-	return errWithType(Empty)
+	return errWithType(Empty, ops...)
 }
 
 func EmptyErr(s string) *Error {
@@ -209,7 +209,7 @@ func EmptyErr(s string) *Error {
 }
 
 func NotFoundErrWith(ops ...Options) *Error {
-	return errWithType(NotFound)
+	return errWithType(NotFound, ops...)
 }
 
 func NotFoundErr(s string) *Error {
@@ -217,7 +217,7 @@ func NotFoundErr(s string) *Error {
 }
 
 func MaximumAttemptsErrWith(ops ...Options) *Error {
-	return errWithType(MaximumAttempts)
+	return errWithType(MaximumAttempts, ops...)
 }
 
 func MaximumAttemptsErr(s string) *Error {
@@ -225,7 +225,7 @@ func MaximumAttemptsErr(s string) *Error {
 }
 
 func SubscriptionExpiredErrWith(ops ...Options) *Error {
-	return errWithType(SubscriptionExpired)
+	return errWithType(SubscriptionExpired, ops...)
 }
 
 func SubscriptionExpiredErr(s string) *Error {
@@ -233,7 +233,7 @@ func SubscriptionExpiredErr(s string) *Error {
 }
 
 func DownstreamDependencyTimedoutErrWith(ops ...Options) *Error {
-	return errWithType(DownstreamDependencyTimedout)
+	return errWithType(DownstreamDependencyTimedout, ops...)
 }
 
 func DownstreamDependencyTimedoutErr(s string) *Error {

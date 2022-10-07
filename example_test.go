@@ -42,6 +42,17 @@ func ExampleNewLog() {
 	// ovsinc/errors hello world
 }
 
+func ExampleDownstreamDependencyTimedoutErr() {
+	e := errors.DownstreamDependencyTimedoutErr("hello")
+
+	fmt.Printf("%q\n", e)
+	fmt.Printf("%v\n", e)
+
+	// Output:
+	// id: operation: error_type:DownstreamDependencyTimedout context_info: message:hello
+	// (DownstreamDependencyTimedout) hello
+}
+
 func ExampleNewWith() {
 	e := errors.NewWith(
 		errors.SetID("myid"),
