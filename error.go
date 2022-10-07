@@ -64,8 +64,9 @@ func NewWithLog(ops ...Options) *Error {
 // Error структура кастомной ошибки.
 // Это потоко-безопасный объект.
 type Error struct {
-	id, msg, operation, errorType []byte
-	contextInfo                   CtxKV
+	id, msg, operation []byte
+	contextInfo        CtxKV
+	errorType          errType
 	// type like a:
 	// http - https://cs.opensource.google/go/go/+/refs/tags/go1.19.1:src/net/http/status.go;l=9
 	// grpc - https://pkg.go.dev/google.golang.org/grpc/codes
@@ -121,9 +122,9 @@ func (e *Error) Operation() []byte {
 
 // ErrorType вернет тип ошибки.
 // Это безопасный метод, всегда возвращает не nil.
-func (e *Error) ErrorType() []byte {
+func (e *Error) ErrorType() errType {
 	if e == nil {
-		return nil
+		return defaultErrType
 	}
 
 	return e.errorType
@@ -168,7 +169,7 @@ func (e *Error) Format(s fmt.State, verb rune) { //nolint:cyclop
 		_, _ = s.Write(e.Operation())
 
 	case 't':
-		_, _ = s.Write(e.ErrorType())
+		_, _ = io.WriteString(s, e.ErrorType().String())
 
 	case 'f':
 		_, _ = io.WriteString(s, Caller(7)())
@@ -198,7 +199,8 @@ func (e *Error) Format(s fmt.State, verb rune) { //nolint:cyclop
 		_, _ = s.Write(e.Operation())
 		//errorType
 		_, _ = io.WriteString(s, " error_type:")
-		_, _ = s.Write(e.ErrorType())
+		_, _ = io.WriteString(s, e.ErrorType().String())
+
 		//errorType
 		_, _ = io.WriteString(s, " context_info:")
 		contextInfoFormat(s, e.ContextInfo(), false)

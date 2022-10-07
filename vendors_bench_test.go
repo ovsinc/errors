@@ -117,10 +117,10 @@ func BenchmarkVendorMyNewFullConstructor(b *testing.B) {
 		errors.SetID("IDhello1"),
 		errors.SetOperation("nothing"),
 		errors.AppendContextInfo("hello", "world"),
-		errors.SetErrorType("myerrtype"),
+		errors.SetErrorType(errors.Duplicate),
 	)
 
-	require.Equal(b, err.Error(), "(myerrtype) [nothing] {hello:world} hello1")
+	require.Equal(b, err.Error(), "(Duplicate) [nothing] {hello:world} hello1")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -129,7 +129,7 @@ func BenchmarkVendorMyNewFullConstructor(b *testing.B) {
 			errors.SetID("IDhello1"),
 			errors.SetOperation("nothing"),
 			errors.AppendContextInfo("hello", "world"),
-			errors.SetErrorType("myerrtype"),
+			errors.SetErrorType(errors.Duplicate),
 		)
 	}
 }

@@ -48,11 +48,11 @@ func (m *MarshalString) Marshal(i interface{}) ([]byte, error) {
 	}
 
 	buf := bytebufferpool.Get()
-	defer bytebufferpool.Put(buf)
-
 	_ = m.MarshalTo(i, buf)
+	data := buf.Bytes()
+	bytebufferpool.Put(buf)
 
-	return buf.Bytes(), nil
+	return data, nil
 }
 
 //
@@ -105,9 +105,10 @@ func stringFormat(w io.Writer, e error) {
 		// id do not write
 
 		// err type
-		if t := t.ErrorType(); t != nil {
+		if et := t.ErrorType(); et != 0 {
 			_, _ = w.Write(_errTypeDelimerLeft)
-			_, _ = w.Write(t)
+			_, _ = io.WriteString(w, t.ErrorType().String())
+
 			_, _ = w.Write(_errTypeDelimerRight)
 			_, _ = w.Write(_separator)
 		}

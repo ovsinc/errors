@@ -34,11 +34,11 @@ func (m *MarshalJSON) Marshal(i interface{}) ([]byte, error) {
 	}
 
 	buf := bytebufferpool.Get()
-	defer bytebufferpool.Put(buf)
-
 	_ = m.MarshalTo(i, buf)
+	data := buf.Bytes()
+	bytebufferpool.Put(buf)
 
-	return buf.Bytes(), nil
+	return data, nil
 }
 
 func jsonFormat(buf io.Writer, e error) {
@@ -56,6 +56,12 @@ func jsonFormat(buf io.Writer, e error) {
 		_, _ = io.WriteString(buf, "\"operation\":")
 		_, _ = io.WriteString(buf, "\"")
 		_, _ = buf.Write(t.Operation())
+		_, _ = io.WriteString(buf, "\",")
+
+		// ErrorType
+		_, _ = io.WriteString(buf, "\"error_type\":")
+		_, _ = io.WriteString(buf, "\"")
+		_, _ = io.WriteString(buf, t.ErrorType().String())
 		_, _ = io.WriteString(buf, "\",")
 
 		// ContextInfo

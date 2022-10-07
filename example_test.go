@@ -49,7 +49,7 @@ func ExampleNewWith() {
 		errors.AppendContextInfo("hello", "world"),
 		errors.AppendContextInfo("Joe", "Dow"),
 		errors.SetOperation("test op"),
-		errors.SetErrorType("mytype"),
+		errors.SetErrorType(errors.InputBody),
 	)
 
 	fmt.Printf("%q\n", e)
@@ -63,13 +63,13 @@ func ExampleNewWith() {
 	fmt.Printf("%f\n", e)
 
 	// Output:
-	// id:myid operation:test op error_type:mytype context_info:hello:world,Joe:Dow message:hello
-	// (mytype) [test op] {hello:world,Joe:Dow} hello
+	// id:myid operation:test op error_type:InputBody context_info:hello:world,Joe:Dow message:hello
+	// (InputBody) [test op] {hello:world,Joe:Dow} hello
 	// hello:world,Joe:Dow
-	// mytype
+	// InputBody
 	// test op
 	// hello
-	// {"id":"myid","operation":"test op","context":{"hello":"world","Joe":"Dow"},"msg":"hello"}
+	// {"id":"myid","operation":"test op","error_type":"InputBody","context":{"hello":"world","Joe":"Dow"},"msg":"hello"}
 	// example_test.go:63: ExampleNewWith()
 }
 

@@ -62,7 +62,11 @@ func WrapWithLog(olderr error, err error) error {
 	return e
 }
 
-var _ Multierror = (*multiError)(nil)
+var (
+	_ Multierror    = (*multiError)(nil)
+	_ error         = (*multiError)(nil)
+	_ fmt.Formatter = (*multiError)(nil)
+)
 
 type Multierror interface {
 	Errors() []error

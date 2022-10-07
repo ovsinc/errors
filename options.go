@@ -43,15 +43,15 @@ func SetOperation(o string) Options {
 
 // Error type
 
-// SetErrorType установит тип, как строку.
+// SetErrorType установит тип.
 // Если в *Error уже были записаны операции,
 // то они будут заменены на указанные в аргументе ops.
-func SetErrorType(et string) Options {
+func SetErrorType(et errType) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
 		}
-		e.errorType = []byte(et)
+		e.errorType = et
 	}
 }
 
