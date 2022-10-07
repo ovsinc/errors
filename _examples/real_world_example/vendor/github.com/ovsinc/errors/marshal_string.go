@@ -1,9 +1,7 @@
 package errors
 
 import (
-	"fmt"
 	"io"
-	"sort"
 	"strconv"
 
 	"github.com/valyala/bytebufferpool"
@@ -37,7 +35,7 @@ func (m *MarshalString) MarshalTo(i interface{}, dst io.Writer) error {
 		return nil
 	case interface{ Errors() []error }: // multiError
 		stringMultierrFormat(dst, t.Errors())
-	case error: //one
+	case error: // one
 		stringFormat(dst, t)
 	}
 
@@ -50,11 +48,11 @@ func (m *MarshalString) Marshal(i interface{}) ([]byte, error) {
 	}
 
 	buf := bytebufferpool.Get()
-	defer bytebufferpool.Put(buf)
-
 	_ = m.MarshalTo(i, buf)
+	data := buf.Bytes()
+	bytebufferpool.Put(buf)
 
-	return buf.Bytes(), nil
+	return data, nil
 }
 
 //
@@ -74,12 +72,7 @@ func stringMultierrFormat(w io.Writer, es []error) {
 	}
 }
 
-func contextInfoFormat(w io.Writer, ctxiptr *CtxMap, useDelimiter bool) {
-	if ctxiptr == nil {
-		return
-	}
-
-	ctxi := *ctxiptr
+func contextInfoFormat(w io.Writer, ctxi CtxKV, useDelimiter bool) {
 	if len(ctxi) < 1 {
 		return
 	}
@@ -88,18 +81,16 @@ func contextInfoFormat(w io.Writer, ctxiptr *CtxMap, useDelimiter bool) {
 		_, _ = w.Write(_ctxDelimiterLeft)
 	}
 
-	// отсортируем по ключам запишем в буфер в формате
-	// {<key>:<value>,<key>:<value>}
-	ctxskeys := make([]string, 0, len(ctxi))
-	for i := range ctxi {
-		ctxskeys = append(ctxskeys, i)
-	}
-	sort.Strings(ctxskeys)
-
-	_, _ = fmt.Fprintf(w, "%s:%v", ctxskeys[0], ctxi[ctxskeys[0]])
-	for _, i := range ctxskeys[1:] {
+	// 0
+	_, _ = w.Write(ctxi[0].Key)
+	_, _ = io.WriteString(w, ":")
+	_, _ = w.Write(ctxi[0].Value)
+	// other
+	for _, i := range ctxi[1:] {
 		_, _ = w.Write(_listSeparator)
-		_, _ = fmt.Fprintf(w, "%s:%v", i, ctxi[i])
+		_, _ = w.Write(i.Key)
+		_, _ = io.WriteString(w, ":")
+		_, _ = w.Write(i.Value)
 	}
 
 	if useDelimiter {
@@ -114,9 +105,10 @@ func stringFormat(w io.Writer, e error) {
 		// id do not write
 
 		// err type
-		if t := t.ErrorType(); t != nil {
+		if et := t.ErrorType(); et != 0 {
 			_, _ = w.Write(_errTypeDelimerLeft)
-			_, _ = w.Write(t)
+			_, _ = io.WriteString(w, t.ErrorType().String())
+
 			_, _ = w.Write(_errTypeDelimerRight)
 			_, _ = w.Write(_separator)
 		}
@@ -130,8 +122,7 @@ func stringFormat(w io.Writer, e error) {
 		}
 
 		// ctx
-		ctxi := t.ContextInfo()
-		contextInfoFormat(w, &ctxi, true)
+		contextInfoFormat(w, t.ContextInfo(), true)
 
 		// msg
 		_, _ = w.Write(t.Msg())

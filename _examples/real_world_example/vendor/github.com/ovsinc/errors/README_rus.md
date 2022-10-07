@@ -12,10 +12,11 @@
   - [Производительность](#Производительность)
 4. [Сценарии использования](#Сценарии-использования)
   - [Замена стандартной errors](#Замена-стандартной-errors)
-  - [Дополнительные опции](#Дополнительные-опции)
+  - [Дополнительные свойства](#Дополнительные-свойства)
   - [Логгирование](#Логгирование)
   - [Перевод сообщения ошибки](#Переводсообщения-ошибки)
   - [Цепочка ошибок](#Цепочка-ошибок)
+  - [Финальная обработка ошибок](#Финальная-обработка-ошибок)
 5. [Особенности использования](#Особенности-использования)
   - [Управление логгированием ошибки](#Управление-логгированием-ошибки)
   - [Настройка перевода сообщения ошибки](#Настройка-перевода-сообщения-ошибки)
@@ -99,6 +100,39 @@ make bench
 make bench_vendors
 ```
 
+Сравнение основных возможностей для похожих решений, одна ошибка:
+
+```text
+go test -benchmem -run=^$ -bench "^(BenchmarkVendorStandartError|BenchmarkVendorStandartConstructor|BenchmarkVendorXerrors|BenchmarkVendorXerrorsConstructor|BenchmarkVendorMyNewFull|BenchmarkVendorMyNewFullConstructor|BenchmarkVendorMyNewSimple|BenchmarkVendorMyNewSimpleConstructo)$"
+goos: linux
+goarch: amd64
+pkg: github.com/ovsinc/errors
+cpu: Intel(R) Core(TM) i7-10850H CPU @ 2.70GHz
+BenchmarkVendorStandartError-12                 704312725                1.732 ns/op           0 B/op          0 allocs/op
+BenchmarkVendorStandartConstructor-12           1000000000               0.3863 ns/op          0 B/op          0 allocs/op
+BenchmarkVendorXerrors-12                       711442788                1.709 ns/op           0 B/op          0 allocs/op
+BenchmarkVendorXerrorsConstructor-12             2037637               584.4 ns/op             0 B/op          0 allocs/op
+BenchmarkVendorMyNewSimple-12                   14488196                79.01 ns/op            0 B/op          0 allocs/op
+BenchmarkVendorMyNewSimpleConstructor-12         10686228               152.0 ns/op           136 B/op          2 allocs/op
+BenchmarkVendorMyNewFull-12                      6436602               158.1 ns/op             0 B/op          0 allocs/op
+BenchmarkVendorMyNewFullConstructor-12           1848260               649.0 ns/op           472 B/op          8 allocs/op
+```
+
+Сравнение основных возможностей для похожих решений, цепочка ошибок:
+
+
+```text
+go test -benchmem -run=^$ -bench "^(BenchmarkVendorMyMulti2StdErr|BenchmarkVendorMyMulti2MySimple|BenchmarkVendorHashiMulti2StdErr|BenchmarkVendorUberMulti2StdErr)$"
+goos: linux
+goarch: amd64
+pkg: github.com/ovsinc/errors
+cpu: Intel(R) Core(TM) i7-10850H CPU @ 2.70GHz
+BenchmarkVendorMyMulti2StdErr-12         1761760               936.2 ns/op           128 B/op          6 allocs/op
+BenchmarkVendorMyMulti2MySimple-12       1661764               867.7 ns/op           128 B/op          6 allocs/op
+BenchmarkVendorHashiMulti2StdErr-12      1238654              1082 ns/op             136 B/op          6 allocs/op
+BenchmarkVendorUberMulti2StdErr-12       8818620               163.5 ns/op            16 B/op          1 allocs/op
+```
+
 [К оглавлению](#Оглавление)
 
 ## Сценарии использования
@@ -151,7 +185,7 @@ func main() {
         errors.SetMsg("hello error"),
         errors.SetOperation("store to db"),
         errors.SetID("<myid>"),
-        errors.SetErrorType("internal"),
+        errors.SetErrorType(errors.NotFound),
         errors.AppendContextInfo("host", "localhost"),
         errors.AppendContextInfo("db", "postgres"),
     )
@@ -168,7 +202,7 @@ func main() {
 
 ### Расширенное использование
 
-#### Дополнительные опции
+#### Дополнительные свойства
 
 Вызов `NewWith` позволяет создать ошибку с нужными свойствами в стиле функций-параметров.
 
@@ -176,10 +210,10 @@ func main() {
 | ----- | -------- |
 | `SetMsg(string)` | Установить сообщение об ошибке. |
 | `SetOperation(string)` | Установит операцию. |
-| `SetErrorType(string)` | Установит тип. |
+| `SetErrorType(errType)` | Установит тип. |
 | `SetID(string)` | Установит идентификатор. |
-| `SetContextInfo(CtxMap)` | Установит контекст. |
-| `AppendContextInfo(string, interface{})` | Добавит контекст к имеющимуся. Если контекст не был создан, создаст. |
+| `SetContextInfo(CtxKV)` | Установит контекст. |
+| `AppendContextInfo(string, string)` | Добавит контекст к имеющимуся. Если контекст не был создан, создаст. |
 
 #### Логгирование
 
@@ -191,9 +225,15 @@ func main() {
 - вызов метода `*Error.Log(...Logger)`;
 - хелпер `Log(error, ...Logger)`.
 
+#### Типизированная ошибка
+
+TODO!
+
 ### Перевод сообщения ошибки
 
-Сообщение об ошибке можно перевести. Для корректного выполнения перевода в `*Error` должен быть установлен идентификатор.
+Сообщение об ошибке можно перевести.
+Для корректного выполнения перевода в `*Error` должен быть установлен идентификатор,
+который должен быть идентичным с объектом сообщения (`i18n.Message`).
 
 Возможные варианты вызова:
 
@@ -201,7 +241,9 @@ func main() {
 - хелпер `Translate(error, ...Translater) (string, error)`;
 - форматированныый вывод `Printf` с руной `#s` (используется дефолтный контекст перевода).
 
-В случае ошибки перевода методы вернут оригинальное сообщение.
+В случае ошибки перевода все эти методы вернут оригинальное сообщение.
+
+Подробнее описано [тут](#Настройка-перевода-сообщения-ошибки).
 
 ### Цепочка ошибок
 
@@ -297,6 +339,123 @@ func main() {
 
 Использование в разных потоках может быть не безопасным!
 В горутинах лучше использовать [errgroup](https://pkg.go.dev/golang.org/x/sync@v0.0.0-20220923202941-7f9b1623fab7/errgroup).
+
+### Финальная обработка ошибок
+
+В golang, к сожалению, нет удобного механизма обработки исключений, как в python. Принято "поднимать" ошибку на более высокий уровень вызова по цепочке.
+
+Например:
+
+```golang
+
+import "errors"
+
+var Err1 = errors.New("some error")
+
+func fn1() error {
+    return Err1
+}
+
+func fn2() error {
+    err := fn1()
+    if err != nil {
+        return err
+    }
+    return nil
+}
+
+...
+
+```
+
+Тем не мене подход в python try-except выглядит интересным.
+
+```python
+class Err1(Exception):
+    pass
+
+class Err2(Exception):
+    pass
+
+class Err3(Exception):
+    pass
+
+def fn():
+    raise Err1()
+
+def main:
+    try:
+        fn()
+    except Err1 as err:
+        print("Error: {0}".format(err))
+    except Err2 as err:
+        print("Error: {0}".format(err))
+    except:
+        raise
+```
+
+В пакете `errors` для подобной реализации есть инструменты.
+Как пример выше на python можно похоже реализовать на golang:
+
+```golang
+package main
+
+import (
+    "fmt"
+    "github.com/ovsinc/errors"
+)
+
+const (
+    Err1ID = "one"
+    Err2ID = "two"
+    Err3ID = "tree"
+)
+
+var (
+    Err1 = errors.NewWith(
+        errors.SetMsg("error one"),
+        errors.SetID(Err1ID),
+    )
+    Err2 = errors.NewWith(
+        errors.SetMsg("error two"),
+        errors.SetID(Err2ID),
+    )
+    Err3 = errors.NewWith(
+        errors.SetMsg("error tree"),
+        errors.SetID(Err3ID),
+    )
+)
+
+func fn() error {
+    return Err1
+}
+
+func main() {
+    var e error
+
+    err := fn() // try
+    switch {
+    // except named exception
+    case errors.ContainsByID(err, Err1ID):
+        e = errors.UnwrapByID(err, Err1ID)
+
+    case errors.ContainsByID(err, Err2ID):
+        e = errors.UnwrapByID(err, Err2ID)
+
+    // default except
+    default:
+        e = errors.UnwrapByID(err, Err3ID)
+    }
+
+    fmt.Printf("%v\n", e)
+}
+
+```
+
+Не стоит беспокоиться о повторном поиске по ID,
+второй раз поиск по ID выполнится быстрее из-за кеширования.
+
+Подробнее можно ознакомится в примере [real_world_example](https://github.com/ovsinc/errors/tree/new_approach/_examples/real_world_example).
 
 ## Особенности использования
 
@@ -406,9 +565,9 @@ func main() {
 }
 ```
 
----------------------------------
-
 ### Сериализация сообщения ошибки
+
+TODO
 
 В пакете представлены по паре (JSON, string) функций форматирования для единичного сообщения и цепочке сообщений ошибки.
 
@@ -432,8 +591,9 @@ Multierror-сообщения форматируются в пакете сле�
 
 [К оглавлению](#Оглавление)
 
-
 ### Хелперы
+
+TODO
 
 Is(err, target error) bool
 As(err error, target interface{}) bool

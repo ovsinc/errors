@@ -7,8 +7,6 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
-const verboseStr = "id:%s operation:%s errorType:%s contextInfo:%v msg:%s"
-
 var (
 	ErrUnknownMarshaller = New("marshaller not found")
 
@@ -16,12 +14,10 @@ var (
 	_ fmt.Formatter = (*Error)(nil)
 )
 
-// CtxMap map контекста ошибки.
-// В качестве ключа всегда должна быть строка, а значение - любой тип.
-// При преобразовании ошибки в строку CtxMap может использоваться различные методы.
-// Для функции JSONFormat CtxMap будет преобразовываться с помощью JSON marshall.
-// Для функции StringFormat CtxMap будет преобразовываться с помощью fmt.Sprintf.
-type CtxMap map[string]interface{}
+// CtxKV slice key-value контекста ошибки.
+type CtxKV []struct {
+	Key, Value []byte
+}
 
 // New конструктор на необязательных параметрах
 // * ops ...Options -- параметризация через функции-парметры.
@@ -68,11 +64,12 @@ func NewWithLog(ops ...Options) *Error {
 // Error структура кастомной ошибки.
 // Это потоко-безопасный объект.
 type Error struct {
-	id, msg, operation, errorType []byte
+	id, msg, operation []byte
+	contextInfo        CtxKV
+	errorType          errType
 	// type like a:
 	// http - https://cs.opensource.google/go/go/+/refs/tags/go1.19.1:src/net/http/status.go;l=9
 	// grpc - https://pkg.go.dev/google.golang.org/grpc/codes
-	contextInfo CtxMap
 }
 
 // WithOptions производит параметризацию *Error с помощью функции-парметры Options.
@@ -125,16 +122,16 @@ func (e *Error) Operation() []byte {
 
 // ErrorType вернет тип ошибки.
 // Это безопасный метод, всегда возвращает не nil.
-func (e *Error) ErrorType() []byte {
+func (e *Error) ErrorType() errType {
 	if e == nil {
-		return nil
+		return defaultErrType
 	}
 
 	return e.errorType
 }
 
 // ContextInfo вернет контекст CtxMap ошибки.
-func (e *Error) ContextInfo() CtxMap {
+func (e *Error) ContextInfo() CtxKV {
 	return e.contextInfo
 }
 
@@ -159,21 +156,20 @@ func (e *Error) Marshal(fn ...Marshaller) ([]byte, error) {
 }
 
 // Format производит форматирование строки, для поддержки fmt.Printf().
-func (e *Error) Format(s fmt.State, verb rune) {
+func (e *Error) Format(s fmt.State, verb rune) { //nolint:cyclop
 	if e == nil {
 		return
 	}
 
 	switch verb {
 	case 'c':
-		ctxi := e.ContextInfo()
-		contextInfoFormat(s, &ctxi, false)
+		contextInfoFormat(s, e.ContextInfo(), false)
 
 	case 'o':
 		_, _ = s.Write(e.Operation())
 
 	case 't':
-		_, _ = s.Write(e.ErrorType())
+		_, _ = io.WriteString(s, e.ErrorType().String())
 
 	case 'f':
 		_, _ = io.WriteString(s, Caller(7)())
@@ -182,7 +178,7 @@ func (e *Error) Format(s fmt.State, verb rune) {
 		if s.Flag('+') {
 			// Translate в случае ошибки перевода
 			// возвращает оригинальное сообщение
-			io.WriteString(s, DefaultTranslate(e))
+			_, _ = io.WriteString(s, DefaultTranslate(e))
 			return
 		}
 		_, _ = s.Write(e.Msg())
@@ -192,22 +188,29 @@ func (e *Error) Format(s fmt.State, verb rune) {
 			spew.Fdump(s, e)
 			return
 		}
-		mustMarshaler().MarshalTo(e, s)
+		_ = mustMarshaler().MarshalTo(e, s)
 
 	case 'q':
-		fmt.Fprintf(
-			s,
-			verboseStr,
-			e.ID(),
-			e.Operation(),
-			e.ErrorType(),
-			e.ContextInfo(),
-			e.Msg(),
-		)
+		// id
+		_, _ = io.WriteString(s, "id:")
+		_, _ = s.Write(e.ID())
+		//operation
+		_, _ = io.WriteString(s, " operation:")
+		_, _ = s.Write(e.Operation())
+		//errorType
+		_, _ = io.WriteString(s, " error_type:")
+		_, _ = io.WriteString(s, e.ErrorType().String())
+
+		//errorType
+		_, _ = io.WriteString(s, " context_info:")
+		contextInfoFormat(s, e.ContextInfo(), false)
+		//msg
+		_, _ = io.WriteString(s, " message:")
+		_, _ = s.Write(e.Msg())
 
 	case 'j':
 		jmarshal := &MarshalJSON{}
-		jmarshal.MarshalTo(e, s)
+		_ = jmarshal.MarshalTo(e, s)
 	}
 }
 

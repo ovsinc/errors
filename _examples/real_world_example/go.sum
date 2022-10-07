@@ -31,8 +31,8 @@ github.com/mattn/go-sqlite3 v1.14.12 h1:TJ1bhYJPV44phC+IMu1u2K/i5RriLTPe+yc68XDJ
 github.com/mattn/go-sqlite3 v1.14.12/go.mod h1:NyWgC/yNuGj7Q9rpYnZvas74GogHl5/Z4A/KQRfk6bU=
 github.com/nicksnyder/go-i18n/v2 v2.2.0 h1:MNXbyPvd141JJqlU6gJKrczThxJy+kdCNivxZpBQFkw=
 github.com/nicksnyder/go-i18n/v2 v2.2.0/go.mod h1:4OtLfzqyAxsscyCb//3gfqSvBc81gImX91LrZzczN1o=
-github.com/ovsinc/errors v1.2.4-0.20221005112135-3a5cdcd01b2a h1:yNfiJuoT2rhUvoPPsmNj8xN3IauVRA3jgrYr4r+riz0=
-github.com/ovsinc/errors v1.2.4-0.20221005112135-3a5cdcd01b2a/go.mod h1:7Uay1Tqo9awf4Ooj2La5+PJyi0kxL3O0ZAFf/tb8wL8=
+github.com/ovsinc/errors v1.2.4-0.20221007135121-2b111d981f09 h1:B2K2lCDN55U+Y8klyKAd0uQE7tqpa0UO1HXkF+pDk2A=
+github.com/ovsinc/errors v1.2.4-0.20221007135121-2b111d981f09/go.mod h1:7Uay1Tqo9awf4Ooj2La5+PJyi0kxL3O0ZAFf/tb8wL8=
 github.com/ovsinc/multilog v1.0.5 h1:55I9RXZMwc/6iMeRNSlBb/DCXWPqXEaw35YghbZ4qcI=
 github.com/ovsinc/multilog v1.0.5/go.mod h1:kY03dtoiKsf+j8cBtDzfeqo7Olk5mOxfiQSDbEnoZV0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

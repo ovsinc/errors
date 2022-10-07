@@ -7,7 +7,7 @@ require (
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/labstack/echo/v4 v4.9.0
 	github.com/nicksnyder/go-i18n/v2 v2.2.0
-	github.com/ovsinc/errors v1.2.4-0.20221005112135-3a5cdcd01b2a
+	github.com/ovsinc/errors v1.2.4-0.20221007135121-2b111d981f09
 	golang.org/x/text v0.3.7
 	gorm.io/driver/sqlite v1.3.6
 	gorm.io/gorm v1.23.10

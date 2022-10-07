@@ -11,38 +11,33 @@ import (
 )
 
 var (
-	ErrUserValidation = errors.NewWith(
+	ErrUserValidation = errors.ValidationErrWith(
 		errors.SetMsg(EValidationMsg.Other),
 		errors.SetID(EValidationMsg.ID),
-		errors.SetErrorType(EValidation.String()),
 	)
 
-	ErrUserEmpty = errors.NewWith(
+	ErrUserEmpty = errors.EmptyErrWith(
 		errors.SetID(EEmptyMsg.ID),
 		errors.SetMsg(EEmptyMsg.Other),
-		errors.SetErrorType(EEmpty.String()),
 	)
 
-	ErrDBNotFound = errors.NewWith(
+	ErrDBNotFound = errors.NotFoundErrWith(
 		errors.SetMsg(ENotFoundMsg.Other),
 		errors.SetID(ENotFoundMsg.ID),
-		errors.SetErrorType(ENotFound.String()),
 	)
-	ErrDBDuplicate = errors.NewWith(
+	ErrDBDuplicate = errors.DuplicateErrWith(
 		errors.SetMsg(EDuplicateMsg.Other),
 		errors.SetID(EDuplicateMsg.ID),
-		errors.SetErrorType(EDuplicate.String()),
 	)
-	ErrDBInternal = errors.NewWith(
+	ErrDBInternal = errors.IternalErrWith(
 		errors.SetMsg(EInternalMsg.Other),
 		errors.SetID(EInternalMsg.ID),
-		errors.SetErrorType(EInternal.String()),
 	)
 
 	ErrUnknown = errors.NewWith(
 		errors.SetMsg(EUnknownMsg.Other),
 		errors.SetID(EUnknownMsg.ID),
-		errors.SetErrorType(EUnknown.String()),
+		errors.SetErrorType(errors.Unknown),
 	)
 )
 

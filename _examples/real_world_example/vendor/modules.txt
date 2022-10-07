@@ -45,7 +45,7 @@ github.com/mattn/go-sqlite3
 github.com/nicksnyder/go-i18n/v2/i18n
 github.com/nicksnyder/go-i18n/v2/internal
 github.com/nicksnyder/go-i18n/v2/internal/plural
-# github.com/ovsinc/errors v1.2.4-0.20221005112135-3a5cdcd01b2a
+# github.com/ovsinc/errors v1.2.4-0.20221007135121-2b111d981f09
 ## explicit; go 1.18
 github.com/ovsinc/errors
 # github.com/ovsinc/multilog v1.0.5

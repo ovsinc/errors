@@ -10,9 +10,8 @@ import (
 )
 
 var (
-	ErrBadContent = errors.NewWith(
+	ErrBadContent = errors.InputBodyErrWith(
 		errors.SetID(EBadContentMsg.ID),
-		errors.SetErrorType(EInputBody.String()),
 		errors.SetMsg(EBadContentMsg.Other),
 	)
 )
@@ -49,21 +48,6 @@ func (h *Handler) Register(app *echo.Echo) {
 }
 
 var ErrErrHandle = errors.New("can`t error handling")
-
-func (h *Handler) prepareMsg(e error, lang string) (int, *Response) {
-	err, _ := errors.Cast(e)
-	return ParseIntErr(string(err.ErrorType())).Status(),
-		&Response{
-			Data:   nil,
-			HasErr: true,
-			Error: &ErrorMessage{
-				Message:   h.localizer.TranslateError(lang, err),
-				Operation: string(err.Operation()),
-				Type:      string(err.ErrorType()),
-				ID:        string(err.ID()),
-			},
-		}
-}
 
 func (h *Handler) errHandle(c echo.Context, err error) error {
 	if err == nil {
@@ -104,8 +88,16 @@ func (h *Handler) errHandle(c echo.Context, err error) error {
 		e = ErrDBInternal
 	}
 
-	code, msg := h.prepareMsg(e, c.Request().Header.Get("Accept-Language"))
-	return c.JSON(code, msg)
+	code, etype, _ := errors.HTTPStatusCodeMessage(e)
+	return c.JSON(code, &Response{
+		Data:   nil,
+		HasErr: true,
+		Error: &ErrorMessage{
+			Message: h.localizer.TranslateError(c.Request().Header.Get("Accept-Language"), e),
+			Type:    etype,
+			ID:      errors.GetID(e),
+		},
+	})
 
 }
 
