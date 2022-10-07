@@ -63,13 +63,13 @@ func ExampleNewWith() {
 	fmt.Printf("%f\n", e)
 
 	// Output:
-	// id:myid operation:test op errorType:mytype contextInfo:map[Joe:Dow hello:world] msg:hello
-	// (mytype) [test op] {Joe:Dow,hello:world} hello
-	// Joe:Dow,hello:world
+	// id:myid operation:test op error_type:mytype context_info:hello:world,Joe:Dow message:hello
+	// (mytype) [test op] {hello:world,Joe:Dow} hello
+	// hello:world,Joe:Dow
 	// mytype
 	// test op
 	// hello
-	// {"id":"myid","operation":"test op","context":{"Joe":"Dow","hello":"world"},"msg":"hello"}
+	// {"id":"myid","operation":"test op","context":{"hello":"world","Joe":"Dow"},"msg":"hello"}
 	// example_test.go:63: ExampleNewWith()
 }
 
@@ -194,7 +194,7 @@ func ExampleCombineWithLog() {
 func someFuncWithErr() error {
 	return errors.NewWith(
 		errors.SetMsg("connection error"),
-		errors.SetContextInfo(errors.CtxMap{"hello": "world"}),
+		errors.SetContextInfo(errors.CtxKV{{[]byte("hello"), []byte("world")}}),
 		errors.SetOperation("write"),
 	)
 }
@@ -241,8 +241,8 @@ func someErrWithTimedCall() (err *errors.Error) {
 	begin := time.Now()
 	defer func() {
 		err = err.WithOptions(
-			errors.AppendContextInfo("duration", time.Since(begin).Round(time.Second)),
 			errors.AppendContextInfo("call", errors.DefaultCaller()),
+			errors.AppendContextInfo("duration", time.Since(begin).Round(time.Second).String()),
 		)
 	}()
 

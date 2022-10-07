@@ -7,8 +7,6 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
-const verboseStr = "id:%s operation:%s errorType:%s contextInfo:%v msg:%s"
-
 var (
 	ErrUnknownMarshaller = New("marshaller not found")
 
@@ -16,12 +14,10 @@ var (
 	_ fmt.Formatter = (*Error)(nil)
 )
 
-// CtxMap map контекста ошибки.
-// В качестве ключа всегда должна быть строка, а значение - любой тип.
-// При преобразовании ошибки в строку CtxMap может использоваться различные методы.
-// Для функции JSONFormat CtxMap будет преобразовываться с помощью JSON marshall.
-// Для функции StringFormat CtxMap будет преобразовываться с помощью fmt.Sprintf.
-type CtxMap map[string]interface{}
+// CtxKV slice key-value контекста ошибки.
+type CtxKV []struct {
+	Key, Value []byte
+}
 
 // New конструктор на необязательных параметрах
 // * ops ...Options -- параметризация через функции-парметры.
@@ -69,10 +65,10 @@ func NewWithLog(ops ...Options) *Error {
 // Это потоко-безопасный объект.
 type Error struct {
 	id, msg, operation, errorType []byte
+	contextInfo                   CtxKV
 	// type like a:
 	// http - https://cs.opensource.google/go/go/+/refs/tags/go1.19.1:src/net/http/status.go;l=9
 	// grpc - https://pkg.go.dev/google.golang.org/grpc/codes
-	contextInfo CtxMap
 }
 
 // WithOptions производит параметризацию *Error с помощью функции-парметры Options.
@@ -134,7 +130,7 @@ func (e *Error) ErrorType() []byte {
 }
 
 // ContextInfo вернет контекст CtxMap ошибки.
-func (e *Error) ContextInfo() CtxMap {
+func (e *Error) ContextInfo() CtxKV {
 	return e.contextInfo
 }
 
@@ -166,8 +162,7 @@ func (e *Error) Format(s fmt.State, verb rune) { //nolint:cyclop
 
 	switch verb {
 	case 'c':
-		ctxi := e.ContextInfo()
-		contextInfoFormat(s, &ctxi, false)
+		contextInfoFormat(s, e.ContextInfo(), false)
 
 	case 'o':
 		_, _ = s.Write(e.Operation())
@@ -195,15 +190,21 @@ func (e *Error) Format(s fmt.State, verb rune) { //nolint:cyclop
 		_ = mustMarshaler().MarshalTo(e, s)
 
 	case 'q':
-		fmt.Fprintf(
-			s,
-			verboseStr,
-			e.ID(),
-			e.Operation(),
-			e.ErrorType(),
-			e.ContextInfo(),
-			e.Msg(),
-		)
+		// id
+		_, _ = io.WriteString(s, "id:")
+		_, _ = s.Write(e.ID())
+		//operation
+		_, _ = io.WriteString(s, " operation:")
+		_, _ = s.Write(e.Operation())
+		//errorType
+		_, _ = io.WriteString(s, " error_type:")
+		_, _ = s.Write(e.ErrorType())
+		//errorType
+		_, _ = io.WriteString(s, " context_info:")
+		contextInfoFormat(s, e.ContextInfo(), false)
+		//msg
+		_, _ = io.WriteString(s, " message:")
+		_, _ = s.Write(e.Msg())
 
 	case 'j':
 		jmarshal := &MarshalJSON{}

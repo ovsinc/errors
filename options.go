@@ -58,7 +58,7 @@ func SetErrorType(et string) Options {
 // Context Info
 
 // SetContextInfo установить CtxMap.
-func SetContextInfo(ctxinf CtxMap) Options {
+func SetContextInfo(ctxinf CtxKV) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
@@ -69,14 +69,14 @@ func SetContextInfo(ctxinf CtxMap) Options {
 
 // AppendContextInfo добавить в имеющийся CtxMap значение value по ключу key.
 // Если CtxMap в *Error не установлен, то он будет предварительно установлен.
-func AppendContextInfo(key string, value interface{}) Options {
+func AppendContextInfo(key string, value string) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
 		}
 		if e.contextInfo == nil {
-			e.contextInfo = make(CtxMap)
+			e.contextInfo = make(CtxKV, 0, 6)
 		}
-		e.contextInfo[key] = value
+		e.contextInfo = append(e.contextInfo, struct{ Key, Value []byte }{[]byte(key), []byte(value)})
 	}
 }

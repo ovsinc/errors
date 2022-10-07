@@ -1,9 +1,7 @@
 package errors
 
 import (
-	"fmt"
 	"io"
-	"sort"
 	"strconv"
 
 	"github.com/valyala/bytebufferpool"
@@ -64,15 +62,20 @@ func jsonFormat(buf io.Writer, e error) {
 		_, _ = io.WriteString(buf, "\"context\":")
 		if cxtInfo := t.ContextInfo(); len(cxtInfo) > 0 {
 			_, _ = io.WriteString(buf, "{")
-			ctxskeys := make([]string, 0, len(cxtInfo))
-			for i := range cxtInfo {
-				ctxskeys = append(ctxskeys, i)
-			}
-			sort.Strings(ctxskeys)
-			_, _ = fmt.Fprintf(buf, "\"%s\":\"%v\"", ctxskeys[0], cxtInfo[ctxskeys[0]])
-			for _, i := range ctxskeys[1:] {
+			// 0
+			_, _ = io.WriteString(buf, "\"")
+			_, _ = buf.Write(cxtInfo[0].Key)
+			_, _ = io.WriteString(buf, "\":\"")
+			_, _ = buf.Write(cxtInfo[0].Value)
+			_, _ = io.WriteString(buf, "\"")
+			// other
+			for _, i := range cxtInfo[1:] {
 				_, _ = buf.Write(_listSeparator)
-				_, _ = fmt.Fprintf(buf, "\"%s\":\"%v\"", i, cxtInfo[i])
+				_, _ = io.WriteString(buf, "\"")
+				_, _ = buf.Write(i.Key)
+				_, _ = io.WriteString(buf, "\":\"")
+				_, _ = buf.Write(i.Value)
+				_, _ = io.WriteString(buf, "\"")
 			}
 			_, _ = io.WriteString(buf, "}")
 		} else {

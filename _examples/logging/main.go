@@ -17,16 +17,12 @@ func main() {
 
 	err := errors.NewWithLog(
 		errors.SetMsg("hello error"),
-		errors.SetContextInfo(
-			errors.CtxMap{
-				"time": now.Format("2006-01-02T15:04:05-0700"),
-			},
-		),
+		errors.AppendContextInfo("time", now.Format("2006-01-02T15:04:05-0700")),
 	)
 
 	err = err.WithOptions(
 		errors.SetID("my id"),
-		errors.AppendContextInfo("duration", time.Since(now)),
+		errors.AppendContextInfo("duration", time.Since(now).String()),
 	)
 
 	journalLogger := journald.New()

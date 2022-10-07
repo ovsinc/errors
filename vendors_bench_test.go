@@ -73,7 +73,7 @@ func BenchmarkVendorXerrorsConstructor(b *testing.B) {
 
 // MY
 
-func BenchmarkVendorMyNewNormal(b *testing.B) {
+func BenchmarkVendorMyNewSimple(b *testing.B) {
 	err := errors.New("hello1")
 
 	require.Equal(b, err.Error(), "hello1")
@@ -84,7 +84,7 @@ func BenchmarkVendorMyNewNormal(b *testing.B) {
 	}
 }
 
-func BenchmarkVendorMyConstructorNormal(b *testing.B) {
+func BenchmarkVendorMyNewSimpleConstructo(b *testing.B) {
 	err := errors.New("hello1")
 
 	require.Equal(b, err.Error(), "hello1")
@@ -92,43 +92,6 @@ func BenchmarkVendorMyConstructorNormal(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = errors.New("hello1")
-	}
-}
-
-func BenchmarkVendorMyConstructorFullNoCtx(b *testing.B) {
-	err := errors.NewWith(
-		errors.SetMsg("hello1"),
-		errors.SetID("IDhello1"),
-		errors.SetOperation("nothing"),
-		errors.SetErrorType("myerrtype"),
-	)
-
-	require.Equal(b, err.Error(), "(myerrtype) [nothing] hello1")
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_ = errors.NewWith(
-			errors.SetMsg("hello1"),
-			errors.SetID("IDhello1"),
-			errors.SetOperation("nothing"),
-			errors.SetErrorType("myerrtype"),
-		)
-	}
-}
-
-func BenchmarkVendorMyNewFullNoCtx(b *testing.B) {
-	err := errors.NewWith(
-		errors.SetMsg("hello1"),
-		errors.SetID("IDhello1"),
-		errors.SetOperation("nothing"),
-		errors.SetErrorType("myerrtype"),
-	)
-
-	require.Equal(b, err.Error(), "(myerrtype) [nothing] hello1")
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_ = err.Error()
 	}
 }
 
@@ -145,6 +108,29 @@ func BenchmarkVendorMyNewFull(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = err.Error()
+	}
+}
+
+func BenchmarkVendorMyNewFullConstructor(b *testing.B) {
+	err := errors.NewWith(
+		errors.SetMsg("hello1"),
+		errors.SetID("IDhello1"),
+		errors.SetOperation("nothing"),
+		errors.AppendContextInfo("hello", "world"),
+		errors.SetErrorType("myerrtype"),
+	)
+
+	require.Equal(b, err.Error(), "(myerrtype) [nothing] {hello:world} hello1")
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = errors.NewWith(
+			errors.SetMsg("hello1"),
+			errors.SetID("IDhello1"),
+			errors.SetOperation("nothing"),
+			errors.AppendContextInfo("hello", "world"),
+			errors.SetErrorType("myerrtype"),
+		)
 	}
 }
 
