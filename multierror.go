@@ -1,7 +1,6 @@
 package errors
 
 import (
-	"bytes"
 	"fmt"
 
 	"go.uber.org/atomic"
@@ -77,7 +76,6 @@ type Multierror interface {
 	Log(l ...Logger)
 	Unwrap() error
 	Last() error
-	FindByID(id []byte) (error, bool)
 }
 
 type multiError struct {
@@ -158,29 +156,6 @@ func (merr *multiError) Is(target error) bool {
 // Если l не указан, то в качестве логгера будет использоваться логгер по-умолчанию.
 func (merr *multiError) Log(l ...Logger) {
 	Log(merr, l...)
-}
-
-func (merr *multiError) FindByID(id []byte) (error, bool) {
-	if merr.errors == nil {
-		return nil, false
-	}
-
-	if e, ok := merr.errors[merr.cur.Load()].(*Error); ok { //nolint:errorlint
-		if bytes.Equal(e.ID(), id) {
-			return e, true
-		}
-	}
-
-	for i, e := range merr.errors {
-		if ee, ok := e.(*Error); ok { //nolint:errorlint
-			if bytes.Equal(ee.ID(), id) {
-				merr.cur.Store(int32(i))
-				return e, true
-			}
-		}
-	}
-
-	return nil, false
 }
 
 type inspectResult struct {

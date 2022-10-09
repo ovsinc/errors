@@ -37,7 +37,7 @@ const (
 
 var defaultErrType = Internal
 
-func ParseErrType(s string) errType {
+func ParseErrType(s string) errType { //nolint:cyclop
 	t := Unknown
 
 	switch s {
@@ -76,7 +76,7 @@ func ParseErrType(s string) errType {
 }
 
 // HTTPStatusCode is a convenience method used to get the appropriate HTTP response status code for the respective error type
-func (et errType) HTTPStatusCode() int {
+func (et errType) HTTPStatusCode() int { //nolint:cyclop
 	status := http.StatusTeapot
 
 	switch et {
@@ -100,6 +100,8 @@ func (et errType) HTTPStatusCode() int {
 		status = http.StatusTooManyRequests
 	case SubscriptionExpired:
 		status = http.StatusPaymentRequired
+	case DownstreamDependencyTimedout:
+		status = http.StatusRequestTimeout
 	case Unknown:
 		status = http.StatusTeapot
 	}
@@ -116,11 +118,11 @@ func (i errType) Bytes() []byte {
 
 //
 
-func getErrType(err error) (errType, bool) {
+func GetErrType(err error) (errType, bool) {
 	errType := defaultErrType
 	ok := false
 
-	if e, eok := err.(*Error); eok {
+	if e, eok := err.(*Error); eok { //nolint:errorlint
 		errType = e.ErrorType()
 		ok = true
 	}
@@ -129,17 +131,17 @@ func getErrType(err error) (errType, bool) {
 }
 
 func HTTPStatusCode(err error) (int, bool) {
-	errType, ok := getErrType(err)
+	errType, ok := GetErrType(err)
 	return errType.HTTPStatusCode(), ok
 }
 
 func HTTPStatusCodeMessage(err error) (int, string, bool) {
-	errType, ok := getErrType(err)
+	errType, ok := GetErrType(err)
 	return errType.HTTPStatusCode(), errType.String(), ok
 }
 
 func StatusMessage(err error) (string, bool) {
-	errType, ok := getErrType(err)
+	errType, ok := GetErrType(err)
 	return errType.String(), ok
 }
 

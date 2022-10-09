@@ -81,7 +81,7 @@ func ExampleNewWith() {
 	// test op
 	// hello
 	// {"id":"myid","operation":"test op","error_type":"InputBody","context":{"hello":"world","Joe":"Dow"},"msg":"hello"}
-	// example_test.go:63: ExampleNewWith()
+	// example_test.go:74: ExampleNewWith()
 }
 
 func ExampleError_WithOptions() {
@@ -270,5 +270,5 @@ func ExampleCaller() {
 	fmt.Printf("%s\n", err.Error())
 
 	// Output:
-	// {call:example_test.go:257: ExampleCaller(),duration:1s} some call
+	// {call:example_test.go:268: ExampleCaller(),duration:1s} some call
 }

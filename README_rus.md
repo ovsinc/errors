@@ -437,14 +437,14 @@ func main() {
     switch {
     // except named exception
     case errors.ContainsByID(err, Err1ID):
-        e = errors.UnwrapByID(err, Err1ID)
+        e = errors.FindByID(err, Err1ID)
 
     case errors.ContainsByID(err, Err2ID):
-        e = errors.UnwrapByID(err, Err2ID)
+        e = errors.FindByID(err, Err2ID)
 
     // default except
     default:
-        e = errors.UnwrapByID(err, Err3ID)
+        e = errors.FindByID(err, Err3ID)
     }
 
     fmt.Printf("%v\n", e)
@@ -603,8 +603,8 @@ GetID(err error) (id string)
 Cast(err error) (*Error, bool)
 
 CastMultierr(err error) (Multierror, bool)
-UnwrapByID(err error, id string) error
-UnwrapByErr(err error, target error) error
+FindByID(err error, id string) error
+FindByErr(err error, target error) error
 Contains(err error, target error) bool
 ContainsByID(err error, id string) bool
 

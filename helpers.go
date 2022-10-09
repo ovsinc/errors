@@ -13,72 +13,77 @@ func GetID(err error) (id string) {
 	return
 }
 
-func findByErr(err error, target error) (error, bool) {
+func Find(err error, fn func(error) bool) error {
 	switch t := err.(type) { //nolint:errorlint
-	case Multierror:
-		for _, e := range t.Errors() {
-			if Is(e, target) {
-				return e, true
+	case *multiError:
+		cure := t.errors[t.cur.Load()]
+		if fn(cure) {
+			return cure
+		}
+		for i, e := range t.errors {
+			if fn(e) {
+				t.cur.Store(int32(i))
+				return e
 			}
 		}
-		return nil, false
 
 	case *Error:
-		if Is(t, target) {
-			return t, true
+		if fn(t) {
+			return t
 		}
 
 	case error:
-		if Is(t, target) {
-			return New(t), true
+		if fn(t) {
+			return t
 		}
 	}
 
-	return nil, false
+	return nil
 }
 
-func findByID(err error, id []byte) (error, bool) {
-	switch t := err.(type) { //nolint:errorlint
-	case interface{ FindByID([]byte) (error, bool) }: // multiError
-		return t.FindByID(id)
-
-	case *Error:
-		return t, bytes.Equal(t.ID(), []byte(id))
-	}
-
-	return nil, false
-}
-
-// UnwrapByID вернет ошибку (*Error) с указанным ID.
+// FindByID вернет ошибку (*Error) с указанным ID.
 // Если ошибка с указанным ID не найдена, вернется nil.
-func UnwrapByID(err error, id string) error {
-	if e, ok := findByID(err, []byte(id)); ok {
-		return e
-	}
-	return nil
+func FindByID(err error, id string) error {
+	return Find(err, func(e error) bool {
+		ee, ok := e.(*Error) //nolint:errorlint
+		return ok && bytes.Equal(ee.ID(), []byte(id))
+	})
 }
 
-// UnwrapByErr вернет ошибку (*Error) соответсвующую target или nil.
+// FindByErr вернет ошибку (*Error) соответсвующую target или nil.
 // Если ошибка не найдена, вернется nil.
-func UnwrapByErr(err error, target error) error {
-	if e, ok := findByErr(err, target); ok {
-		return e
-	}
-	return nil
+func FindByErr(err error, target error) error {
+	return Find(err, func(e error) bool {
+		return origerrors.Is(e, target)
+	})
 }
 
 // Contains проверит есть ли в цепочке целевая ошибка.
 // Допускается в качестве аргумента err указывать одиночную ошибку.
-func Contains(err error, target error) bool {
-	_, ok := findByErr(err, target)
-	return ok
+func Contains(err error, fn func(error) bool) bool {
+	switch t := err.(type) { //nolint:errorlint
+	case *multiError:
+		cure := t.errors[t.cur.Load()]
+		if fn(cure) {
+			return true
+		}
+		for i, e := range t.errors {
+			if fn(e) {
+				t.cur.Store(int32(i))
+				return true
+			}
+		}
+	}
+	return fn(err)
 }
 
 // Contains проверит есть ли в цепочке ошибка с указанным ID.
 // Допускается в качестве аргумента err указывать одиночную ошибку.
 func ContainsByID(err error, id string) bool {
-	_, ok := findByID(err, []byte(id))
-	return ok
+	return Contains(err, func(e error) bool {
+		ee, ok := e.(*Error) //nolint:errorlint
+		return ok && bytes.Equal(ee.ID(), []byte(id))
+	})
 }
 
 // Is сообщает, соответствует ли ошибка err target-ошибке.

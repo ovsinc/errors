@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUnwrapByID(t *testing.T) { //nolint:funlen
+func TestFindByID(t *testing.T) { //nolint:funlen
 	id1 := "myid"
 	e1 := NewWith(
 		SetMsg("e1"),
@@ -65,15 +65,15 @@ func TestUnwrapByID(t *testing.T) { //nolint:funlen
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			err := UnwrapByID(tt.args.err, tt.args.id)
+			err := FindByID(tt.args.err, tt.args.id)
 			if err != nil && tt.want != nil && err.Error() != tt.want.Error() {
-				t.Errorf("UnwrapByID() error = %#v, want %#v", err, tt.want)
+				t.Errorf("FindByID() error = %#v, want %#v", err, tt.want)
 			}
 		})
 	}
 }
 
-func BenchmarkUnwrapByIDOne(b *testing.B) {
+func BenchmarkFindByIDOne(b *testing.B) {
 	id1 := "myid"
 	e1 := NewWith(
 		SetMsg("e1"),
@@ -88,16 +88,16 @@ func BenchmarkUnwrapByIDOne(b *testing.B) {
 		NewWith(SetMsg("hello2"), SetID("two")),
 	)
 
-	findErr := UnwrapByID(err, id1)
+	findErr := FindByID(err, id1)
 	require.NotNil(b, findErr)
 	require.Equal(b, findErr.Error(), e1.Error())
 
 	for i := 0; i < b.N; i++ {
-		_ = UnwrapByID(err, id1)
+		_ = FindByID(err, id1)
 	}
 }
 
-func BenchmarkUnwrapByID2Same(b *testing.B) {
+func BenchmarkFindByID2Same(b *testing.B) {
 	id1 := "myid1"
 	id2 := "myid2"
 
@@ -119,16 +119,16 @@ func BenchmarkUnwrapByID2Same(b *testing.B) {
 		e2,
 	)
 
-	require.Equal(b, UnwrapByID(err, id1).Error(), e1.Error())
-	require.Equal(b, UnwrapByID(err, id2).Error(), e2.Error())
+	require.Equal(b, FindByID(err, id1).Error(), e1.Error())
+	require.Equal(b, FindByID(err, id2).Error(), e2.Error())
 
 	for i := 0; i < b.N; i++ {
 		_ = ContainsByID(err, id1)
-		_ = UnwrapByID(err, id1)
+		_ = FindByID(err, id1)
 	}
 }
 
-func BenchmarkUnwrapByID2Differrents(b *testing.B) {
+func BenchmarkFindByID2Differrents(b *testing.B) {
 	id1 := "myid1"
 	id2 := "myid2"
 
@@ -150,12 +150,12 @@ func BenchmarkUnwrapByID2Differrents(b *testing.B) {
 		e2,
 	)
 
-	require.Equal(b, UnwrapByID(err, id1).Error(), e1.Error())
-	require.Equal(b, UnwrapByID(err, id2).Error(), e2.Error())
+	require.Equal(b, FindByID(err, id1).Error(), e1.Error())
+	require.Equal(b, FindByID(err, id2).Error(), e2.Error())
 
 	for i := 0; i < b.N; i++ {
 		_ = ContainsByID(err, id1)
-		_ = UnwrapByID(err, id2)
+		_ = FindByID(err, id2)
 	}
 }
 
