@@ -17,10 +17,10 @@ var (
 )
 
 type ErrorMessage struct {
-	Message   string `json:"message"`
-	Operation string `json:"operation"`
-	Type      string `json:"type"`
-	ID        string `json:"id"`
+	Translate      string `json:"translate"`
+	DefaultMessage string `json:"message"`
+	Code           string `json:"code"`
+	ID             string `json:"id"`
 }
 
 type Response struct {
@@ -64,25 +64,25 @@ func (h *Handler) errHandle(c echo.Context, err error) error {
 	var e error
 	switch {
 	case errors.ContainsByID(err, EBadContentMsg.ID):
-		e = errors.UnwrapByID(err, EBadContentMsg.ID)
+		e = errors.FindByID(err, EBadContentMsg.ID)
 
 	case errors.ContainsByID(err, EValidationMsg.ID):
-		e = errors.UnwrapByID(err, EValidationMsg.ID)
+		e = errors.FindByID(err, EValidationMsg.ID)
 
 	case errors.ContainsByID(err, ENotFoundMsg.ID):
-		e = errors.UnwrapByID(err, ENotFoundMsg.ID)
+		e = errors.FindByID(err, ENotFoundMsg.ID)
 
 	case errors.ContainsByID(err, EDuplicateMsg.ID):
-		e = errors.UnwrapByID(err, EDuplicateMsg.ID)
+		e = errors.FindByID(err, EDuplicateMsg.ID)
 
 	case errors.ContainsByID(err, EEmptyMsg.ID):
-		e = errors.UnwrapByID(err, EEmptyMsg.ID)
+		e = errors.FindByID(err, EEmptyMsg.ID)
 
 	case errors.ContainsByID(err, EInternalMsg.ID):
-		e = errors.UnwrapByID(err, EInternalMsg.ID)
+		e = errors.FindByID(err, EInternalMsg.ID)
 
 	case errors.ContainsByID(err, EUnknownMsg.ID):
-		e = errors.UnwrapByID(err, EUnknownMsg.ID)
+		e = errors.FindByID(err, EUnknownMsg.ID)
 
 	default:
 		e = ErrDBInternal
@@ -93,9 +93,10 @@ func (h *Handler) errHandle(c echo.Context, err error) error {
 		Data:   nil,
 		HasErr: true,
 		Error: &ErrorMessage{
-			Message: h.localizer.TranslateError(c.Request().Header.Get("Accept-Language"), e),
-			Type:    etype,
-			ID:      errors.GetID(e),
+			DefaultMessage: e.Error(),
+			Translate:      h.localizer.TranslateError(c.Request().Header.Get("Accept-Language"), e),
+			ID:             errors.GetID(e),
+			Code:           etype,
 		},
 	})
 

@@ -194,17 +194,17 @@ func (e *Error) Format(s fmt.State, verb rune) { //nolint:cyclop
 		// id
 		_, _ = io.WriteString(s, "id:")
 		_, _ = s.Write(e.ID())
-		//operation
+		// operation
 		_, _ = io.WriteString(s, " operation:")
 		_, _ = s.Write(e.Operation())
-		//errorType
+		// errorType
 		_, _ = io.WriteString(s, " error_type:")
 		_, _ = io.WriteString(s, e.ErrorType().String())
 
-		//errorType
+		// errorType
 		_, _ = io.WriteString(s, " context_info:")
 		contextInfoFormat(s, e.ContextInfo(), false)
-		//msg
+		// msg
 		_, _ = io.WriteString(s, " message:")
 		_, _ = s.Write(e.Msg())
 

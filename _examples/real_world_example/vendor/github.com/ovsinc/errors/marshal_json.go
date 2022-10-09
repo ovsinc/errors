@@ -41,7 +41,7 @@ func (m *MarshalJSON) Marshal(i interface{}) ([]byte, error) {
 	return data, nil
 }
 
-func jsonFormat(buf io.Writer, e error) {
+func jsonFormat(buf io.Writer, e error) { //nolint:funlen
 	switch t := e.(type) { //nolint:errorlint
 	case *Error:
 		_, _ = io.WriteString(buf, "{")

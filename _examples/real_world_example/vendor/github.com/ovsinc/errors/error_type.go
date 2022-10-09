@@ -37,7 +37,7 @@ const (
 
 var defaultErrType = Internal
 
-func ParseErrType(s string) errType {
+func ParseErrType(s string) errType { //nolint:cyclop
 	t := Unknown
 
 	switch s {
@@ -76,7 +76,7 @@ func ParseErrType(s string) errType {
 }
 
 // HTTPStatusCode is a convenience method used to get the appropriate HTTP response status code for the respective error type
-func (et errType) HTTPStatusCode() int {
+func (et errType) HTTPStatusCode() int { //nolint:cyclop
 	status := http.StatusTeapot
 
 	switch et {
@@ -100,6 +100,8 @@ func (et errType) HTTPStatusCode() int {
 		status = http.StatusTooManyRequests
 	case SubscriptionExpired:
 		status = http.StatusPaymentRequired
+	case DownstreamDependencyTimedout:
+		status = http.StatusRequestTimeout
 	case Unknown:
 		status = http.StatusTeapot
 	}
@@ -116,11 +118,11 @@ func (i errType) Bytes() []byte {
 
 //
 
-func getErrType(err error) (errType, bool) {
+func GetErrType(err error) (errType, bool) {
 	errType := defaultErrType
 	ok := false
 
-	if e, eok := err.(*Error); eok {
+	if e, eok := err.(*Error); eok { //nolint:errorlint
 		errType = e.ErrorType()
 		ok = true
 	}
@@ -129,17 +131,17 @@ func getErrType(err error) (errType, bool) {
 }
 
 func HTTPStatusCode(err error) (int, bool) {
-	errType, ok := getErrType(err)
+	errType, ok := GetErrType(err)
 	return errType.HTTPStatusCode(), ok
 }
 
 func HTTPStatusCodeMessage(err error) (int, string, bool) {
-	errType, ok := getErrType(err)
+	errType, ok := GetErrType(err)
 	return errType.HTTPStatusCode(), errType.String(), ok
 }
 
 func StatusMessage(err error) (string, bool) {
-	errType, ok := getErrType(err)
+	errType, ok := GetErrType(err)
 	return errType.String(), ok
 }
 
@@ -153,7 +155,7 @@ func errWithType(eType errType, ops ...Options) *Error {
 }
 
 func IternalErrWith(ops ...Options) *Error {
-	return errWithType(Internal)
+	return errWithType(Internal, ops...)
 }
 
 func IternalErr(s string) *Error {
@@ -169,7 +171,7 @@ func ValidationErr(s string) *Error {
 }
 
 func InputBodyErrWith(ops ...Options) *Error {
-	return errWithType(InputBody)
+	return errWithType(InputBody, ops...)
 }
 
 func InputBodyErr(s string) *Error {
@@ -177,7 +179,7 @@ func InputBodyErr(s string) *Error {
 }
 
 func UnauthenticatedErrWith(ops ...Options) *Error {
-	return errWithType(Unauthenticated)
+	return errWithType(Unauthenticated, ops...)
 }
 
 func UnauthenticatedErr(s string) *Error {
@@ -185,7 +187,7 @@ func UnauthenticatedErr(s string) *Error {
 }
 
 func UnauthorizedErrWith(ops ...Options) *Error {
-	return errWithType(Unauthorized)
+	return errWithType(Unauthorized, ops...)
 }
 
 func UnauthorizedErr(s string) *Error {
@@ -193,7 +195,7 @@ func UnauthorizedErr(s string) *Error {
 }
 
 func DuplicateErrWith(ops ...Options) *Error {
-	return errWithType(Duplicate)
+	return errWithType(Duplicate, ops...)
 }
 
 func DuplicateErr(s string) *Error {
@@ -201,7 +203,7 @@ func DuplicateErr(s string) *Error {
 }
 
 func EmptyErrWith(ops ...Options) *Error {
-	return errWithType(Empty)
+	return errWithType(Empty, ops...)
 }
 
 func EmptyErr(s string) *Error {
@@ -209,7 +211,7 @@ func EmptyErr(s string) *Error {
 }
 
 func NotFoundErrWith(ops ...Options) *Error {
-	return errWithType(NotFound)
+	return errWithType(NotFound, ops...)
 }
 
 func NotFoundErr(s string) *Error {
@@ -217,7 +219,7 @@ func NotFoundErr(s string) *Error {
 }
 
 func MaximumAttemptsErrWith(ops ...Options) *Error {
-	return errWithType(MaximumAttempts)
+	return errWithType(MaximumAttempts, ops...)
 }
 
 func MaximumAttemptsErr(s string) *Error {
@@ -225,7 +227,7 @@ func MaximumAttemptsErr(s string) *Error {
 }
 
 func SubscriptionExpiredErrWith(ops ...Options) *Error {
-	return errWithType(SubscriptionExpired)
+	return errWithType(SubscriptionExpired, ops...)
 }
 
 func SubscriptionExpiredErr(s string) *Error {
@@ -233,7 +235,7 @@ func SubscriptionExpiredErr(s string) *Error {
 }
 
 func DownstreamDependencyTimedoutErrWith(ops ...Options) *Error {
-	return errWithType(DownstreamDependencyTimedout)
+	return errWithType(DownstreamDependencyTimedout, ops...)
 }
 
 func DownstreamDependencyTimedoutErr(s string) *Error {
