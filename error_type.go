@@ -2,6 +2,8 @@ package errors
 
 import (
 	"net/http"
+
+	"google.golang.org/grpc/codes"
 )
 
 //go:generate stringer -type=errType
@@ -33,6 +35,8 @@ const (
 	SubscriptionExpired
 	// DownstreamDependencyTimedout is error type for when a request to a downstream dependent service times out
 	DownstreamDependencyTimedout
+	// Unavailable is error type for when server is unavailable.
+	Unavailable
 )
 
 var defaultErrType = Internal
@@ -70,6 +74,9 @@ func ParseErrType(s string) errType { //nolint:cyclop
 
 	case "SubscriptionExpired":
 		t = SubscriptionExpired
+
+	case "Unavailable":
+		t = Unavailable
 	}
 
 	return t
@@ -102,8 +109,38 @@ func (et errType) HTTPStatusCode() int { //nolint:cyclop
 		status = http.StatusPaymentRequired
 	case DownstreamDependencyTimedout:
 		status = http.StatusRequestTimeout
+	case Unavailable:
+		status = http.StatusServiceUnavailable
 	case Unknown:
 		status = http.StatusTeapot
+	}
+
+	return status
+}
+
+// GRPCStatusCode is a convenience method used to get the appropriate gRPC response code for the respective error type
+func (et errType) GRPCStatusCode() codes.Code { //nolint:cyclop
+	status := codes.Unknown
+
+	switch et {
+	case NotFound:
+		status = codes.NotFound
+	case Duplicate:
+		status = codes.AlreadyExists
+	case Validation, InputBody, Empty:
+		status = codes.InvalidArgument
+	case Internal:
+		status = codes.Internal
+	case Unauthenticated:
+		status = codes.Unauthenticated
+	case Unauthorized:
+		status = codes.PermissionDenied
+	case MaximumAttempts, Unavailable, SubscriptionExpired:
+		status = codes.Unavailable
+	case DownstreamDependencyTimedout:
+		status = codes.DeadlineExceeded
+	case Unknown:
+		status = codes.Unknown
 	}
 
 	return status
@@ -130,9 +167,19 @@ func GetErrType(err error) (errType, bool) {
 	return errType, ok
 }
 
+func GRPCStatusCode(err error) (codes.Code, bool) {
+	errType, ok := GetErrType(err)
+	return errType.GRPCStatusCode(), ok
+}
+
 func HTTPStatusCode(err error) (int, bool) {
 	errType, ok := GetErrType(err)
 	return errType.HTTPStatusCode(), ok
+}
+
+func GRPCStatusCodeMessage(err error) (codes.Code, string, bool) {
+	errType, ok := GetErrType(err)
+	return errType.GRPCStatusCode(), errType.String(), ok
 }
 
 func HTTPStatusCodeMessage(err error) (int, string, bool) {
@@ -240,4 +287,12 @@ func DownstreamDependencyTimedoutErrWith(ops ...Options) *Error {
 
 func DownstreamDependencyTimedoutErr(s string) *Error {
 	return DownstreamDependencyTimedoutErrWith(SetMsg(s))
+}
+
+func UnavailableErrWith(ops ...Options) *Error {
+	return errWithType(Unavailable, ops...)
+}
+
+func UnavailableErr(s string) *Error {
+	return UnavailableErrWith(SetMsg(s))
 }
