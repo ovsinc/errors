@@ -1,5 +1,10 @@
 package errors
 
+import (
+	"reflect"
+	"unsafe"
+)
+
 // Options опции из параметра ошибки.
 type Options func(e *Error)
 
@@ -11,7 +16,7 @@ func SetMsg(msg string) Options {
 		if e == nil {
 			return
 		}
-		e.msg = []byte(msg)
+		e.msg = s2b(msg)
 	}
 }
 
@@ -23,7 +28,7 @@ func SetID(id string) Options {
 		if e == nil {
 			return
 		}
-		e.id = []byte(id)
+		e.id = s2b(id)
 	}
 }
 
@@ -37,7 +42,7 @@ func SetOperation(o string) Options {
 		if e == nil {
 			return
 		}
-		e.operation = []byte(o)
+		e.operation = s2b(o)
 	}
 }
 
@@ -77,6 +82,23 @@ func AppendContextInfo(key string, value string) Options {
 		if e.contextInfo == nil {
 			e.contextInfo = make(CtxKV, 0, 6)
 		}
-		e.contextInfo = append(e.contextInfo, struct{ Key, Value []byte }{[]byte(key), []byte(value)})
+		e.contextInfo = append(e.contextInfo, struct{ Key, Value []byte }{s2b(key), s2b(value)})
 	}
+}
+
+//
+// from https://github.com/valyala/fastjson/blob/master/util.go
+//
+
+func b2s(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
+}
+
+func s2b(s string) (b []byte) {
+	strh := (*reflect.StringHeader)(unsafe.Pointer(&s))
+	sh := (*reflect.SliceHeader)(unsafe.Pointer(&b))
+	sh.Data = strh.Data
+	sh.Len = strh.Len
+	sh.Cap = strh.Len
+	return b
 }

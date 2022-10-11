@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 
+	stderrors "errors"
+
 	"github.com/BurntSushi/toml"
 	i18n "github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/ovsinc/errors"
@@ -207,6 +209,7 @@ func someFuncWithErr() error {
 		errors.SetMsg("connection error"),
 		errors.SetContextInfo(errors.CtxKV{{[]byte("hello"), []byte("world")}}),
 		errors.SetOperation("write"),
+		errors.SetID("someid"),
 	)
 }
 
@@ -217,16 +220,32 @@ func someFuncWithErr2() error {
 }
 
 func ExampleWrap() {
+	e := stderrors.New("hello world")
+
 	err := someFuncWithErr()
-
 	err = errors.Wrap(err, someFuncWithErr2())
+	err = errors.Wrap(err, e)
 
-	fmt.Printf("%v\n", err)
+	fmt.Printf("%v", err)
+
+	oneErr := errors.FindByID(err, "someid")
+
+	fmt.Printf(
+		"err with id 'someid': %v; id: %s; op: %s\n",
+		oneErr,
+		errors.GetID(oneErr),
+		errors.GetOperation(oneErr),
+	)
+
+	fmt.Println(errors.FindByErr(err, e))
 
 	// Output:
 	// the following errors occurred:
-	// 	#1 [write] {hello:world} connection error
-	// 	#2 connection error
+	//	#1 [write] {hello:world} connection error
+	//	#2 connection error
+	//	#3 hello world
+	// err with id 'someid': [write] {hello:world} connection error; id: someid; op: write
+	// hello world
 }
 
 func ExampleNewWithLog() {

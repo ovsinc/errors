@@ -240,7 +240,7 @@ func (e *Error) Error() string {
 	if err != nil {
 		return ""
 	}
-	return string(data)
+	return b2s(data)
 }
 
 func (e *Error) Is(target error) bool {

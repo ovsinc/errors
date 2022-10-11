@@ -2,8 +2,6 @@ package errors
 
 import (
 	"fmt"
-
-	"go.uber.org/atomic"
 )
 
 // Combine создаст цепочку ошибок из ошибок ...errors.
@@ -31,19 +29,9 @@ func Wrap(left error, right error) error {
 	}
 
 	if _, ok := right.(*multiError); !ok { //nolint:errorlint
-		if l, ok := left.(*multiError); ok && !l.copyNeeded.Swap(true) { //nolint:errorlint
-			// Common case where the error on the left is constantly being
-			// appended to.
-			return &multiError{
-				errors: append(l.errors, right),
-				cur:    atomic.NewInt32(l.cur.Load()),
-			}
-		} else if !ok {
+		if _, ok := left.(*multiError); !ok { //nolint:errorlint
 			// Both errors are single errors.
-			return &multiError{
-				errors: []error{left, right},
-				cur:    atomic.NewInt32(int32(0)),
-			}
+			return &multiError{errors: []error{left, right}}
 		}
 	}
 
@@ -79,9 +67,7 @@ type Multierror interface {
 }
 
 type multiError struct {
-	errors     []error
-	cur        *atomic.Int32
-	copyNeeded *atomic.Bool
+	errors []error
 }
 
 // Errors returns the copy list of underlying errors.
@@ -95,7 +81,7 @@ func (merr *multiError) Errors() []error {
 func (merr *multiError) Error() string {
 	marshal := &MarshalString{}
 	data, _ := marshal.Marshal(merr)
-	return string(data)
+	return b2s(data)
 }
 
 func (merr *multiError) Marshal(fn ...Marshaller) ([]byte, error) {
@@ -222,7 +208,7 @@ func fromSlice(errors []error) error {
 			// unconditionally for all other cases.
 			// This lets us optimize for the "no errors" case.
 			out := append(([]error)(nil), errors...)
-			return &multiError{errors: out, cur: atomic.NewInt32(int32(res.firstErrorIdx))}
+			return &multiError{errors: out}
 		}
 	}
 
@@ -239,5 +225,5 @@ func fromSlice(errors []error) error {
 		}
 	}
 
-	return &multiError{errors: nonNilErrs, cur: atomic.NewInt32(int32(0))}
+	return &multiError{errors: nonNilErrs}
 }

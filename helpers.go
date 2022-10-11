@@ -8,36 +8,36 @@ import (
 // GetID возвращает ID ошибки. Для НЕ *Error всегда будет "".
 func GetID(err error) (id string) {
 	if e, ok := err.(*Error); ok { //nolint:errorlint
-		return string(e.ID())
+		return b2s(e.ID())
 	}
 	return
+}
+
+// GetOperation возвращает операцию ошибки. Для НЕ *Error всегда будет "".
+func GetOperation(err error) string {
+	if e, ok := err.(*Error); ok { //nolint:errorlint
+		return b2s(e.Operation())
+	}
+	return ""
 }
 
 func Find(err error, fn func(error) bool) error {
 	switch t := err.(type) { //nolint:errorlint
 	case *multiError:
-		cure := t.errors[t.cur.Load()]
-		if fn(cure) {
-			return cure
-		}
-		for i, e := range t.errors {
+		for _, e := range t.errors {
 			if fn(e) {
-				t.cur.Store(int32(i))
 				return e
 			}
 		}
-
 	case *Error:
 		if fn(t) {
 			return t
 		}
-
 	case error:
 		if fn(t) {
 			return t
 		}
 	}
-
 	return nil
 }
 
@@ -46,7 +46,7 @@ func Find(err error, fn func(error) bool) error {
 func FindByID(err error, id string) error {
 	return Find(err, func(e error) bool {
 		ee, ok := e.(*Error) //nolint:errorlint
-		return ok && bytes.Equal(ee.ID(), []byte(id))
+		return ok && bytes.Equal(ee.ID(), s2b(id))
 	})
 }
 
@@ -63,26 +63,33 @@ func FindByErr(err error, target error) error {
 func Contains(err error, fn func(error) bool) bool {
 	switch t := err.(type) { //nolint:errorlint
 	case *multiError:
-		cure := t.errors[t.cur.Load()]
-		if fn(cure) {
-			return true
-		}
-		for i, e := range t.errors {
+		for _, e := range t.errors {
 			if fn(e) {
-				t.cur.Store(int32(i))
 				return true
 			}
 		}
+	case *Error:
+		return fn(err)
+	case error:
+		return fn(err)
 	}
-	return fn(err)
+	return false
 }
 
-// Contains проверит есть ли в цепочке ошибка с указанным ID.
+// ContainsByID проверит есть ли в цепочке ошибка с указанным ID.
 // Допускается в качестве аргумента err указывать одиночную ошибку.
 func ContainsByID(err error, id string) bool {
 	return Contains(err, func(e error) bool {
 		ee, ok := e.(*Error) //nolint:errorlint
-		return ok && bytes.Equal(ee.ID(), []byte(id))
+		return ok && bytes.Equal(ee.ID(), s2b(id))
+	})
+}
+
+// ContainsByErr проверит есть ли в цепочке ошибка.
+// Допускается в качестве аргумента err указывать одиночную ошибку.
+func ContainsByErr(err error, target error) bool {
+	return Contains(err, func(e error) bool {
+		return origerrors.Is(err, target)
 	})
 }
 
@@ -115,7 +122,7 @@ func Cast(err error) (*Error, bool) {
 	case *Error:
 		return t, true
 
-	case interface{ Last() error }:
+	case *multiError:
 		return New(t.Last()), true
 
 	default:

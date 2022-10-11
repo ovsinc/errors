@@ -51,11 +51,11 @@ func Translate(e error, l Localizer, tctx *TranslateContext) (string, error) {
 
 	default:
 		// no localizer
-		return string(err.Msg()), ErrNoLocalizer
+		return b2s(err.Msg()), ErrNoLocalizer
 	}
 
 	i18nConf := i18n.LocalizeConfig{
-		MessageID: string(err.ID()),
+		MessageID: b2s(err.ID()),
 	}
 	if tctx != nil {
 		i18nConf.DefaultMessage = tctx.DefaultMessage
@@ -67,5 +67,5 @@ func Translate(e error, l Localizer, tctx *TranslateContext) (string, error) {
 		return msg, nil
 	}
 
-	return string(err.Msg()), nil
+	return b2s(err.Msg()), nil
 }

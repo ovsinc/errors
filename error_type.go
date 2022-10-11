@@ -148,9 +148,9 @@ func (et errType) GRPCStatusCode() codes.Code { //nolint:cyclop
 
 func (i errType) Bytes() []byte {
 	if i < 0 || i >= errType(len(_errType_index)-1) {
-		return []byte("Unknown")
+		return s2b("Unknown")
 	}
-	return []byte(_errType_name[_errType_index[i]:_errType_index[i+1]])
+	return s2b(_errType_name[_errType_index[i]:_errType_index[i+1]])
 }
 
 //

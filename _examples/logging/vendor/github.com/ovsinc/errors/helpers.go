@@ -8,7 +8,7 @@ import (
 // GetID возвращает ID ошибки. Для НЕ *Error всегда будет "".
 func GetID(err error) (id string) {
 	if e, ok := err.(*Error); ok { //nolint:errorlint
-		return string(e.ID())
+		return b2s(e.ID())
 	}
 	return
 }
