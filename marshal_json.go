@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"fmt"
 	"io"
 	"strconv"
 
@@ -49,13 +50,13 @@ func jsonFormat(buf io.Writer, e error) { //nolint:funlen
 		// ID
 		_, _ = io.WriteString(buf, "\"id\":")
 		_, _ = io.WriteString(buf, "\"")
-		_, _ = buf.Write(t.ID())
+		_, _ = buf.Write(s2b(t.ID()))
 		_, _ = io.WriteString(buf, "\",")
 
 		// Operation
 		_, _ = io.WriteString(buf, "\"operation\":")
 		_, _ = io.WriteString(buf, "\"")
-		_, _ = buf.Write(t.Operation())
+		_, _ = buf.Write(s2b(t.Operation()))
 		_, _ = io.WriteString(buf, "\",")
 
 		// ErrorType
@@ -70,17 +71,17 @@ func jsonFormat(buf io.Writer, e error) { //nolint:funlen
 			_, _ = io.WriteString(buf, "{")
 			// 0
 			_, _ = io.WriteString(buf, "\"")
-			_, _ = buf.Write(cxtInfo[0].Key)
+			_, _ = buf.Write(s2b(cxtInfo[0].Key))
 			_, _ = io.WriteString(buf, "\":\"")
-			_, _ = buf.Write(cxtInfo[0].Value)
+			_, _ = fmt.Fprint(buf, cxtInfo[0].Value)
 			_, _ = io.WriteString(buf, "\"")
 			// other
 			for _, i := range cxtInfo[1:] {
 				_, _ = buf.Write(_listSeparator)
 				_, _ = io.WriteString(buf, "\"")
-				_, _ = buf.Write(i.Key)
+				_, _ = buf.Write(s2b(i.Key))
 				_, _ = io.WriteString(buf, "\":\"")
-				_, _ = buf.Write(i.Value)
+				_, _ = fmt.Fprint(buf, i.Value)
 				_, _ = io.WriteString(buf, "\"")
 			}
 			_, _ = io.WriteString(buf, "}")
@@ -92,7 +93,7 @@ func jsonFormat(buf io.Writer, e error) { //nolint:funlen
 		// Msg
 		_, _ = io.WriteString(buf, "\"msg\":")
 		_, _ = io.WriteString(buf, "\"")
-		_, _ = buf.Write(t.Msg())
+		_, _ = buf.Write(s2b(t.Msg()))
 		_, _ = io.WriteString(buf, "\"")
 
 		_, _ = io.WriteString(buf, "}")

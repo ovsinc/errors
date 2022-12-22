@@ -5,52 +5,48 @@ import (
 	"unsafe"
 )
 
-// Options опции из параметра ошибки.
+// Options опции-параметры ошибки.
 type Options func(e *Error)
 
 // Msg
 
-// SetMsg установит сообщение об ошибке, указанное в виде строки.
+// SetMsg строка. Установит сообщение об ошибке.
 func SetMsg(msg string) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
 		}
-		e.msg = s2b(msg)
+		e.msg = msg
 	}
 }
 
 // ID
 
-// SetID установит ID ошибки.
+// SetID, строка. Установит ID ошибки.
 func SetID(id string) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
 		}
-		e.id = s2b(id)
+		e.id = id
 	}
 }
 
 // Operation
 
-// SetOperation установит операцию, как строку.
-// Если в *Error уже были записаны операции,
-// то они будут заменены на указанные в аргументе ops.
+// SetOperation, строка. Установит имя операции.
 func SetOperation(o string) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
 		}
-		e.operation = s2b(o)
+		e.operation = o
 	}
 }
 
 // Error type
 
-// SetErrorType установит тип.
-// Если в *Error уже были записаны операции,
-// то они будут заменены на указанные в аргументе ops.
+// SetErrorType, errType (enum). Установит тип.
 func SetErrorType(et errType) Options {
 	return func(e *Error) {
 		if e == nil {
@@ -62,7 +58,7 @@ func SetErrorType(et errType) Options {
 
 // Context Info
 
-// SetContextInfo установить CtxMap.
+// SetContextInfo, CtxKV. Установит контекст.
 func SetContextInfo(ctxinf CtxKV) Options {
 	return func(e *Error) {
 		if e == nil {
@@ -72,9 +68,9 @@ func SetContextInfo(ctxinf CtxKV) Options {
 	}
 }
 
-// AppendContextInfo добавить в имеющийся CtxMap значение value по ключу key.
-// Если CtxMap в *Error не установлен, то он будет предварительно установлен.
-func AppendContextInfo(key string, value string) Options {
+// AppendContextInfo, key, val - строки. Добавит в имеющийся CtxKV значение value по ключу key.
+// CtxKV будет инициализирован, если ранее этого не было сделано.
+func AppendContextInfo(key string, value interface{}) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
@@ -82,7 +78,10 @@ func AppendContextInfo(key string, value string) Options {
 		if e.contextInfo == nil {
 			e.contextInfo = make(CtxKV, 0, 6)
 		}
-		e.contextInfo = append(e.contextInfo, struct{ Key, Value []byte }{s2b(key), s2b(value)})
+		e.contextInfo = append(e.contextInfo, struct {
+			Key   string
+			Value interface{}
+		}{key, value})
 	}
 }
 

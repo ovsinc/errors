@@ -6,23 +6,23 @@
 
 ## Оглавление
 
-1. [Установка](#Установка)
-2. [Миграция](#Миграция)
-3. [Тестирование](#Тестирование)
-  - [Производительность](#Производительность)
-4. [Сценарии использования](#Сценарии-использования)
-  - [Замена стандартной errors](#Замена-стандартной-errors)
-  - [Дополнительные свойства](#Дополнительные-свойства)
-  - [Логгирование](#Логгирование)
-  - [Перевод сообщения ошибки](#Переводсообщения-ошибки)
-  - [Цепочка ошибок](#Цепочка-ошибок)
-  - [Финальная обработка ошибок](#Финальная-обработка-ошибок)
-5. [Особенности использования](#Особенности-использования)
-  - [Управление логгированием ошибки](#Управление-логгированием-ошибки)
-  - [Настройка перевода сообщения ошибки](#Настройка-перевода-сообщения-ошибки)
-  - [Сериализация сообщения ошибки](#Сериализация-сообщения-ошибки)
-6. [Список задач](#Список-задач)
-7. [Лицензия](#Лицензия)
+1. [Установка](#установка)
+2. [Миграция](#миграция)
+3. [Тестирование](#тестирование)
+  - [Производительность](#производительность)
+4. [Сценарии использования](#сценарии-использования)
+  - [Замена стандартной errors](#замена-стандартной-errors)
+  - [Дополнительные свойства](#дополнительные-свойства)
+  - [Логгирование](#логгирование)
+  - [Перевод сообщения ошибки](#переводсообщения-ошибки)
+  - [Цепочка ошибок](#цепочка-ошибок)
+  - [Финальная обработка ошибок](#финальная-обработка-ошибок)
+5. [Особенности использования](#особенности-использования)
+  - [Управление логгированием ошибки](#управление-логгированием-ошибки)
+  - [Настройка перевода сообщения ошибки](#настройка-перевода-сообщения-ошибки)
+  - [Сериализация сообщения ошибки](#сериализация-сообщения-ошибки)
+6. [Список задач](#список-задач)
+7. [Лицензия](#лицензия)
 
 ____
 
@@ -108,17 +108,17 @@ goos: linux
 goarch: amd64
 pkg: github.com/ovsinc/errors
 cpu: Intel(R) Core(TM) i7-10850H CPU @ 2.70GHz
-BenchmarkVendorStandartError-12                 711538548                1.676 ns/op           0 B/op          0 allocs/op
-BenchmarkVendorStandartConstructor-12           1000000000               0.3874 ns/op          0 B/op          0 allocs/op
-BenchmarkVendorXerrors-12                       719484416                1.716 ns/op           0 B/op          0 allocs/op
-BenchmarkVendorXerrorsConstructor-12             2068800               597.7 ns/op             0 B/op          0 allocs/op
-BenchmarkVendorMyNewSimple-12                   15624081                77.47 ns/op            0 B/op          0 allocs/op
-BenchmarkVendorMyNewSimpleConstructor-12        13094023                99.67 ns/op          112 B/op          1 allocs/op
-BenchmarkVendorMyNewFull-12                      7614114               151.6 ns/op             0 B/op          0 allocs/op
-BenchmarkVendorMyNewFullConstructor-12           2934590               461.4 ns/op           448 B/op          3 allocs/op
+BenchmarkVendorStandartError-12                 713995772                1.698 ns/op           0 B/op          0 allocs/op
+BenchmarkVendorStandartConstructor-12           1000000000               0.3875 ns/op          0 B/op          0 allocs/op
+BenchmarkVendorXerrors-12                       718511691                1.648 ns/op           0 B/op          0 allocs/op
+BenchmarkVendorXerrorsConstructor-12             2052255               588.9 ns/op             0 B/op          0 allocs/op
+BenchmarkVendorMyNewSimple-12                   15405230                77.94 ns/op            0 B/op          0 allocs/op
+BenchmarkVendorMyNewSimpleConstructor-12        18630474                80.98 ns/op           80 B/op          1 allocs/op
+BenchmarkVendorMyNewFull-12                      6755743               158.3 ns/op             0 B/op          0 allocs/op
+BenchmarkVendorMyNewFullConstructor-12           2980184               429.6 ns/op           416 B/op          3 allocs/op
 ```
 
-Сравнение основных возможностей для похожих решений, цепочка ошибок:
+Сравнение основных возможностей для похожих решений, две шибки в цепочке:
 
 ```text
 go test -benchmem -run=^$ -bench "^(BenchmarkVendorMyMulti2StdErr|BenchmarkVendorMyMulti2MySimple|BenchmarkVendorHashiMulti2StdErr|BenchmarkVendorUberMulti2StdErr)$"
@@ -126,10 +126,10 @@ goos: linux
 goarch: amd64
 pkg: github.com/ovsinc/errors
 cpu: Intel(R) Core(TM) i7-10850H CPU @ 2.70GHz
-BenchmarkVendorMyMulti2StdErr-12         2718146               558.6 ns/op            64 B/op          5 allocs/op
-BenchmarkVendorMyMulti2MySimple-12       2166350               530.5 ns/op            64 B/op          5 allocs/op
-BenchmarkVendorHashiMulti2StdErr-12      1236064               895.4 ns/op           136 B/op          6 allocs/op
-BenchmarkVendorUberMulti2StdErr-12       9098443               138.7 ns/op            16 B/op          1 allocs/op
+BenchmarkVendorMyMulti2StdErr-12         2840337               462.3 ns/op            64 B/op          5 allocs/op
+BenchmarkVendorMyMulti2MySimple-12       2606301               476.8 ns/op            64 B/op          5 allocs/op
+BenchmarkVendorHashiMulti2StdErr-12      1405405               939.4 ns/op           136 B/op          6 allocs/op
+BenchmarkVendorUberMulti2StdErr-12       9235027               128.3 ns/op            16 B/op          1 allocs/op
 ```
 
 [К оглавлению](#Оглавление)
@@ -385,10 +385,13 @@ def fn():
 def main:
     try:
         fn()
+    # except named exception
     except Err1 as err:
         print("Error: {0}".format(err))
+    # except named exception
     except Err2 as err:
         print("Error: {0}".format(err))
+    # default except
     except:
         raise
 ```
@@ -438,6 +441,7 @@ func main() {
     case errors.ContainsByID(err, Err1ID):
         e = errors.FindByID(err, Err1ID)
 
+    // except named exception
     case errors.ContainsByID(err, Err2ID):
         e = errors.FindByID(err, Err2ID)
 
@@ -449,12 +453,12 @@ func main() {
     fmt.Printf("%v\n", e)
 }
 
-```
-
-Не стоит беспокоиться о повторном поиске по ID,
-второй раз поиск по ID выполнится быстрее из-за кеширования.
-
 Подробнее можно ознакомится в примере [real_world_example](https://github.com/ovsinc/errors/tree/new_approach/_examples/real_world_example).
+
+
+
+
+-----
 
 ## Особенности использования
 

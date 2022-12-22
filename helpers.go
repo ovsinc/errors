@@ -1,14 +1,13 @@
 package errors
 
 import (
-	"bytes"
 	origerrors "errors"
 )
 
 // GetID возвращает ID ошибки. Для НЕ *Error всегда будет "".
 func GetID(err error) (id string) {
 	if e, ok := err.(*Error); ok { //nolint:errorlint
-		return b2s(e.ID())
+		return e.ID()
 	}
 	return
 }
@@ -16,7 +15,7 @@ func GetID(err error) (id string) {
 // GetOperation возвращает операцию ошибки. Для НЕ *Error всегда будет "".
 func GetOperation(err error) string {
 	if e, ok := err.(*Error); ok { //nolint:errorlint
-		return b2s(e.Operation())
+		return e.Operation()
 	}
 	return ""
 }
@@ -46,7 +45,7 @@ func Find(err error, fn func(error) bool) error {
 func FindByID(err error, id string) error {
 	return Find(err, func(e error) bool {
 		ee, ok := e.(*Error) //nolint:errorlint
-		return ok && bytes.Equal(ee.ID(), s2b(id))
+		return ok && ee.ID() == id
 	})
 }
 
@@ -81,7 +80,7 @@ func Contains(err error, fn func(error) bool) bool {
 func ContainsByID(err error, id string) bool {
 	return Contains(err, func(e error) bool {
 		ee, ok := e.(*Error) //nolint:errorlint
-		return ok && bytes.Equal(ee.ID(), s2b(id))
+		return ok && ee.ID() == id
 	})
 }
 

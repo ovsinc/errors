@@ -24,6 +24,7 @@ func Log(err error, lg ...Logger) {
 	l := DefaultLogger
 	if len(lg) > 0 {
 		l = lg[0]
+
 	}
 	l.Errorf(err.Error())
 }

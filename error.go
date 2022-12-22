@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	ErrUnknownMarshaller = New("marshaller not found")
+	ErrUnknownMarshaller = New("marshaller not set")
 
 	_ error         = (*Error)(nil)
 	_ fmt.Formatter = (*Error)(nil)
@@ -16,12 +16,18 @@ var (
 
 // CtxKV slice key-value контекста ошибки.
 type CtxKV []struct {
-	Key, Value []byte
+	Key   string
+	Value interface{}
 }
 
-// New конструктор на необязательных параметрах
-// * ops ...Options -- параметризация через функции-парметры.
-// См. options.go
+// New конструктор *Error. Аргумент используется для указания сообщения.
+// * In: interface{}
+// Поддерживаемые варианты для NewWith(SetMsg(msg)):
+// string, *Error -> as is
+// error -> Error()
+// interface{ String() string } -> String()
+// func() string -> f()
+// * Out: *Error
 //
 // ** *Error
 func New(i interface{}) *Error {
@@ -29,6 +35,8 @@ func New(i interface{}) *Error {
 	switch t := i.(type) {
 	case string:
 		msg = t
+	case *Error:
+		return t
 	case error:
 		msg = t.Error()
 	case interface{ String() string }:
@@ -47,6 +55,11 @@ func NewLog(i interface{}) *Error {
 	return e
 }
 
+// NewWith конструктор на необязательных параметрах
+// * ops ...Options -- параметризация через функции-парметры.
+// См. options.go
+//
+// ** *Error
 func NewWith(ops ...Options) *Error {
 	e := Error{}
 	for _, op := range ops {
@@ -55,6 +68,8 @@ func NewWith(ops ...Options) *Error {
 	return &e
 }
 
+// NewWithLog конструктор *Error, как и NewWith,
+// но при этом будет осуществлено логгирование с помощь логгера по-умолчанию.
 func NewWithLog(ops ...Options) *Error {
 	e := NewWith(ops...)
 	e.Log()
@@ -62,19 +77,15 @@ func NewWithLog(ops ...Options) *Error {
 }
 
 // Error структура кастомной ошибки.
-// Это потоко-безопасный объект.
 type Error struct {
-	id, msg, operation []byte
+	id, msg, operation string
 	contextInfo        CtxKV
 	errorType          errType
-	// type like a:
-	// http - https://cs.opensource.google/go/go/+/refs/tags/go1.19.1:src/net/http/status.go;l=9
-	// grpc - https://pkg.go.dev/google.golang.org/grpc/codes
 }
 
 // WithOptions производит параметризацию *Error с помощью функции-парметры Options.
 // Допускается указывать произвольно количество ops.
-// Возвращается новый экземпляр *Error.
+// Возвращается новый экземпляр *Error с переопределением заданных параметров.
 func (e *Error) WithOptions(ops ...Options) *Error {
 	if e == nil {
 		return nil
@@ -94,34 +105,30 @@ func (e *Error) WithOptions(ops ...Options) *Error {
 // getters
 
 // ID возвращает ID ошибки.
-// Это безопасный метод, всегда возвращает не nil.
-func (e *Error) ID() []byte {
+func (e *Error) ID() string {
 	if e == nil {
-		return nil
+		return ""
 	}
 	return e.id
 }
 
 // Msg возвращает исходное сообщение об ошибке.
-// Это безопасный метод, всегда возвращает не nil.
-func (e *Error) Msg() []byte {
+func (e *Error) Msg() string {
 	if e == nil {
-		return nil
+		return ""
 	}
 	return e.msg
 }
 
 // Operations вернет список операций.
-// Это безопасный метод, всегда возвращает не nil.
-func (e *Error) Operation() []byte {
+func (e *Error) Operation() string {
 	if e == nil {
-		return nil
+		return ""
 	}
 	return e.operation
 }
 
 // ErrorType вернет тип ошибки.
-// Это безопасный метод, всегда возвращает не nil.
 func (e *Error) ErrorType() errType {
 	if e == nil {
 		return defaultErrType
@@ -130,7 +137,7 @@ func (e *Error) ErrorType() errType {
 	return e.errorType
 }
 
-// ContextInfo вернет контекст CtxMap ошибки.
+// ContextInfo вернет контекст CtxKV ошибки.
 func (e *Error) ContextInfo() CtxKV {
 	return e.contextInfo
 }
@@ -166,7 +173,7 @@ func (e *Error) Format(s fmt.State, verb rune) { //nolint:cyclop
 		contextInfoFormat(s, e.ContextInfo(), false)
 
 	case 'o':
-		_, _ = s.Write(e.Operation())
+		_, _ = s.Write(s2b(e.Operation()))
 
 	case 't':
 		_, _ = io.WriteString(s, e.ErrorType().String())
@@ -181,7 +188,7 @@ func (e *Error) Format(s fmt.State, verb rune) { //nolint:cyclop
 			_, _ = io.WriteString(s, DefaultTranslate(e))
 			return
 		}
-		_, _ = s.Write(e.Msg())
+		_, _ = s.Write(s2b(e.Msg()))
 
 	case 'v':
 		if s.Flag('#') {
@@ -193,10 +200,10 @@ func (e *Error) Format(s fmt.State, verb rune) { //nolint:cyclop
 	case 'q':
 		// id
 		_, _ = io.WriteString(s, "id:")
-		_, _ = s.Write(e.ID())
+		_, _ = s.Write(s2b(e.ID()))
 		// operation
 		_, _ = io.WriteString(s, " operation:")
-		_, _ = s.Write(e.Operation())
+		_, _ = s.Write(s2b(e.Operation()))
 		// errorType
 		_, _ = io.WriteString(s, " error_type:")
 		_, _ = io.WriteString(s, e.ErrorType().String())
@@ -206,7 +213,7 @@ func (e *Error) Format(s fmt.State, verb rune) { //nolint:cyclop
 		contextInfoFormat(s, e.ContextInfo(), false)
 		// msg
 		_, _ = io.WriteString(s, " message:")
-		_, _ = s.Write(e.Msg())
+		_, _ = s.Write(s2b(e.Msg()))
 
 	case 'j':
 		jmarshal := &MarshalJSON{}
@@ -247,8 +254,7 @@ func (e *Error) Error() string {
 }
 
 func (e *Error) Is(target error) bool {
-	switch x := target.(type) { //nolint:errorlint
-	case *Error:
+	if x, ok := target.(*Error); ok { //nolint:errorlint
 		return e == x
 	}
 	return false

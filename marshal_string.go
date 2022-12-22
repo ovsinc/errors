@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"fmt"
 	"io"
 	"strconv"
 
@@ -82,15 +83,15 @@ func contextInfoFormat(w io.Writer, ctxi CtxKV, useDelimiter bool) {
 	}
 
 	// 0
-	_, _ = w.Write(ctxi[0].Key)
+	_, _ = w.Write(s2b(ctxi[0].Key))
 	_, _ = io.WriteString(w, ":")
-	_, _ = w.Write(ctxi[0].Value)
+	_, _ = fmt.Fprint(w, ctxi[0].Value)
 	// other
 	for _, i := range ctxi[1:] {
 		_, _ = w.Write(_listSeparator)
-		_, _ = w.Write(i.Key)
+		_, _ = w.Write(s2b(i.Key))
 		_, _ = io.WriteString(w, ":")
-		_, _ = w.Write(i.Value)
+		_, _ = fmt.Fprint(w, i.Value)
 	}
 
 	if useDelimiter {
@@ -114,9 +115,9 @@ func stringFormat(w io.Writer, e error) {
 		}
 
 		// operation
-		if op := t.Operation(); op != nil {
+		if op := t.Operation(); op != "" {
 			_, _ = w.Write(_opDelimiterLeft)
-			_, _ = w.Write(op)
+			_, _ = w.Write(s2b(op))
 			_, _ = w.Write(_opDelimiterRight)
 			_, _ = w.Write(_separator)
 		}
@@ -125,7 +126,7 @@ func stringFormat(w io.Writer, e error) {
 		contextInfoFormat(w, t.ContextInfo(), true)
 
 		// msg
-		_, _ = w.Write(t.Msg())
+		_, _ = w.Write(s2b(t.Msg()))
 
 	default:
 		_, _ = io.WriteString(w, t.Error())

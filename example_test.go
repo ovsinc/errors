@@ -10,9 +10,10 @@ import (
 
 	"github.com/BurntSushi/toml"
 	i18n "github.com/nicksnyder/go-i18n/v2/i18n"
-	"github.com/ovsinc/errors"
 	"github.com/ovsinc/multilog/golog"
 	"golang.org/x/text/language"
+
+	"github.com/ovsinc/errors"
 )
 
 // one err
@@ -59,7 +60,8 @@ func ExampleNewWith() {
 	e := errors.NewWith(
 		errors.SetID("myid"),
 		errors.SetMsg("hello"),
-		errors.AppendContextInfo("hello", "world"),
+		errors.AppendContextInfo("hello",
+			[]struct{ k, v interface{} }{{"1", 1}, {"10", 11}}),
 		errors.AppendContextInfo("Joe", "Dow"),
 		errors.SetOperation("test op"),
 		errors.SetErrorType(errors.InputBody),
@@ -76,14 +78,14 @@ func ExampleNewWith() {
 	fmt.Printf("%f\n", e)
 
 	// Output:
-	// id:myid operation:test op error_type:InputBody context_info:hello:world,Joe:Dow message:hello
-	// (InputBody) [test op] {hello:world,Joe:Dow} hello
-	// hello:world,Joe:Dow
+	// id:myid operation:test op error_type:InputBody context_info:hello:[{1 1} {10 11}],Joe:Dow message:hello
+	// (InputBody) [test op] {hello:[{1 1} {10 11}],Joe:Dow} hello
+	// hello:[{1 1} {10 11}],Joe:Dow
 	// InputBody
 	// test op
 	// hello
-	// {"id":"myid","operation":"test op","error_type":"InputBody","context":{"hello":"world","Joe":"Dow"},"msg":"hello"}
-	// example_test.go:74: ExampleNewWith()
+	// {"id":"myid","operation":"test op","error_type":"InputBody","context":{"hello":"[{1 1} {10 11}]","Joe":"Dow"},"msg":"hello"}
+	// example_test.go:78: ExampleNewWith()
 }
 
 func ExampleError_WithOptions() {
@@ -207,7 +209,7 @@ func ExampleCombineWithLog() {
 func someFuncWithErr() error {
 	return errors.NewWith(
 		errors.SetMsg("connection error"),
-		errors.SetContextInfo(errors.CtxKV{{[]byte("hello"), []byte("world")}}),
+		errors.SetContextInfo(errors.CtxKV{{"hello", "world"}}),
 		errors.SetOperation("write"),
 		errors.SetID("someid"),
 	)
@@ -289,5 +291,5 @@ func ExampleCaller() {
 	fmt.Printf("%s\n", err.Error())
 
 	// Output:
-	// {call:example_test.go:268: ExampleCaller(),duration:1s} some call
+	// {call:example_test.go:289: ExampleCaller(),duration:1s} some call
 }
