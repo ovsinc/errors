@@ -1,0 +1,34 @@
+[ErrBadContent]
+description = "Некорректные входные данные"
+hash = "sha1-be575416c37ad145012740d0cb0f961f801a33cc"
+other = "Некорректные входные данные."
+
+[ErrDBDuplicate]
+description = "Такая запись в базе уже естьб дубликат"
+hash = "sha1-2da08801b6a160c1d84bcdf380fc8e848b9d85e8"
+other = "Запись в базе уже существует, дубликат."
+
+[ErrDBInternal]
+description = "Любая внутренняя ошибка"
+hash = "sha1-c19f9fb31d61675146938d93510b34043455a9ae"
+other = "Внутренняя ошибка."
+
+[ErrDBNotFound]
+description = "Запись в базе не найдена"
+hash = "sha1-fbd903daa9173f3964825bdbe27f89a3a6a06cd8"
+other = "Запись в базе не найдена."
+
+[ErrUnknown]
+description = "Внезапная ошибка"
+hash = "sha1-c45e15a4b26e1d49c489b6024db7c4e6ef3c4d47"
+other = "Внезапная ошибка."
+
+[ErrUserEmpty]
+description = "Входные данные пусты или nil"
+hash = "sha1-5d6976ed9b1bdfa770f4fe0462d4cfe2cdf3a104"
+other = "Входные данные пусты."
+
+[ErrUserValidation]
+description = "Провал валидации"
+hash = "sha1-54aef575b84f24cd353f010a6f3df1ec7317260c"
+other = "Данные не валидны."

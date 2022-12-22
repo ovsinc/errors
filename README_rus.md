@@ -6,20 +6,13 @@
 
 ## Оглавление
 
-1. [Установка](#Установка)
-2. [Миграция](#Миграция)
-3. [Тестирование](#Тестирование)
-   - [Производительность](#Производительность)
-4. [Фичи](#Фичи)
-5. [Использование](#Использование)
-   - [Методы *Error](#Методы-*Error)
-   - [Функции-параметры](#Функции-параметры)
-   - [Основные хелперы](#Основные-хелперы)
-   - [Логгирование ошибки](#Логгирование-ошибки)
-   - [Перевод ошибки](#Перевод-ошибки)
-   - [Функции форматирования сообщения ошибки](#Функции-форматирования-сообщения-ошибки)
-6. [Список задач](#Список-задач)
-7. [Лицензия](#Лицензия)
+1. [Установка](#установка)
+2. [Миграция](#миграция)
+3. [Тестирование](#тестирование)
+4. [Сценарии использования](#сценарии-использования)
+5. [Особенности использования](#особенности-использования)
+6. [Список задач](#список-задач)
+7. [Лицензия](#лицензия)
 
 ____
 
@@ -45,7 +38,7 @@ func main() {
 
 ```
 
-[К оглавлению](#Оглавление)
+[К оглавлению](#оглавление)
 
 ## Миграция
 
@@ -66,7 +59,7 @@ func main() {
 
 ```
 
-[К оглавлению](#Оглавление)
+[К оглавлению](#оглавление)
 
 ## Тестирование
 
@@ -97,185 +90,458 @@ make bench
 make bench_vendors
 ```
 
-[К оглавлению](#Оглавление)
+Сравнение основных возможностей для похожих решений, одна ошибка:
 
-## Фичи
+```text
+go test -benchmem -run=^$ -bench "^(BenchmarkVendorStandartError|BenchmarkVendorStandartConstructor|BenchmarkVendorXerrors|BenchmarkVendorXerrorsConstructor|BenchmarkVendorMyNewFull|BenchmarkVendorMyNewFullConstructor|BenchmarkVendorMyNewSimple|BenchmarkVendorMyNewSimpleConstructor)$"
+goos: linux
+goarch: amd64
+pkg: github.com/ovsinc/errors
+cpu: Intel(R) Core(TM) i7-10850H CPU @ 2.70GHz
+BenchmarkVendorStandartError-12                 713995772                1.698 ns/op           0 B/op          0 allocs/op
+BenchmarkVendorStandartConstructor-12           1000000000               0.3875 ns/op          0 B/op          0 allocs/op
+BenchmarkVendorXerrors-12                       718511691                1.648 ns/op           0 B/op          0 allocs/op
+BenchmarkVendorXerrorsConstructor-12             2052255               588.9 ns/op             0 B/op          0 allocs/op
+BenchmarkVendorMyNewSimple-12                   15405230                77.94 ns/op            0 B/op          0 allocs/op
+BenchmarkVendorMyNewSimpleConstructor-12        18630474                80.98 ns/op           80 B/op          1 allocs/op
+BenchmarkVendorMyNewFull-12                      6755743               158.3 ns/op             0 B/op          0 allocs/op
+BenchmarkVendorMyNewFullConstructor-12           2980184               429.6 ns/op           416 B/op          3 allocs/op
+```
 
-- Стандартный интерфейс ошибки (`error`);
-- Дополнительные поля описания ошибки: идентификатор (`Objecter`), тип (`Objecter`), контекст (`map[string]interface{}`), severity (Enum: `log.SeveritError`, `log.SeverityWarn`), операции (`Objects`);
-- Дополнительный метод: [логгирование](#Логгирование-ошибки);
-- Сообщение ошибки может быть [локализовано](#Перевод-ошибки);
-- логгирование с помощью [multilog](https://github.com/ovsinc/multilog);
-- Логгирование в цепочке;
-- Потокобезопасное управления ошибкой/ошибками.
+Сравнение основных возможностей для похожих решений, две шибки в цепочке:
 
-[К оглавлению](#Оглавление)
+```text
+go test -benchmem -run=^$ -bench "^(BenchmarkVendorMyMulti2StdErr|BenchmarkVendorMyMulti2MySimple|BenchmarkVendorHashiMulti2StdErr|BenchmarkVendorUberMulti2StdErr)$"
+goos: linux
+goarch: amd64
+pkg: github.com/ovsinc/errors
+cpu: Intel(R) Core(TM) i7-10850H CPU @ 2.70GHz
+BenchmarkVendorMyMulti2StdErr-12         2840337               462.3 ns/op            64 B/op          5 allocs/op
+BenchmarkVendorMyMulti2MySimple-12       2606301               476.8 ns/op            64 B/op          5 allocs/op
+BenchmarkVendorHashiMulti2StdErr-12      1405405               939.4 ns/op           136 B/op          6 allocs/op
+BenchmarkVendorUberMulti2StdErr-12       9235027               128.3 ns/op            16 B/op          1 allocs/op
+```
 
-## Использование
+[К оглавлению](#оглавление)
 
-Ошибка `*Error` представлена следующей структурой:
+## Сценарии использования
+
+### Замена стандартной errors
+
+Тут всё просто: нужно заменить импорт `errors` на `github.com/ovsinc/errors` и пользоваться как было привычно:
 
 ```golang
-type Error struct {
-    id               Objecter
-    msg              Objecter
-    severity         Severity
-    errorType        Objecter
-    operations       Objects
-    formatFn         FormatFn
-    translateContext *TranslateContext
-    localizer        *i18n.Localizer
-    contextInfo      CtxMap
+package main
+
+import (
+    "fmt"
+    // "errors"
+    "github.com/ovsinc/errors"
+)
+
+func main() {
+    fmt.Println(errors.New("hello error"))
 }
 ```
 
-Пакет имеет обратную совместимость по методам со стандартной библиотекой `errors` и `github.com/pkg/errors`. Поэтому может быть использован в стандартных сценариях, а также с дополнительными возможностями.
+При использовании форматирования возможно более широкое использование использование:
 
-Тип `*Error` является потокобезопасным.
+| Глагол и флаг | Описание |
+| ------------- | -------- |
+| `v` | Строка, сериализованная ошибка в строку. |
+| `#v`| Дамп *Error |
+| `j` | Строка, сериализованная ошибка в JSON (содержит все поля). |
+| `q` | Строка, сериализованная ошибка в строку (с указанием ID). |
+| `s` | Строка, сообщение. |
+| `+s` | Строка, сообщение с переводом (если возможно). |
+| `t` | Строка, тип. |
+| `o` | Строка, операция. |
+| `с` | Строка, сериализованный контекст. |
+| `f` | Строка, место вызова. |
 
-Дополнительные к стандартным могут использованы следующие кейсы:
+Пример использования:
 
-- оборачивание цепочки ошибок;
-- логгирование ошибки в момент ее формирования;
-- формирование ошибок в процессе выполнения цепочки методов и проверка в вышестоящем методе (с возможным логгированием);
-- выдача ошибок (ошибки) клиентскому приложению с переводом сообщения на язык клиента (при установки локализатора).
+```golang
+package main
 
-Для переводов сообщения используется библиотека `github.com/nicksnyder/go-i18n/v2/i18n`. Ознакомится с особенностями работы i18n можно [тут](https://github.com/nicksnyder/go-i18n).
+import (
+    "fmt"
+    "github.com/ovsinc/errors"
+)
 
-Можно также ознакомится с [примерами](https://github.com/ovsinc/errors/-/blob/main/example_test.go) использования `github.com/ovsinc/errors`.
+func main() {
+    e := errors.NewWith(
+        errors.SetMsg("hello error"),
+        errors.SetOperation("store to db"),
+        errors.SetID("<myid>"),
+        errors.SetErrorType(errors.NotFound),
+        errors.AppendContextInfo("host", "localhost"),
+        errors.AppendContextInfo("db", "postgres"),
+    )
+    
+    fmt.Printf("id: %i, op: %o, type: %t ctx: %c, msg: %s", e, e, e, e, e)
 
-### Методы *Error
+    fmt.Printf("%+v", e)
 
-| Метод | Описание |
+    fmt.Printf("full str: %q", e)
+
+    fmt.Printf("full str: %j", e)
+}
+```
+
+### Расширенное использование
+
+#### Дополнительные свойства
+
+Вызов `NewWith` позволяет создать ошибку с нужными свойствами в стиле функций-параметров.
+
+| Опция | Описание |
 | ----- | -------- |
-| `func New(msg string, ops ...Options) *Error` | Конструктор `*Error`. Обязательно нужно указать сообщение ошибки. Для ошибки будет установлен `severity = log.SeverityError`. Свойства `*Error` можно установить или переопределить с помощью [функций-параметров](#Функции-параметры). |
-| `func NewWithLog(msg string, ops ...Options) *Error` | Конструктор `*Error`, как и `New`. Перед возвратом `*Error` производит логгирование на дефолтном логгере. |
-| `func (e *Error) Error() string` | Метод, возвращающий строку сообщения ошибки. |
-| `func (e *Error) WithOptions(ops ...Options) *Error` | Вернет новый объект `*Error` как копию `e` с модифицированными с помощью `ops ...Options` свойствами. Изменение свойств `*Error` производится с помощью [функций-параметров](#Функции-параметры). |
-| `func (e *Error) Severity() log.Severity` | Геттер получения важности ошибки. |
-| `func (e *Error) Msg() Objecter` | Геттер получения объекта сообщения ошибки. |
-| `func (e *Error) Sdump() string` | Геттер получения текстового дампа `*Error`. Может использоваться для отладки. Или в выводе форматированного сообщения, например, `fmt.Printf("%+v", err)`. |
-| `func (e *Error) ErrorOrNil() error` | Геттер получения ошибки или `nil`. `*Error` с severity `log.SeverityWarn` не является ошибкой; метод `ErrorOrNil` с таким типом вернет `nil`. |
-| `func (e *Error) Operations() Objects` | Геттер получения списка объектов операций. |
-| `func (e *Error) ErrorType() Objecter` | Геттер получения объекта типа ошибки. |
-| `func (e *Error) Format(s fmt.State, verb rune)` | Функция форматирования для обработки строк с возможностью задания формата, например: `fmt.Printf`, `fmt.Sprintf`, `fmt.Fprintf`,.. |
-| `func (e *Error) ID() Objecter` | Геттер получения объекта ID. |
-| `func (e *Error) TranslateContext() *TranslateContext` | Геттер получения контекста перевода. |
-| `func (e *Error) Localizer() *i18n.Localizer` | Геттер получения локализатора. |
-| `func (e *Error) Log(l ...multilog.Logger) ` | Метод логгирования. Выполнит логгирование ошибки с использованием логгера `l[0]`. |
-| `func (e *Error) WriteTranslateMsg(w io.Writer) (int, error)` | Запишет перевод сообщения ошибки в буфер. В случае неудачи перевода в буфер запишется оригинальное сообщение (без перевода). |
-| `func (e *Error) TranslateMsg() string` | Выполнит перевод сообщения и вернет его. В случае неудачи перевода метод вернет оригинальное сообщение (без перевода).|
-| `func (e *Error) Is(target error) bool` |  Проверит на равенство `target`. Для go >= 1.13. |
-| `func (e *Error) As(target interface{}) bool ` |  Проверит на тип `*Error`. Для go >= 1.13. |
-| `func (e *Error) Unwrap() error` | Всегда вернет `nil`. Для go >= 1.13. |
+| `SetMsg(string)` | Установить сообщение об ошибке. |
+| `SetOperation(string)` | Установит операцию. |
+| `SetErrorType(errType)` | Установит тип. |
+| `SetID(string)` | Установит идентификатор. |
+| `SetContextInfo(CtxKV)` | Установит контекст. |
+| `AppendContextInfo(string, string)` | Добавит контекст к имеющимуся. Если контекст не был создан, создаст. |
+| `SetErrorType(et IErrType) Options` | Установить тип ошибки. Если не указано, то устанавливается тип `Unknown`. |
 
-### Объекты (Objects, Objecter)
+#### Логгирование
 
-Тип `Objecter` представлен следующим интерфейсом:
+Существует возможность логгирования ошибки.
+
+Возможные варианты вызова:
+
+- из конструтороа `NewLog` (аналогично конструтору `New`, но с логгированием) или `NewWithLog` (аналогично `NewWith`, но с логгированием);
+- вызов метода `*Error.Log(...Logger)`;
+- хелпер `Log(error, ...Logger)`.
+
+#### Типизированная ошибка
+
+Ошибки могут иметь тип. Например, `Validation`, `InputBody`.
+Типизация может понадобится для удобной обработки обработки в хендлерах.
+
+Тип реализует интерфейс:
 
 ```golang
-type Objecter interface {
+type IErrType interface {
+    HTTPStatusCode() int
+    GRPCStatusCode() codes.Code
+    Number() int
     String() string
-    Bytes() []byte
-    Buffer() *bytes.Buffer
 }
 ```
 
-Тип `Objects` можно представить интерфейсом:
+В пакете присутсвуют конструкторы для типизированных ошибок. Например, для создания ошибки валидации можно использовать разные варианты, например:
 
 ```golang
-type _ interface {
-    Append(oo ...Objecter) Objects
-    AppendString(ss ...string) Objects
-    AppendBytes(vv ...[]byte) Objects
+errors.NewWith(
+    errors.SetMsg("some validation error"),
+    errors.SetErrorType(errors.Validation),
+)
+// the same
+errors.ValidationErr("some validation error")
+```
+
+Методы конструкторы именуются по следующей схеме:
+
+1. `{{type}}Err(string) *Error` - создание ошибки типа `type` и сообщения;
+
+2. `{{type}}ErrWith(...Options) *Error` - создание ошибки `type` и с опциями;
+
+Для второго пособа важно отметить, что тип устанавливается в соответсвии с именем функции конструктора, даже если использовалась опция `SetErrorType` с другим типом.
+
+Типы:
+
+```golang
+const (
+    _ errType = iota
+
+    // Неизвестный тип ошибки. Дефолтное значение.
+    Unknown
+
+    // Internal внутренняя системная ошибка. Например, отказ базы данных.
+    Internal
+
+    // Validation ошибка валидации. Например, не корректный email-адрес.
+    Validation
+
+    // InputBody ошибка обработки входных данных. Например, ошибка сериализации JSON.
+    InputBody
+
+    // Duplicate дубликат данных, нарушения уникальности.
+    Duplicate
+
+    // Unauthenticated для выполнения запроса требуется аутентфиикация.
+    Unauthenticated
+
+    // Unauthorized доступ запрещен, запрос не авторизован.
+    Unauthorized
+
+    // Empty запрос или не ответ не должен быть пустым.
+    Empty
+
+    // NotFound запрашиваемые данные не найдены. Например, пользователь с заданным ID не найден.
+    NotFound
+
+    // MaximumAttempts превышение числе разрешенных попуток выполнения одного и того же действия.
+    MaximumAttempts
+
+    // SubscriptionExpired срок действия "оплаченой" подписки истек.
+    SubscriptionExpired
+
+    // DownstreamDependencyTimedout время ожидания выполнения запрос к нижестоящему сервису истек.
+    DownstreamDependencyTimedout
+
+    // Unavailable сервис не доступен.
+    Unavailable
+)
+```
+
+### Перевод сообщения ошибки
+
+Сообщение об ошибке можно перевести.
+Для корректного выполнения перевода в `*Error` должен быть установлен идентификатор,
+который должен быть идентичным с объектом сообщения (`i18n.Message`).
+
+Возможные варианты вызова:
+
+- вызов метода `*Error.Translate(...Translater) (string, error)`;
+- хелпер `Translate(error, ...Translater) (string, error)`;
+- форматированныый вывод `Printf` с руной `#s` (используется дефолтный контекст перевода).
+
+В случае ошибки перевода все эти методы вернут оригинальное сообщение.
+
+Подробнее описано [тут](#настройка-перевода-сообщения-ошибки).
+
+### Цепочка ошибок
+
+Иногда требуется в одном месте собрать несколько ошибок в цепочке вызовов.
+Цепочка вызовов, пример:
+
+```golang
+package main
+
+import (
+    "net/http"
+    "github.com/ovsinc/errors"
+)
+
+var (
+    ErrModel      = errors.New("some *model* error")
+    ErrController = errors.New("some *control* error")
+)
+
+type Myhandler struct{}
+
+func (*Myhandler) ModelFunc() error {
+    return ErrModel
+}
+
+func (h *Myhandler) ControlFunc() error {
+    err := h.ModelFunc()
+    if err != nil {
+        return errors.Wrap(ErrController, err)
+    }
+    return nil
+}
+
+func (h *Myhandler) HandleFunc(w http.ResponseWriter, r *http.Request) {
+    code := http.StatusOK
+    msg := "Hello world"
+
+    err := h.ControlFunc()
+    if err != nil {
+        errors.Log(err)
+        code = http.StatusInternalServerError
+        msg = "Some errors occured\n"
+    }
+
+    w.WriteHeader(code)
+    w.Write(s2b(msg))
+}
+
+func main() {
+    h := new(Myhandler)
+    http.HandleFunc("/", h.HandleFunc)
+    http.ListenAndServe(":8000", nil)
 }
 ```
 
-В этой версии внесены изменения в методы `ID()`, `Msg()`, `ErrorType()` - изменены тип возвращаемого значения со `string` на `Objecter`.
-Например, так: `func (e *Error) ID() string` -> `func (e *Error) ID() Objecter`.
+Или когда нужно в цикле обработать однотипные выводы и в конце вынести общий вердикт.
+Общий вердикт, пример:
 
-Теперь для получения значения типа `string` достаточно дополнить вызов метода `Objecter.String()`. Это безопасно.
+```golang
+package main
+
+import (
+    "database/sql"
+    "github.com/ovsinc/errors"
+)
+
+func main() {
+    var (
+        srvs = []string{
+            "myhsot",
+            "localhost",
+        }
+
+        err    error
+        client *sql.DB
+    )
+
+    for _, connStr := range srvs {
+        db, e := sql.Open("postgres", connStr)
+        if err == nil {
+            client = db
+            break
+        }
+
+        err = errors.Combine(err, e)
+    }
+
+    if client == nil {
+        errors.Log(err)
+    }
+}
+```
+
+Использование в разных потоках может быть не безопасным!
+В горутинах лучше использовать [errgroup](https://pkg.go.dev/golang.org/x/sync@v0.0.0-20220923202941-7f9b1623fab7/errgroup).
+
+### Финальная обработка ошибок
+
+В golang, к сожалению, нет удобного механизма обработки исключений, как в python. Принято "поднимать" ошибку на более высокий уровень вызова по цепочке.
 
 Например:
 
 ```golang
-func main() {
-    e := errors.New("hello")
--   fmt.Println(e.Msg()) 
-+   fmt.Println(e.Msg().String()) 
+
+import "errors"
+
+var Err1 = errors.New("some error")
+
+func fn1() error {
+    return Err1
+}
+
+func fn2() error {
+    err := fn1()
+    if err != nil {
+        return err
+    }
+    return nil
 }
 ```
 
-### Функции-параметры
+Тем не мене подход в python try-except выглядит интересным.
 
-Параметризация `*Error` производится с помощью функций-параметров типа `type Options func(e *Error)`.
+```python
+class Err1(Exception):
+    pass
 
-| Метод | Описание |
-| ----- | -------- |
-| `func SetFormatFn(fn FormatFn) Options` | Устанавливает функцию форматирования. Если значение `nil`, будет использоваться функция форматирования по-умолчанию. |
-| `func SetMsg(msg string) Options` | Установить сообщение. |
-| `func SetMsgBytes(msg []byte) Options` | Установить сообщение из `[]byte`. |
-| `func SetSeverity(severity log.Severity) Options` | Установить уровень важности сообщения. Доступные значения: `log.SeverityWarn`, `log.SeverityError`. |
-| `func SetLocalizer(localizer *i18n.Localizer) Options ` | Установить локализатор для перевода. |
-| `func SetTranslateContext(tctx *TranslateContext) Options` | Установить `*TranslateContext` для указанного языка. Используется для настройки дополнительных параметров, требуемых для корректного перевода. Например, `TranslateContext.PluralCount` позволяет установить множественное значение используемых в переводе объектов. |
-| `func SetErrorType(etype string) Options` | Установить тип ошибки. Тип ошибки - `string`. |
-| `func SetErrorTypeBytes(etype []byte) Options` | Установить тип ошибки из `[]byte`. |
-| `func SetOperations(ops ...string) Options` | Установить список выполненных операций, указанных как `string`. |
-| `func SetOperationsBytes(o ...[]byte) Options` | Установить список выполненных операций, указанных как `[]byte`. |
-| `func AppendOperations(ops ...string) Options` | Добавить операции, указанные как `string`, к уже имеющемуся списку. Если список операций не существует, он будет создан. |
-| `func AppendOperationsBytes(o ...[]byte) Options` | Добавить операции, указанные как `[]byte`, к уже имеющемуся списку. Если список операций не существует, он будет создан. |
-| `func SetContextInfo(ctxinf CtxMap) Options` | Задать контекст ошибки. |
-| `func AppendContextInfo(key string, value interface{}) Options` | Добавить значения к уже имеющемуся контексту ошибки. Если контекст ошибки не существует, он будет создан. |
-| `func SetID(id string) Options` | Установить ID ошибки. |
-| `func SetIDBytes(id []byte) Options` | Установить ID ошибки из `[]byte`. |
+class Err2(Exception):
+    pass
 
-### Основные хелперы
+class Err3(Exception):
+    pass
 
-Все хелперы работают с типом `error`.
+def fn():
+    raise Err1()
 
-| Хелпер | Описание |
-| ------ | -------- |
-| `func GetErrorType(err error) string` | Получить тип ошибки. Для НЕ `*Error` всегда будет "". |
-| `func ErrorOrNil(err error) error` | Возможна обработка цепочки или одиночной ошибки. Если хотя бы одна ошибка в цепочке является ошибкой, то она будет возвращена в качестве результата. Важно: `*Error` c Severity `Warn` не является ошибкой. |
-| `func Cast(err error) *Error` | Преобразование типа `error` в `*Error`. |
-| `func Combine(errs ...error) error` | Создать цепочку ошибок. Допускается использование `nil` в аргументах. |
-| `func Wrap(left error, right error) error` | Обернуть ошибку `left` ошибкой `right`, получив цепочку. Допускается использование `nil` в одном из аргументов, тогда функция вернет ошибку из второго аргумента. |
-| `func Errors(err error) []error` | Получить список ошибок из цепочки. Вернет `nil`, при пустой цепочке. |
-| `func UnwrapByID(err error, id string) *Error` | Получить ошибку (`*Error`) по ID. Вернет `nil`, если в случае провала поиска. |
-| `func GetID(err error) (id string)` | Получить ID ошибки. Для НЕ `*Error` всегда будет "". |
-| `func Contains(err error, id string) bool` | Проверить присутствует ли в цепочке ошибка с указанным ID. |
-| `func Is(err, target error) bool` | Обёртка над методом стандартной библиотеки `errors.Is`. Для go >= 1.13. |
-| `func As(err error, target interface{}) bool` | Обёртка над методом стандартной библиотеки `errors.As`. Для go >= 1.13. |
-| `func Unwrap(err error) error` | Обёртка над методом стандартной библиотеки `errors.Unwrap`. Для go >= 1.13. |
+def main:
+    try:
+        fn()
+    # except named exception
+    except Err1 as err:
+        print("Error: {0}".format(err))
+    # except named exception
+    except Err2 as err:
+        print("Error: {0}".format(err))
+    # default except
+    except:
+        raise
+```
 
-### Логгирование ошибки
+В пакете `errors` для подобной реализации есть инструменты.
+Как пример выше на python можно похоже реализовать на golang:
 
-Логгирование в пакете реализовано с помощью [multilog](https://github.com/ovsinc/multilog).
+```golang
+package main
+
+import (
+    "fmt"
+    "github.com/ovsinc/errors"
+)
+
+const (
+    Err1ID = "one"
+    Err2ID = "two"
+    Err3ID = "tree"
+)
+
+var (
+    Err1 = errors.NewWith(
+        errors.SetMsg("error one"),
+        errors.SetID(Err1ID),
+    )
+    Err2 = errors.NewWith(
+        errors.SetMsg("error two"),
+        errors.SetID(Err2ID),
+    )
+    Err3 = errors.NewWith(
+        errors.SetMsg("error tree"),
+        errors.SetID(Err3ID),
+    )
+)
+
+func fn() error {
+    return Err1
+}
+
+func main() {
+    var e error
+
+    err := fn() // try
+    switch {
+    // except named exception
+    case errors.ContainsByID(err, Err1ID):
+        e = errors.FindByID(err, Err1ID)
+
+    // except named exception
+    case errors.ContainsByID(err, Err2ID):
+        e = errors.FindByID(err, Err2ID)
+
+    // default except
+    default:
+        e = errors.FindByID(err, Err3ID)
+    }
+
+    fmt.Printf("%v\n", e)
+}
+
+Подробнее можно ознакомится в примере [real_world_example](https://github.com/ovsinc/errors/tree/new_approach/_examples/real_world_example).
+
+## Особенности использования
+
+### Управление логгированием ошибки
+
+Логгирование в пакете реализовано с помощью библиотеки [multilog](https://github.com/ovsinc/multilog).
 
 ```golang
 type Logger interface {
-    Warn(err error)
-    Error(err error)
+    Errorf(format string, args ...interface{})
 }
 ```
 
-В пакете [multilog](https://github.com/ovsinc/multilog) присутствует логгер по-умолчанию `https://github.com/ovsinc/multilog.DefaultLogger`.
-Он установлен на использование стандартного для Go логгера `log`.
+В пакете установлен логгер по-умолчанию, установленный на использование стандартного для Go логгера `log`.
 
 При необходимости его можно легко переопределить на более подходящее значение из пакета [multilog](https://github.com/ovsinc/multilog).
 
-Для логгирования в `*Error` имеется метод `Log(l ...multilog.Logger)`.
+Возможные варианты вызова:
 
-Однако, приводить `error` к `*Error` каждый раз не требуется. Для логгирования в пакете есть несколько хелперов.
-
-| Хелпер | Описание |
-| ------ | -------- |
-| `func NewWithLog(msg string, ops ...Options) *Error` | Функция произведет логгирование ошибки дефолтным логгером. |
-| `func Log(err error, l ...multilog.Logger)` | Функция произведет логгирование ошибки дефолтным логгером или логгером указанным в l (будет использоваться только первое значение). |
-| `func CombineWithLog(errs ...error) error` | Хелпер создать цепочку ошибок., выполнит логгирование дефолтным логгером и вернет цепочку. |
-| `func WrapWithLog(olderr error, err error) error` | Хелпер обернет `olderr` ошибкой `err`, выполнит логгирование дефолтным логгером и вернет цепочку. |
-
-Для удобства поддерживаются несколько оберток над наиболее популярными логгерами.
+- метод `*Error.Log(l ...multilog.Logger)`;
+- хелпер `Log(error, ...Logger)`;
+- методы-конструкторы: `CombineWithLog`,`WrapWithLog`, `NewLog`, `NewWithLog`.
 
 Ниже приведен пример использования `github.com/ovsinc/errors` c логгированием:
 
@@ -283,10 +549,6 @@ type Logger interface {
 package main
 
 import (
-    "time"
-
-    "github.com/ovsinc/multilog"
-    "github.com/ovsinc/multilog/chain"
     "github.com/ovsinc/multilog/journald"
     "github.com/ovsinc/multilog/logrus"
     origlogrus "github.com/sirupsen/logrus"
@@ -294,63 +556,37 @@ import (
 )
 
 func main() {
-    now := time.Now()
-
     logrusLogger := logrus.New(origlogrus.New())
+    errors.DefaultLogger = logrusLogger
 
-    multilog.DefaultLogger = logrusLogger
-
-    err := errors.NewWithLog(
-        "hello error",
-        errors.SetSeverity(errors.SeverityWarn),
-        errors.SetContextInfo(
-            errors.CtxMap{
-                "time": now,
-            },
-        ),
-    )
-
-    err = err.WithOptions(
-        errors.SetID("my id"),
-        errors.AppendContextInfo("duration", time.Since(now)),
-    )
+    err := errors.NewLog("hello error")
 
     journalLogger := journald.New()
-
-    chainLogger := chain.New(logrusLogger, journalLogger)
-
-    err.Log(chainLogger)
+    errors.Log(err, journalLogger)
 }
 ```
 
-### Перевод ошибки
+### Настройка перевода сообщения ошибки
 
-Для переводов сообщения ошибки используется библиотека `github.com/nicksnyder/go-i18n/v2/i18n`.
+Перевод сообщения ошибки реализован с помощью библиотеки `github.com/nicksnyder/go-i18n/v2/i18n`.
 
-Для работы переводов нужно установить:
+Важно чтобы каждый объект `*Error` должен содержать ID. Он используется в `go-i18n` для поиска переводимого сообщения.
+В случае перевода сообщения ошибки, заданное сообщение будет использоваться при срабатывании fallback сценария, т.е. при возникновении ошибки при переводе.
 
-- `DefaultLocalizer`, тогда он будет использоваться для перевода всех ошибок;
-- или локализатор для каждой отдельно взятой ошибки, используя функцию-параметр `*Error.SetLocalizer` при её создании.
+Для работы переводов нужно выполнить подготовку:
 
-Может оказаться удобным установить локализатор `DefaultLocalizer` для всего вашего приложения. Тогда, конечно, ваш локализатор должен содержать весь набор переводимых сообщений и настроен на использование требуемых языков.
-
-В структуре `*Error` за перевод отвечают несколько свойств.
-
-| Свойство | Тип |Назначение | Значение по-умолчанию |
-| -------- | --- | --------- | --------------------- |
-| translateContext | `*TranslateContext` | Дополнительная информация (контекст) для перевода. | `nil` |
-| localizer  | `*i18n.Localizer` | Локализатор. Используется для выполнения переводов сообщения ошибки. | `nil` |
-
-Для выполнения перевода ошибки требуется установить локализатор (если значение `DefaultLocalizer` не было установлено), используя функцию-параметр `SetLocalizer`.
-Тогда при вызове метода `*Errors.Error()` будет выдана строка с переведенным сообщением.
-
-В случае возникновения ошибки при переводе сообщения `*Error` будет выдана строка с оригинальным сообщением, без перевода.
-
-Для ошибки `*Error` можно установить контекст перевода. Обычно это требуется для сложных сообщений, например, содержащих имена собственные или количественные значения. Для таких сообщений в составе контекста перевода необходимо установить шаблон `TemplateData map[string]interface{}`.
-При использовании множественных форм в сообщении ошибки необходимо установить число в `PluralCount interface{}`.
-Можно указать `DefaultMessage *i18n.Message`, если требуется указать значения перевода в случае ошибки перевода из файла.
-
+- инициализировать локализатор go-i18n (должен соответсвовать интерфейсу `Localizer`);
 См. подробности в пакете [i18n](https://github.com/nicksnyder/go-i18n).
+- при создании сообщения `*Error`, использовать конструктор `NewWith` с заданием ID.
+
+Может оказаться удобным установить локализатор `DefaultLocalizer` для всего приложения. Тогда, конечно, локализатор должен содержать весь набор переводимых сообщений и настроен на использование требуемых языков.
+
+Получение переведенного сообщения:
+
+- хелпер `TranslateMsg(error, Localizer, *TranslateContext)`;
+- форматированный вывода с руной `#s`.
+
+В простых случаях, если задан `DefaultLocalizer` для всего приложения, то можно использовать форматированный вывода из составка `fmt` с руной `#s`. При этом необходимо учитывать, что плюральные форммы требуют задание контекста для каждого переводимого сообщения, что в случае с форматированным выводом сделать нельзя.
 
 Пример использование перевода в сообщении ошибки:
 
@@ -375,56 +611,75 @@ func main() {
     bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
     bundle.MustParseMessageFileBytes(translationRu, "testdata/active.ru.toml")
 
-    err := errors.New(
-        "fallback message",
-        errors.SetID("ErrEmailsUnreadMsg"),
-        errors.SetLocalizer(i18n.NewLocalizer(bundle, "ru")),
-        errors.SetTranslateContext(&errors.TranslateContext{
+    localizer := i18n.NewLocalizer(bundle, "ru")
+    locCtx := errors.TranslateContext{
             TemplateData: map[string]interface{}{
-                "Name":        "John Snow",
-                "PluralCount": 5,
-            },
-            PluralCount: 5,
-        }),
+            "Name":        "John Snow",
+            "PluralCount": 5,
+        },
+        PluralCount: 5,
+    }
+
+    err := errors.NewWith(
+        errors.SetMsg("fallback message"),
+        errors.SetID("ErrEmailsUnreadMsg"),
     )
 
-    fmt.Printf("%v\n", err)
+    fmt.Println(errors.TranslateMsg(err, localizer, &locCtx))
 }
 ```
 
-### Функции форматирования сообщения ошибки
+### Сериализация сообщения ошибки
 
-В пакете представлены по паре (JSON, string) функций форматирования для единичного сообщения и цепочке сообщений ошибки.
+В пакете предосталены два врианта маршалинга: string, json.
 
-Для цепочки сообщений изменение функции-форматера осуществляется через переменную `DefaultMultierrFormatFunc`. Для неё определено значение по-умолчанию `var DefaultMultierrFormatFunc = StringMultierrFormatFunc`.
+По деволту используется маршалинг в строку (string).
 
-Multierror-сообщения форматируются в пакете следующими функциями:
+Изменить дефолтный маршалинг можно установив переменную `DefaultMarshaller` в нужное значение.
 
-- для вывода в формате JSON - `JSONMultierrFuncFormat(w io.Writer, es []error)`;
-- для строкового вывода - `StringMultierrFormatFunc(w io.Writer, es []error)`.
+Кастомный маршалинг должен реализовывать следующий интерфейс:
 
-Для сообщений с типом `*Error` используются функции-форматеры типа `type FormatFn func(e *Error) string`. Задать требуемую функцию форматирования можно с помощью функции-параметра `SetFormatFn` в конструкторе или изменить это значение с помощью метода `WithOptions`. Можно задать функцию-форматирования по-умолчанию через переменную `DefaultFormatFn`.
+```golang
+type Marshaller interface {
+    Marshal(interface{}) ([]byte, error)
+    MarshalTo(interface{}, io.Writer) error
+}
+```
 
-В пакете представлены следующие функции-форматеры:
+В `*Error` имеется метод маршалинга (`Marshal(fn ...Marshaller) ([]byte, error)`), если не указано, используется дефолтный.
 
-- для вывода в формате JSON - `JSONFormat(buf io.Writer, e *Error)`;
-- для строкового вывода - `StringFormat(buf io.Writer, e *Error)`.
+[К оглавлению](#оглавление)
 
-Внимание! При использовании форматирования цепочки сообщения `JSONMultierrFuncFormat` функция форматирование `*Error` по-умолчанию переключается на `JSONFormat`.
+### Хелперы
 
-Все функций форматирования используют `github.com/valyala/bytebufferpool`, что хорошо сказывается на общей производительности и уменьшает потребление памяти.
+#### Стандартные хелперы для работы error
 
-[К оглавлению](#Оглавление)
+Функция `Is(err, target error) bool` сравнивает ошибку со значением.
+
+Функция `As(err error, target interface{}) bool` проверяет, относится ли ошибка к конкретному типу.
+
+Функция `Unwrap(err error) error` вернет, упакованную ошибку.
+Например, если ошибка была обернута с помоющь `Combine`, `Wrap`.
+
+#### Для организации errors flow
+
+Функция `ContainsByID(err error, id string) bool` проверит содержится ли ошибка с указанным ID в цепочке.
+
+Функция `FindByID(err error, id string) error` вернет ошибку с указанным ID, если он есть в цепочке.
+Если нет вернет `nil`. Рекомендуется применять в комбинации с `ContainsByID`.
+
+Функция `GetID(err error) (id string)` вернет ID ошибки. Если ID нет, то вернет пустую строку.
+
+[К оглавлению](#оглавление)
 
 ## Список задач
 
 - [ ] Повысить покрытие тестами;
 - [ ] Более подробные комментарии для описания методов и функций;
-- [ ] Перевод типа ошибки, операций, уровня опасности;
-- [ ] Перевод README на en;
-- [ ] Выпуск на godoc.
+- [ ] Перевод README на en.
+- [+] Проработать сценарии использования в handler (HTTP, GRPC,..)
 
-[К оглавлению](#Оглавление)
+[К оглавлению](#оглавление)
 
 ## Лицензия
 

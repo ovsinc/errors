@@ -1,6 +1,5 @@
 // Package golog implements the standard golang logger.
 //
-//
 // RU:
 // Package golog реализует стандартный логгер golang.
 package golog
@@ -13,13 +12,16 @@ import (
 
 // New constructor of a logger that wraps the original logger.
 //
-//
 // RU:
 // New конструтор интерфейс для использования логгера log из состава golang.
 // Оборачивает стандартный логгер l.
-func New(l *gosystemlog.Logger) log.Logger {
+func New(l ...*gosystemlog.Logger) log.Logger {
+	logger := gosystemlog.Default()
+	if len(l) > 0 {
+		logger = l[0]
+	}
 	return &systemlog{
-		logger: l,
+		logger: logger,
 	}
 }
 

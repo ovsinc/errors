@@ -1,8 +1,0 @@
-[ErrEmailsUnreadMsg]
-description = "The number of unread emails user have"
-one = "{{.Name}} have {{.PluralCount}} unread email."
-other = "{{.Name}} have {{.PluralCount}} unread emails."
-
-[ErrFileNotFoundMsg]
-description = "The File not found message"
-other = "File {{.FName}} not found"

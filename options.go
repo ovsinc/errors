@@ -1,188 +1,104 @@
 package errors
 
-import i18n "github.com/nicksnyder/go-i18n/v2/i18n"
+import (
+	"reflect"
+	"unsafe"
+)
 
-// Options опции из параметра ошибки.
+// Options опции-параметры ошибки.
 type Options func(e *Error)
-
-// SetFormatFn установит пользовательскую функцию-форматирования.
-func SetFormatFn(fn FormatFn) Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.formatFn = fn
-	}
-}
 
 // Msg
 
-// SetMsgBytes установит сообщение об ошибке, указаннов в виде []byte.
-func SetMsgBytes(msg []byte) Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.msg = NewObjectFromBytes(msg)
-	}
-}
-
-// SetMsg установит сообщение об ошибке, указанное в виде строки.
+// SetMsg строка. Установит сообщение об ошибке.
 func SetMsg(msg string) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
 		}
-		e.msg = NewObjectFromString(msg)
-	}
-}
-
-// SetSeverity устновит Severity.
-func SetSeverity(severity Severity) Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.severity = severity
-	}
-}
-
-func SetSeverityWarn() Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.severity = SeverityWarn
-	}
-}
-
-func SetSeverityErr() Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.severity = SeverityError
+		e.msg = msg
 	}
 }
 
 // ID
 
-// SetID установит ID ошибки.
+// SetID, строка. Установит ID ошибки.
 func SetID(id string) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
 		}
-		e.id = NewObjectFromString(id)
+		e.id = id
 	}
 }
 
-// SetIDBytes установит ID ошибки.
-func SetIDBytes(id []byte) Options {
+// Operation
+
+// SetOperation, строка. Установит имя операции.
+func SetOperation(o string) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
 		}
-		e.id = NewObjectFromBytes(id)
+		e.operation = o
 	}
 }
 
 // Error type
 
-// SetErrorType установит тип ошибки.
-func SetErrorType(etype string) Options {
+// SetErrorType, IErrType (enum). Установит тип.
+func SetErrorType(et IErrType) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
 		}
-		e.errorType = NewObjectFromString(etype)
+		e.errorType = et
 	}
 }
 
-// SetErrorTypeBytes установит тип ошибки.
-func SetErrorTypeBytes(etype []byte) Options {
+// Context Info
+
+// SetContextInfo, CtxKV. Установит контекст.
+func SetContextInfo(ctxinf CtxKV) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
 		}
-		e.errorType = NewObjectFromBytes(etype)
+		e.contextInfo = ctxinf
 	}
 }
 
-// Operations
-
-// AppendOperationsBytes добавить операции, указанные как []byte.
-// Можно указать произвольное количество.
-// Если в *Error уже были записаны операции,
-// то указанные в аргументе будет добавлены к уже имеющимся.
-func AppendOperationsBytes(o ...[]byte) Options {
-	return func(e *Error) {
-		if e == nil || len(o) == 0 {
-			return
-		}
-		e.operations = e.operations.AppendBytes(o...)
-	}
-}
-
-// AppendOperations добавить операции, указанные как строки.
-// Можно указать произвольное количество.
-// Если в *Error уже были записаны операции,
-// то указанные в аргументе будет добавлены к уже имеющимся.
-func AppendOperations(o ...string) Options {
-	return func(e *Error) {
-		if e == nil || len(o) == 0 {
-			return
-		}
-		e.operations = e.operations.AppendString(o...)
-	}
-}
-
-// SetOperations установить операции, указанные как строки.
-// Можно указать произвольное количество.
-// Если в *Error уже были записаны операции,
-// то они будут заменены на указанные в аргументе ops.
-func SetOperations(o ...string) Options {
-	return func(e *Error) {
-		if e == nil || len(o) == 0 {
-			return
-		}
-		e.operations = NewObjectsFromString(o...)
-	}
-}
-
-// SetOperationsBytes установить операции, указанные как []byte.
-// Можно указать произвольное количество.
-// Если в *Error уже были записаны операции,
-// то они будут заменены на указанные в аргументе ops.
-func SetOperationsBytes(o ...[]byte) Options {
-	return func(e *Error) {
-		if e == nil || len(o) == 0 {
-			return
-		}
-		e.operations = NewObjectsFromBytes(o...)
-	}
-}
-
-// Translate
-
-// SetTranslateContext установит контекст переревода
-func SetTranslateContext(tctx *TranslateContext) Options {
+// AppendContextInfo, key, val - строки. Добавит в имеющийся CtxKV значение value по ключу key.
+// CtxKV будет инициализирован, если ранее этого не было сделано.
+func AppendContextInfo(key string, value interface{}) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
 		}
-		e.translateContext = tctx
+		if e.contextInfo == nil {
+			e.contextInfo = make(CtxKV, 0, 6)
+		}
+		e.contextInfo = append(e.contextInfo, struct {
+			Key   string
+			Value interface{}
+		}{key, value})
 	}
 }
 
-// SetLocalizer установит локализатор.
-// Этот локализатор будет использован для данной ошибки даже,
-// если был установлен DefaultLocalizer.
-func SetLocalizer(localizer *i18n.Localizer) Options {
-	return func(e *Error) {
-		if e == nil {
-			return
-		}
-		e.localizer = localizer
-	}
+//
+// from https://github.com/valyala/fastjson/blob/master/util.go
+//
+
+func b2s(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
+}
+
+func s2b(s string) []byte {
+	var b []byte
+	strh := (*reflect.StringHeader)(unsafe.Pointer(&s))
+	sh := (*reflect.SliceHeader)(unsafe.Pointer(&b))
+	sh.Data = strh.Data
+	sh.Len = strh.Len
+	sh.Cap = strh.Len
+	return b
 }
