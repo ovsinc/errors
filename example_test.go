@@ -56,12 +56,35 @@ func ExampleDownstreamDependencyTimedoutErr() {
 	// (DownstreamDependencyTimedout) hello
 }
 
+func ExampleError_Marshal() {
+	e := errors.NewWith(
+		errors.SetID("myid"),
+		errors.SetMsg("hello"),
+		errors.AppendContextInfo(
+			"hello",
+			[]struct{ k, v interface{} }{{"1", 1}, {"10", 11}},
+		),
+		errors.AppendContextInfo("Joe", "Dow"),
+		errors.SetOperation("test op"),
+		errors.SetErrorType(errors.InputBody),
+	)
+
+	buf, _ := e.Marshal(&errors.MarshalJSON{})
+
+	fmt.Println(string(buf))
+
+	// Output:
+	// {"id":"myid","operation":"test op","error_type":"InputBody","context":{"hello":"[{1 1} {10 11}]","Joe":"Dow"},"msg":"hello"}
+}
+
 func ExampleNewWith() {
 	e := errors.NewWith(
 		errors.SetID("myid"),
 		errors.SetMsg("hello"),
-		errors.AppendContextInfo("hello",
-			[]struct{ k, v interface{} }{{"1", 1}, {"10", 11}}),
+		errors.AppendContextInfo(
+			"hello",
+			[]struct{ k, v interface{} }{{"1", 1}, {"10", 11}},
+		),
 		errors.AppendContextInfo("Joe", "Dow"),
 		errors.SetOperation("test op"),
 		errors.SetErrorType(errors.InputBody),
@@ -85,7 +108,7 @@ func ExampleNewWith() {
 	// test op
 	// hello
 	// {"id":"myid","operation":"test op","error_type":"InputBody","context":{"hello":"[{1 1} {10 11}]","Joe":"Dow"},"msg":"hello"}
-	// example_test.go:78: ExampleNewWith()
+	// example_test.go:101: ExampleNewWith()
 }
 
 func ExampleError_WithOptions() {
@@ -269,19 +292,13 @@ func ExampleNewWithLog() {
 	// ovsinc/errors three
 }
 
-func someErrWithTimedCall() (err *errors.Error) {
-	begin := time.Now()
-	defer func() {
-		err = err.WithOptions(
-			errors.AppendContextInfo("call", errors.DefaultCaller()),
-			errors.AppendContextInfo("duration", time.Since(begin).Round(time.Second).String()),
-		)
-	}()
-
-	err = errors.New("some call")
-
+func someErrWithTimedCall() error {
+	err := errors.NewWith(
+		errors.SetMsg("some call"),
+		errors.AppendContextInfo("call", errors.RuntimeCaller()),
+		errors.AppendContextInfo("duration", time.Second),
+	)
 	time.Sleep(1 * time.Second)
-
 	return err
 }
 
@@ -291,5 +308,5 @@ func ExampleCaller() {
 	fmt.Printf("%s\n", err.Error())
 
 	// Output:
-	// {call:example_test.go:289: ExampleCaller(),duration:1s} some call
+	// {call:example_test.go:306: ExampleCaller(),duration:1s} some call
 }

@@ -47,7 +47,6 @@ func Caller(skip CallDepth) func() string {
 			nameidx := strings.LastIndexByte(fname, '.')
 			funcName := fname[nameidx+1:]
 			fpos = fpos + ": " + funcName + "()"
-
 		}
 		return fpos
 	}

@@ -5,11 +5,11 @@ import (
 )
 
 // GetID возвращает ID ошибки. Для НЕ *Error всегда будет "".
-func GetID(err error) (id string) {
+func GetID(err error) string {
 	if e, ok := err.(*Error); ok { //nolint:errorlint
 		return e.ID()
 	}
-	return
+	return ""
 }
 
 // GetOperation возвращает операцию ошибки. Для НЕ *Error всегда будет "".

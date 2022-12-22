@@ -2,18 +2,12 @@ package errors
 
 import "github.com/ovsinc/multilog"
 
-var DefaultLogger = NewLogger()
+// DefaultLogger дефолтный логгер в пакете.
+var DefaultLogger Logger = multilog.DefaultLogger //nolint:gochecknoglobals
 
+// Logger используемый в пакете интерфейс логгера.
 type Logger interface {
 	Errorf(format string, args ...interface{})
-}
-
-func NewLogger(l ...multilog.Logger) Logger {
-	logger := multilog.DefaultLogger
-	if len(l) > 0 {
-		logger = l[0]
-	}
-	return logger
 }
 
 // LOG-хелперы
@@ -24,7 +18,6 @@ func Log(err error, lg ...Logger) {
 	l := DefaultLogger
 	if len(lg) > 0 {
 		l = lg[0]
-
 	}
 	l.Errorf(err.Error())
 }

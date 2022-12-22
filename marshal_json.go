@@ -62,7 +62,11 @@ func jsonFormat(buf io.Writer, e error) { //nolint:funlen
 		// ErrorType
 		_, _ = io.WriteString(buf, "\"error_type\":")
 		_, _ = io.WriteString(buf, "\"")
-		_, _ = io.WriteString(buf, t.ErrorType().String())
+		var et IErrType = Unknown
+		if t.ErrorType() != nil {
+			et = t.ErrorType()
+		}
+		_, _ = io.WriteString(buf, et.String())
 		_, _ = io.WriteString(buf, "\",")
 
 		// ContextInfo

@@ -9,21 +9,21 @@ import (
 )
 
 var (
-	_ctxDelimiterLeft  = []byte{'{'}
-	_ctxDelimiterRight = []byte{'}'}
-	_listSeparator     = []byte{','}
+	_ctxDelimiterLeft  = []byte{'{'} //nolint:gochecknoglobals
+	_ctxDelimiterRight = []byte{'}'} //nolint:gochecknoglobals
+	_listSeparator     = []byte{','} //nolint:gochecknoglobals
 
-	_multilineIndent    = []byte("\t#")
-	_multilineSeparator = []byte{'\n'}
-	_multilinePrefix    = []byte("the following errors occurred:")
+	_multilineIndent    = []byte("\t#")                            //nolint:gochecknoglobals
+	_multilineSeparator = []byte{'\n'}                             //nolint:gochecknoglobals
+	_multilinePrefix    = []byte("the following errors occurred:") //nolint:gochecknoglobals
 
-	_separator = []byte{' '}
+	_separator = []byte{' '} //nolint:gochecknoglobals
 
-	_opDelimiterLeft  = []byte{'['}
-	_opDelimiterRight = []byte{']'}
+	_opDelimiterLeft  = []byte{'['} //nolint:gochecknoglobals
+	_opDelimiterRight = []byte{']'} //nolint:gochecknoglobals
 
-	_errTypeDelimerLeft  = []byte{'('}
-	_errTypeDelimerRight = []byte{')'}
+	_errTypeDelimerLeft  = []byte{'('} //nolint:gochecknoglobals
+	_errTypeDelimerRight = []byte{')'} //nolint:gochecknoglobals
 )
 
 var _ Marshaller = (*MarshalString)(nil)
@@ -106,10 +106,9 @@ func stringFormat(w io.Writer, e error) {
 		// id do not write
 
 		// err type
-		if et := t.ErrorType(); et != 0 {
+		if et := t.ErrorType(); et != nil && et.Number() > 0 {
 			_, _ = w.Write(_errTypeDelimerLeft)
 			_, _ = io.WriteString(w, t.ErrorType().String())
-
 			_, _ = w.Write(_errTypeDelimerRight)
 			_, _ = w.Write(_separator)
 		}

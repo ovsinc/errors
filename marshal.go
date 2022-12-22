@@ -9,4 +9,4 @@ type Marshaller interface {
 	MarshalTo(interface{}, io.Writer) error
 }
 
-var DefaultMarshaller = &MarshalString{}
+var DefaultMarshaller = &MarshalString{} //nolint:gochecknoglobals

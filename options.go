@@ -46,8 +46,8 @@ func SetOperation(o string) Options {
 
 // Error type
 
-// SetErrorType, errType (enum). Установит тип.
-func SetErrorType(et errType) Options {
+// SetErrorType, IErrType (enum). Установит тип.
+func SetErrorType(et IErrType) Options {
 	return func(e *Error) {
 		if e == nil {
 			return
@@ -93,7 +93,8 @@ func b2s(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
 
-func s2b(s string) (b []byte) {
+func s2b(s string) []byte {
+	var b []byte
 	strh := (*reflect.StringHeader)(unsafe.Pointer(&s))
 	sh := (*reflect.SliceHeader)(unsafe.Pointer(&b))
 	sh.Data = strh.Data

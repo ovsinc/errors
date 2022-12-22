@@ -80,7 +80,7 @@ func NewWithLog(ops ...Options) *Error {
 type Error struct {
 	id, msg, operation string
 	contextInfo        CtxKV
-	errorType          errType
+	errorType          IErrType
 }
 
 // WithOptions производит параметризацию *Error с помощью функции-парметры Options.
@@ -129,7 +129,7 @@ func (e *Error) Operation() string {
 }
 
 // ErrorType вернет тип ошибки.
-func (e *Error) ErrorType() errType {
+func (e *Error) ErrorType() IErrType {
 	if e == nil {
 		return defaultErrType
 	}
@@ -157,6 +157,10 @@ func mustMarshaler(fn ...Marshaller) Marshaller {
 	return marshal
 }
 
+// Marshal метод маршалит *Error.
+// * fn ...Marshaller -- необязательный парамет для вызова кастомного маршалера
+// если не указано, используется дефолтный.
+// ** []byte, error
 func (e *Error) Marshal(fn ...Marshaller) ([]byte, error) {
 	marshal := mustMarshaler(fn...)
 	return marshal.Marshal(e)

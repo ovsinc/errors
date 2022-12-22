@@ -28,8 +28,8 @@ func Wrap(left error, right error) error {
 		return left
 	}
 
-	if _, ok := right.(*multiError); !ok { //nolint:errorlint
-		if _, ok := left.(*multiError); !ok { //nolint:errorlint
+	if _, okright := right.(*multiError); !okright { //nolint:errorlint
+		if _, okleft := left.(*multiError); !okleft { //nolint:errorlint
 			// Both errors are single errors.
 			return &multiError{errors: []error{left, right}}
 		}
@@ -75,7 +75,7 @@ func (merr *multiError) Errors() []error {
 	if merr == nil || merr.errors == nil {
 		return nil
 	}
-	return append(([]error)(nil), merr.errors...)
+	return append([]error(nil), merr.errors...)
 }
 
 func (merr *multiError) Error() string {
@@ -161,8 +161,9 @@ type inspectResult struct {
 
 // Inspects the given slice of errors so that we can efficiently allocate
 // space for it.
-func inspect(errors []error) (res inspectResult) {
+func inspect(errors []error) inspectResult {
 	first := true
+	res := inspectResult{}
 	for i, err := range errors {
 		if err == nil {
 			continue
@@ -181,7 +182,7 @@ func inspect(errors []error) (res inspectResult) {
 			res.capacity++
 		}
 	}
-	return
+	return res
 }
 
 // fromSlice converts the given list of errors into a single error.
@@ -207,7 +208,7 @@ func fromSlice(errors []error) error {
 			// Otherwise "errors" escapes to the heap
 			// unconditionally for all other cases.
 			// This lets us optimize for the "no errors" case.
-			out := append(([]error)(nil), errors...)
+			out := append([]error(nil), errors...)
 			return &multiError{errors: out}
 		}
 	}

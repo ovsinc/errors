@@ -9,6 +9,15 @@ import (
 //go:generate stringer -type=errType
 type errType int
 
+var _ IErrType = (*errType)(nil)
+
+type IErrType interface {
+	HTTPStatusCode() int
+	GRPCStatusCode() codes.Code
+	Number() int
+	String() string
+}
+
 const (
 	_ errType = iota
 
@@ -78,10 +87,10 @@ const (
 	Unavailable
 )
 
-var defaultErrType = Unknown
+var defaultErrType = Unknown //nolint:gochecknoglobals
 
-// ParseErrType позволяет получить errType по названию.
-func ParseErrType(s string) errType { //nolint:cyclop
+// ParseErrType позволяет получить IErrType по названию.
+func ParseErrType(s string) IErrType { //nolint:cyclop
 	t := defaultErrType
 
 	switch s {
@@ -122,7 +131,13 @@ func ParseErrType(s string) errType { //nolint:cyclop
 	return t
 }
 
-// HTTPStatusCode is a convenience method used to get the appropriate HTTP response status code for the respective error type
+// Number позволяет получить числовой код ошибки.
+func (et errType) Number() int {
+	return int(et)
+}
+
+// HTTPStatusCode is a convenience method used to get the appropriate HTTP response status code
+// for the respective error type
 
 // HTTPStatusCode позволяет конвертировать errType в HTTP status.
 func (et errType) HTTPStatusCode() int { //nolint:cyclop
@@ -193,8 +208,9 @@ func (et errType) GRPCStatusCode() codes.Code { //nolint:cyclop
 // * out: t errType, ok bool
 // Если error кастится на (*Error), то ok == true, и возвращается значение errType.
 // В противном случае возвращается defaultErrType и false.
-func GetErrType(err error) (errType, bool) {
-	errType := defaultErrType
+func GetErrType(err error) (IErrType, bool) {
+	var errType IErrType
+	errType = defaultErrType
 	ok := false
 
 	if e, eok := err.(*Error); eok { //nolint:errorlint
